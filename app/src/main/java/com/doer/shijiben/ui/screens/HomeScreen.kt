@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.doer.shijiben.data.EventEntity
 import com.doer.shijiben.data.TimeFormats
@@ -58,14 +59,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -179,7 +172,7 @@ fun HomeScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(events, key = { it.id }) { event ->
                     EventSummaryCard(
@@ -342,89 +335,69 @@ private fun EventSummaryCard(
     onClick: () -> Unit,
 ) {
     val isInProgress = event.status == "IN_PROGRESS"
-    val accentColor = MaterialTheme.colorScheme.secondary // Soft Purple (from theme)
-
-    val infiniteTransition = rememberInfiniteTransition(label = "breathing")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
+    val accentColor = MaterialTheme.colorScheme.secondary
+    val startTime = TimeFormats.formatTimeMillis(event.startTimeMillis)
+    val timeRange = if (isInProgress) {
+        "$startTime — 进行中"
+    } else {
+        "$startTime — ${TimeFormats.formatTimeMillis(event.endTimeMillis)}"
+    }
+    val durationLabel = if (isInProgress) {
+        "进行中"
+    } else {
+        val minutes = ((event.endTimeMillis - event.startTimeMillis) / 60_000L).toInt()
+        "${minutes.coerceAtLeast(0)}分"
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface,
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
             if (isInProgress) accentColor.copy(alpha = 0.6f)
-            else MaterialTheme.colorScheme.outlineVariant
-        )
+            else MaterialTheme.colorScheme.outlineVariant,
+        ),
     ) {
         Row(
             modifier = Modifier
-                .padding(20.dp)
+                .padding(horizontal = 14.dp, vertical = 12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        event.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (isInProgress) {
-                        Spacer(Modifier.width(12.dp))
-                        Box(contentAlignment = Alignment.Center) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .scale(scale)
-                                    .alpha(alpha)
-                                    .background(accentColor.copy(alpha = 0.4f), CircleShape)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .background(accentColor, CircleShape)
-                            )
-                        }
-                    }
-                }
-                Text(
-                    text = if (isInProgress) {
-                        "${TimeFormats.formatTimeMillis(event.startTimeMillis)} — 正在处理"
-                    } else {
-                        "${TimeFormats.formatTimeMillis(event.startTimeMillis)} — ${TimeFormats.formatTimeMillis(event.endTimeMillis)}"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isInProgress) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
+            Text(
+                text = event.name,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = timeRange,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isInProgress) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+            Text(
+                text = durationLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isInProgress) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(start = 8.dp),
+            )
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .size(20.dp),
             )
         }
     }

@@ -185,115 +185,163 @@ fun EventEditorContent(
         }
     }
 
+    val isNew = eventId == null
+    val sectionGap = if (isNew) 10.dp else 20.dp
+    val horizontalPad = if (isNew) 16.dp else 24.dp
+
     Box(Modifier.fillMaxWidth()) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = horizontalPad, vertical = if (isNew) 8.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(sectionGap)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center, // Center the title
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    if (eventId == null) "记录新篇章" else "重温与修正",
-                    style = MaterialTheme.typography.titleMedium
-                )
+            if (!isNew) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("重温与修正", style = MaterialTheme.typography.titleMedium)
+                }
             }
 
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
                 value = name,
                 onValueChange = { name = it },
-                placeholder = { Text("此刻正在发生什么？") },
+                placeholder = {
+                    Text(
+                        "此刻正在发生什么？",
+                        style = if (isNew) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                    )
+                },
                 singleLine = true,
-                textStyle = MaterialTheme.typography.headlineSmall,
+                textStyle = if (isNew) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                 )
             )
 
+            if (isNew && suggestionNames.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(suggestionNames, key = { it }) { suggestion ->
+                        AssistChip(
+                            onClick = { name = suggestion },
+                            label = {
+                                Text(
+                                    text = suggestion,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(if (isNew) 10.dp else 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(if (isNew) 16.dp else 20.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
                         Text(
                             text = TimeFormats.formatDateMillis(startMillis),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
+                            style = if (isNew) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = { startDatePickerOpen = true }) {
-                            Text("修改日期")
+                        TextButton(
+                            onClick = { startDatePickerOpen = true },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        ) {
+                            Text(
+                                "改日期",
+                                style = if (isNew) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
+                            )
                         }
                     }
-                    
-                    Spacer(Modifier.height(12.dp))
-                    
+
+                    Spacer(Modifier.height(if (isNew) 4.dp else 12.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TimeSelectionBlock(
                             label = "开始",
                             time = TimeFormats.formatTimeMillis(startMillis),
-                            onClick = { startTimePickerOpen = true }
+                            compact = isNew,
+                            onClick = { startTimePickerOpen = true },
                         )
                         Icon(
-                            Icons.Default.AccessTime, 
-                            contentDescription = null, 
+                            Icons.Default.AccessTime,
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp),
                         )
                         TimeSelectionBlock(
                             label = if (status == "IN_PROGRESS") "进行中" else "结束",
                             time = if (status == "IN_PROGRESS") "--:--" else TimeFormats.formatTimeMillis(endMillis),
-                            onClick = { endTimePickerOpen = true }
+                            compact = isNew,
+                            onClick = { endTimePickerOpen = true },
                         )
                     }
                 }
             }
 
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(if (isNew) 0.dp else 4.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("持续时长", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "持续时长",
+                        style = if (isNew) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+                    )
                     Text(
                         if (durationMin > 0) "${durationMin} 分钟" else "正在进行",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 Slider(
                     value = durationMin.toFloat(),
-                    onValueChange = { 
+                    onValueChange = {
                         durationMin = it.toInt()
                         updateEndFromDuration()
                     },
                     valueRange = 0f..120f,
-                    steps = 24 // 0, 5, 10... 120
+                    steps = 24,
                 )
             }
 
-            // Central Add/Update Button
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { saveEvent() },
                 shape = MaterialTheme.shapes.medium,
-                contentPadding = PaddingValues(vertical = 12.dp)
+                contentPadding = PaddingValues(vertical = if (isNew) 8.dp else 12.dp),
             ) {
-                Text(if (eventId == null) "添加" else "更新", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    if (isNew) "添加" else "更新",
+                    style = if (isNew) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+                )
             }
 
             if (eventId != null && loadedEntity != null) {
@@ -324,7 +372,7 @@ fun EventEditorContent(
                 }
             }
             
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(if (isNew) 8.dp else 24.dp))
         }
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
@@ -334,16 +382,25 @@ fun EventEditorContent(
 private fun TimeSelectionBlock(
     label: String,
     time: String,
-    onClick: () -> Unit
+    compact: Boolean = false,
+    onClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .clickable(onClick = onClick)
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = if (compact) 4.dp else 8.dp, vertical = if (compact) 2.dp else 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(time, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            time,
+            style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
