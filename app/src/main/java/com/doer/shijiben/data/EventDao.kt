@@ -30,4 +30,16 @@ interface EventDao {
 
     @Delete
     suspend fun delete(event: EventEntity)
+
+    /** Distinct trimmed names ordered by last use (`startTimeMillis`), for quick-pick. */
+    @Query(
+        """
+        SELECT trim(name) AS name FROM events
+        WHERE trim(name) != ''
+        GROUP BY trim(name)
+        ORDER BY MAX(startTimeMillis) DESC
+        LIMIT 10
+        """,
+    )
+    fun observeRecentDistinctNames(): Flow<List<String>>
 }

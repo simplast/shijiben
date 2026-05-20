@@ -6,6 +6,9 @@ class EventRepository(private val dao: EventDao) {
     fun observeEventsForDay(dayKey: String): Flow<List<EventEntity>> =
         dao.observeEventsForDay(dayKey)
 
+    fun observeRecentDistinctEventNames(): Flow<List<String>> =
+        dao.observeRecentDistinctNames()
+
     suspend fun getById(id: Long): EventEntity? = dao.getById(id)
 
     suspend fun upsert(event: EventEntity) {

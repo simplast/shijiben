@@ -44,6 +44,13 @@ class EventViewModel(
                 emptyList(),
             )
 
+    val recentDistinctEventNames: StateFlow<List<String>> =
+        repository.observeRecentDistinctEventNames().stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
     fun setSelectedDate(date: LocalDate) {
         _selectedDate.value = date
     }
