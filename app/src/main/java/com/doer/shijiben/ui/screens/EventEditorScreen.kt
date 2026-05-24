@@ -78,6 +78,8 @@ fun EventEditorContent(
     val focusRequester = remember { FocusRequester() }
 
     var name by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
     var startMillis by remember { mutableStateOf(System.currentTimeMillis()) }
     var durationMin by remember { mutableIntStateOf(0) } // Default to 0
     var endMillis by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -114,6 +116,8 @@ fun EventEditorContent(
             val entity = viewModel.getEvent(eventId) ?: return@LaunchedEffect
             loadedEntity = entity
             name = entity.name
+            category = entity.category ?: ""
+            note = entity.note ?: ""
             startMillis = entity.startTimeMillis
             endMillis = entity.endTimeMillis
             status = entity.status
@@ -177,7 +181,9 @@ fun EventEditorContent(
             startTimeMillis = startMillis,
             endTimeMillis = if (customStatus == "COMPLETED") System.currentTimeMillis() else endMillis,
             dayKey = "",
-            status = customStatus ?: status
+            status = customStatus ?: status,
+            category = category.trim().ifEmpty { null },
+            note = note.trim().ifEmpty { null }
         )
         viewModel.upsert(entity) { err ->
             if (err != null) showMessage(err.message ?: "保存失败")
@@ -232,7 +238,10 @@ fun EventEditorContent(
                 ) {
                     items(suggestionNames, key = { it }) { suggestion ->
                         AssistChip(
-                            onClick = { name = suggestion },
+                            onClick = { 
+                                name = suggestion
+                                saveEvent() 
+                            },
                             label = {
                                 Text(
                                     text = suggestion,
@@ -244,6 +253,25 @@ fun EventEditorContent(
                         )
                     }
                 }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    modifier = Modifier.weight(1f),
+                    value = category,
+                    onValueChange = { category = it },
+                    label = { Text("分类 (可选)", style = MaterialTheme.typography.labelSmall) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedTextField(
+                    modifier = Modifier.weight(1f),
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text("备注 (可选)", style = MaterialTheme.typography.labelSmall) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Card(
@@ -339,7 +367,7 @@ fun EventEditorContent(
                 contentPadding = PaddingValues(vertical = if (isNew) 8.dp else 12.dp),
             ) {
                 Text(
-                    if (isNew) "添加" else "更新",
+                    if (isNew) "开始记录" else "更新",
                     style = if (isNew) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
                 )
             }

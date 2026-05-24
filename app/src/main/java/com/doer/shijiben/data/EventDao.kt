@@ -42,4 +42,19 @@ interface EventDao {
         """,
     )
     fun observeRecentDistinctNames(): Flow<List<String>>
+
+    @Query("SELECT * FROM events WHERE status = 'IN_PROGRESS' LIMIT 1")
+    fun observeActiveEvent(): Flow<EventEntity?>
+
+    @Query(
+        """
+        SELECT * FROM events 
+        WHERE dayKey >= :startDay AND dayKey <= :endDay
+        ORDER BY startTimeMillis ASC
+        """
+    )
+    fun observeEventsInRange(startDay: String, endDay: String): Flow<List<EventEntity>>
+
+    @Query("SELECT * FROM events ORDER BY startTimeMillis DESC")
+    suspend fun getAllEvents(): List<EventEntity>
 }

@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -53,6 +52,18 @@ import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import java.time.LocalDate
 
 import androidx.compose.material3.ModalBottomSheet
@@ -60,18 +71,88 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: EventViewModel,
     onAddEvent: () -> Unit,
     onOpenEvent: (Long) -> Unit,
+    onOpenReview: () -> Unit,
 ) {
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dateLabel by viewModel.selectedDateLabel.collectAsState()
     val events by viewModel.eventsForSelectedDay.collectAsState()
+    val activeEvent by viewModel.activeEvent.collectAsState()
+    val elapsedMinutes by viewModel.activeEventElapsedMinutes.collectAsState()
+    val weeklyStats by viewModel.weeklyStats.collectAsState()
+
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    var quickInputName by remember { mutableStateOf("") }
+
+    val jsonExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            viewModel.exportDataAsJson(context, it) { err ->
+                scope.launch {
+                    if (err != null) snackbarHostState.showSnackbar("导出失败: ${err.message}")
+                    else snackbarHostState.showSnackbar("导出成功")
+                }
+            }
+        }
+    }
+
+    val csvExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        uri?.let {
+            viewModel.exportDataAsCsv(context, it) { err ->
+                scope.launch {
+                    if (err != null) snackbarHostState.showSnackbar("导出失败: ${err.message}")
+                    else snackbarHostState.showSnackbar("导出成功")
+                }
+            }
+        }
+    }
 
     var datePickerVisible by remember { mutableStateOf(false) }
+    var eventToDelete by remember { mutableStateOf<EventEntity?>(null) }
+
+    if (eventToDelete != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { eventToDelete = null },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除「${eventToDelete?.name}」这段时光吗？") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        val event = eventToDelete
+                        if (event != null) {
+                            viewModel.delete(event) { err ->
+                                if (err != null) {
+                                    scope.launch { snackbarHostState.showSnackbar("删除失败") }
+                                }
+                            }
+                        }
+                        eventToDelete = null
+                    }
+                ) { Text("删除", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { eventToDelete = null }) { Text("取消") }
+            }
+        )
+    }
     
     // Bottom Sheet state
     var editorSheetVisible by remember { mutableStateOf(false) }
@@ -79,7 +160,6 @@ fun HomeScreen(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
-    val scope = rememberCoroutineScope()
 
     if (datePickerVisible) {
         DayPickerDialog(
@@ -122,10 +202,31 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("事记本", style = MaterialTheme.typography.titleLarge) },
+            TopAppBar(
+                title = { Text("事记本", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) },
+                actions = {
+                    IconButton(onClick = { viewModel.smartMergeEvents() }) {
+                        Icon(Icons.Default.CleaningServices, contentDescription = "整理记录", modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(onClick = onOpenReview) {
+                        Icon(Icons.Default.QueryStats, contentDescription = "数据统计")
+                    }
+                    IconButton(onClick = {
+                        val timestamp = System.currentTimeMillis()
+                        csvExportLauncher.launch("shijiben_export_$timestamp.csv")
+                    }) {
+                        Icon(Icons.Default.FileDownload, contentDescription = "导出 CSV")
+                    }
+                    IconButton(onClick = {
+                        val timestamp = System.currentTimeMillis()
+                        jsonExportLauncher.launch("shijiben_export_$timestamp.json")
+                    }) {
+                        Icon(Icons.Default.History, contentDescription = "备份 JSON")
+                    }
+                }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -165,23 +266,125 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
         ) {
-            StatsDashboard(events = events)
+            StatsDashboard(
+                events = events,
+                topGoal = weeklyStats?.goalProgress?.filter { it.targetMinutes > 0 }?.maxByOrNull { it.currentMinutes.toFloat() / it.targetMinutes.toFloat() }
+            )
             
+            Spacer(Modifier.height(8.dp))
+
+            // Quick Start Input
+            androidx.compose.material3.OutlinedTextField(
+                value = quickInputName,
+                onValueChange = { quickInputName = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("今天想记录点什么？", style = MaterialTheme.typography.bodyMedium) },
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
+                trailingIcon = {
+                    if (quickInputName.isNotBlank()) {
+                        IconButton(onClick = {
+                            viewModel.quickStartEvent(quickInputName)
+                            quickInputName = ""
+                        }) {
+                            Icon(Icons.Default.Add, contentDescription = "开始", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Go
+                ),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                    onGo = {
+                        if (quickInputName.isNotBlank()) {
+                            viewModel.quickStartEvent(quickInputName)
+                            quickInputName = ""
+                        }
+                    }
+                )
+            )
+
             Spacer(Modifier.height(16.dp))
+
+            activeEvent?.let { active ->
+                ActiveEventCard(
+                    event = active,
+                    elapsedMinutes = elapsedMinutes,
+                    onStop = { viewModel.stopActiveEvent() },
+                    onClick = {
+                        editingEventId = active.id
+                        editorSheetVisible = true
+                    }
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
+                contentPadding = PaddingValues(top = 0.dp, bottom = 100.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(events, key = { it.id }) { event ->
-                    EventSummaryCard(
-                        event = event, 
-                        onClick = { 
-                            editingEventId = event.id
-                            editorSheetVisible = true
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            when (value) {
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    viewModel.quickStartEvent(event.name)
+                                    false
+                                }
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    eventToDelete = event
+                                    false
+                                }
+                                else -> false
+                            }
                         }
                     )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            val color = when (dismissState.dismissDirection) {
+                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
+                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                else -> MaterialTheme.colorScheme.surface
+                            }
+                            val icon = when (dismissState.dismissDirection) {
+                                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.PlayArrow
+                                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                                else -> null
+                            }
+                            val alignment = when (dismissState.dismissDirection) {
+                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                else -> Alignment.Center
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(color, MaterialTheme.shapes.medium)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                icon?.let { Icon(it, contentDescription = null) }
+                            }
+                        },
+                        enableDismissFromStartToEnd = true,
+                        enableDismissFromEndToStart = true
+                    ) {
+                        EventSummaryCard(
+                            event = event, 
+                            onClick = { 
+                                editingEventId = event.id
+                                editorSheetVisible = true
+                            }
+                        )
+                    }
                 }
                 item {
                     if (events.isEmpty()) {
@@ -205,7 +408,76 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatsDashboard(events: List<EventEntity>) {
+private fun ActiveEventCard(
+    event: EventEntity,
+    elapsedMinutes: Long,
+    onStop: () -> Unit,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "正在进行",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = event.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "已持续 ${elapsedMinutes} 分钟",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+            }
+            
+            Button(
+                onClick = onStop,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("结束")
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsDashboard(events: List<EventEntity>, topGoal: com.doer.shijiben.ui.GoalProgress?) {
     val totalMinutes = events.sumOf { (it.endTimeMillis - it.startTimeMillis) / 60_000L }
     val hours = totalMinutes / 60
     val mins = totalMinutes % 60
@@ -220,58 +492,96 @@ private fun StatsDashboard(events: List<EventEntity>) {
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.QueryStats, 
-                        contentDescription = null, 
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("今日统计", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.QueryStats, 
+                            contentDescription = null, 
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("今日统计", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = if (hours > 0) "${hours}h ${mins}m" else "${mins}m",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = " / 总时长",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                        )
+                    }
                 }
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
+                
+                Column(horizontalAlignment = Alignment.End) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${events.size}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                     Text(
-                        text = if (hours > 0) "${hours}h ${mins}m" else "${mins}m",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = " / 总时长",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "项事件",
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center
+
+            if (topGoal != null) {
+                Spacer(Modifier.height(16.dp))
+                androidx.compose.material3.HorizontalDivider(
+                    thickness = 0.5.dp, 
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
+                Spacer(Modifier.height(12.dp))
+                
+                val currentH = topGoal.currentMinutes / 60
+                val targetH = topGoal.targetMinutes / 60
+                val progress = (topGoal.currentMinutes.toFloat() / topGoal.targetMinutes.toFloat()).coerceAtMost(1f)
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${events.size}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        text = "目标: ${topGoal.name}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${currentH}h / ${targetH}h",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Text(
-                    text = "项事件",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
+                Spacer(Modifier.height(4.dp))
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
             }
         }
