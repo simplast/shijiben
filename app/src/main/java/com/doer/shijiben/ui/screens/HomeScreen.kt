@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,12 +58,16 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import java.time.LocalDate
@@ -72,7 +78,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material.icons.filled.Delete
@@ -202,189 +207,85 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("事记本", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black) },
-                actions = {
-                    IconButton(onClick = { viewModel.smartMergeEvents() }) {
-                        Icon(Icons.Default.CleaningServices, contentDescription = "整理记录", modifier = Modifier.size(20.dp))
-                    }
-                    IconButton(onClick = onOpenReview) {
-                        Icon(Icons.Default.QueryStats, contentDescription = "数据统计")
-                    }
-                    IconButton(onClick = {
-                        val timestamp = System.currentTimeMillis()
-                        csvExportLauncher.launch("shijiben_export_$timestamp.csv")
-                    }) {
-                        Icon(Icons.Default.FileDownload, contentDescription = "导出 CSV")
-                    }
-                    IconButton(onClick = {
-                        val timestamp = System.currentTimeMillis()
-                        jsonExportLauncher.launch("shijiben_export_$timestamp.json")
-                    }) {
-                        Icon(Icons.Default.History, contentDescription = "备份 JSON")
-                    }
+            CompactTopBar(
+                title = "事记本",
+                onSmartMerge = { viewModel.smartMergeEvents() },
+                onOpenReview = onOpenReview,
+                onExportCsv = {
+                    val timestamp = System.currentTimeMillis()
+                    csvExportLauncher.launch("shijiben_export_$timestamp.csv")
+                },
+                onExportJson = {
+                    val timestamp = System.currentTimeMillis()
+                    jsonExportLauncher.launch("shijiben_export_$timestamp.json")
                 }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(
+            CompactFAB(
                 onClick = {
                     editingEventId = null
                     editorSheetVisible = true
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "新建事件")
-            }
+                }
+            )
         },
         bottomBar = {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
-                ),
-                shape = MaterialTheme.shapes.large,
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                DaySelectorRow(
-                    selectedDate = selectedDate,
-                    dateLabel = dateLabel,
-                    onPrevDay = { viewModel.setSelectedDate(selectedDate.minusDays(1)) },
-                    onNextDay = { viewModel.setSelectedDate(selectedDate.plusDays(1)) },
-                    onPickDate = { datePickerVisible = true },
-                )
-            }
+            CompactDayBar(
+                selectedDate = selectedDate,
+                dateLabel = dateLabel,
+                onPrevDay = { viewModel.setSelectedDate(selectedDate.minusDays(1)) },
+                onNextDay = { viewModel.setSelectedDate(selectedDate.plusDays(1)) },
+                onPickDate = { datePickerVisible = true },
+            )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal=12.dp),
         ) {
-            StatsDashboard(
-                events = events,
-                topGoal = weeklyStats?.goalProgress?.filter { it.targetMinutes > 0 }?.maxByOrNull { it.currentMinutes.toFloat() / it.targetMinutes.toFloat() }
-            )
-            
-            Spacer(Modifier.height(8.dp))
-
-            // Quick Start Input
-            androidx.compose.material3.OutlinedTextField(
+            CompactQuickInput(
                 value = quickInputName,
                 onValueChange = { quickInputName = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("今天想记录点什么？", style = MaterialTheme.typography.bodyMedium) },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                trailingIcon = {
+                onSend = {
                     if (quickInputName.isNotBlank()) {
-                        IconButton(onClick = {
-                            viewModel.quickStartEvent(quickInputName)
-                            quickInputName = ""
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "开始", tint = MaterialTheme.colorScheme.primary)
-                        }
+                        viewModel.quickStartEvent(quickInputName)
+                        quickInputName = ""
                     }
-                },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                    imeAction = androidx.compose.ui.text.input.ImeAction.Go
-                ),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                    onGo = {
-                        if (quickInputName.isNotBlank()) {
-                            viewModel.quickStartEvent(quickInputName)
-                            quickInputName = ""
-                        }
-                    }
-                )
+                }
             )
 
-            Spacer(Modifier.height(16.dp))
-
-            activeEvent?.let { active ->
-                ActiveEventCard(
-                    event = active,
-                    elapsedMinutes = elapsedMinutes,
-                    onStop = { viewModel.stopActiveEvent() },
-                    onClick = {
-                        editingEventId = active.id
-                        editorSheetVisible = true
-                    }
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-            
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = 0.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                items(events, key = { it.id }) { event ->
-                    val dismissState = rememberSwipeToDismissBoxState(
-                        confirmValueChange = { value ->
-                            when (value) {
-                                SwipeToDismissBoxValue.StartToEnd -> {
-                                    viewModel.quickStartEvent(event.name)
-                                    false
-                                }
-                                SwipeToDismissBoxValue.EndToStart -> {
-                                    eventToDelete = event
-                                    false
-                                }
-                                else -> false
-                            }
-                        }
-                    )
-
-                    SwipeToDismissBox(
-                        state = dismissState,
-                        backgroundContent = {
-                            val color = when (dismissState.dismissDirection) {
-                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primaryContainer
-                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                                else -> MaterialTheme.colorScheme.surface
-                            }
-                            val icon = when (dismissState.dismissDirection) {
-                                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.PlayArrow
-                                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                                else -> null
-                            }
-                            val alignment = when (dismissState.dismissDirection) {
-                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                                else -> Alignment.Center
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color, MaterialTheme.shapes.medium)
-                                    .padding(horizontal = 20.dp),
-                                contentAlignment = alignment
-                            ) {
-                                icon?.let { Icon(it, contentDescription = null) }
-                            }
-                        },
-                        enableDismissFromStartToEnd = true,
-                        enableDismissFromEndToStart = true
-                    ) {
-                        EventSummaryCard(
-                            event = event, 
-                            onClick = { 
-                                editingEventId = event.id
+                // Active event inline
+                if (activeEvent != null) {
+                    val currentActiveEvent = activeEvent!!
+                    item {
+                        CompactActiveChip(
+                            event = currentActiveEvent,
+                            elapsedMinutes = elapsedMinutes,
+                            onStop = { viewModel.stopActiveEvent() },
+                            onClick = {
+                                editingEventId = currentActiveEvent.id
                                 editorSheetVisible = true
                             }
                         )
                     }
+                }
+
+                items(events, key = { it.id }) { event ->
+                    CompactEventSummaryCard(
+                        event = event,
+                        onClick = {
+                            editingEventId = event.id
+                            editorSheetVisible = true
+                        }
+                    )
                 }
                 item {
                     if (events.isEmpty()) {
@@ -407,8 +308,153 @@ fun HomeScreen(
     }
 }
 
+// ===== Compact Components =====
+
 @Composable
-private fun ActiveEventCard(
+private fun CompactTopBar(
+    title: String,
+    onSmartMerge: () -> Unit,
+    onOpenReview: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportJson: () -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "事记本",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.alpha(0.5f)
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onSmartMerge) {
+                Icon(Icons.Default.CleaningServices, contentDescription = "整理记录", modifier = Modifier.size(20.dp))
+            }
+            IconButton(onClick = onOpenReview) {
+                Icon(Icons.Default.QueryStats, contentDescription = "数据统计")
+            }
+            IconButton(onClick = onExportCsv) {
+                Icon(Icons.Default.FileDownload, contentDescription = "导出 CSV")
+            }
+            IconButton(onClick = onExportJson) {
+                Icon(Icons.Default.History, contentDescription = "备份 JSON")
+            }
+        }
+    )
+}
+
+@Composable
+private fun CompactFAB(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "新建事件")
+    }
+}
+
+@Composable
+private fun CompactDayBar(
+    selectedDate: LocalDate,
+    dateLabel: String,
+    onPrevDay: () -> Unit,
+    onNextDay: () -> Unit,
+    onPickDate: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp, horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            IconButton(onClick = onPrevDay) {
+                Icon(Icons.Default.ChevronLeft, contentDescription = "前一天", modifier = Modifier.size(22.dp))
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = dateLabel,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                val today = LocalDate.now()
+                val relativeLabel = when {
+                    selectedDate == today -> "今天"
+                    selectedDate == today.minusDays(1) -> "昨天"
+                    selectedDate == today.plusDays(1) -> "明天"
+                    selectedDate < today.minusDays(1) -> "过去"
+                    selectedDate > today.plusDays(1) -> "未来"
+                    else -> "选择日期"
+                }
+                Text(
+                    text = relativeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            IconButton(onClick = onPickDate) {
+                Icon(Icons.Default.Today, contentDescription = "选择日期", modifier = Modifier.size(22.dp))
+            }
+            IconButton(onClick = onNextDay) {
+                Icon(Icons.Default.ChevronRight, contentDescription = "后一天", modifier = Modifier.size(22.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactQuickInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        placeholder = {
+            Text("记录今天…", style = MaterialTheme.typography.bodySmall)
+        },
+        singleLine = true,
+        shape = MaterialTheme.shapes.small,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        ),
+        trailingIcon = {
+            if (value.isNotBlank()) {
+                IconButton(onClick = onSend) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "开始", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                }
+            }
+        },
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+            imeAction = androidx.compose.ui.text.input.ImeAction.Go
+        ),
+        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+            onGo = { onSend() }
+        )
+    )
+}
+
+/** Compact active-event chip — replaces the big ActiveEventCard */
+@Composable
+private fun CompactActiveChip(
     event: EventEntity,
     elapsedMinutes: Long,
     onStop: () -> Unit,
@@ -419,228 +465,57 @@ private fun ActiveEventCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+        ),
+        shape = MaterialTheme.shapes.small,
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 10.dp, vertical = 6.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "正在进行",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "已持续 ${elapsedMinutes} 分钟",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                )
-            }
-            
-            Button(
-                onClick = onStop,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("结束")
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatsDashboard(events: List<EventEntity>, topGoal: com.doer.shijiben.ui.GoalProgress?) {
-    val totalMinutes = events.sumOf { (it.endTimeMillis - it.startTimeMillis) / 60_000L }
-    val hours = totalMinutes / 60
-    val mins = totalMinutes % 60
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.QueryStats, 
-                            contentDescription = null, 
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text("今日统计", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = if (hours > 0) "${hours}h ${mins}m" else "${mins}m",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = " / 总时长",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
-                        )
-                    }
-                }
-                
-                Column(horizontalAlignment = Alignment.End) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${events.size}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                    Text(
-                        text = "项事件",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-
-            if (topGoal != null) {
-                Spacer(Modifier.height(16.dp))
-                androidx.compose.material3.HorizontalDivider(
-                    thickness = 0.5.dp, 
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                )
-                Spacer(Modifier.height(12.dp))
-                
-                val currentH = topGoal.currentMinutes / 60
-                val targetH = topGoal.targetMinutes / 60
-                val progress = (topGoal.currentMinutes.toFloat() / topGoal.targetMinutes.toFloat()).coerceAtMost(1f)
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "目标: ${topGoal.name}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${currentH}h / ${targetH}h",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                androidx.compose.material3.LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DaySelectorRow(
-    selectedDate: LocalDate,
-    dateLabel: String,
-    onPrevDay: () -> Unit,
-    onNextDay: () -> Unit,
-    onPickDate: () -> Unit,
-) {
-    val today = LocalDate.now()
-    val relativeLabel = when {
-        selectedDate == today -> "今天"
-        selectedDate == today.minusDays(1) -> "昨天"
-        selectedDate == today.plusDays(1) -> "明天"
-        selectedDate < today.minusDays(1) -> "过去"
-        selectedDate > today.plusDays(1) -> "未来"
-        else -> "选择日期"
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        IconButton(onClick = onPrevDay) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = "前一天")
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onPickDate),
-        ) {
+            // Live indicator
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+            )
+            Spacer(Modifier.width(8.dp))
             Text(
-                text = dateLabel,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                text = event.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = relativeLabel,
+                text = "${elapsedMinutes}m",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.primary,
             )
-        }
-        IconButton(onClick = onNextDay) {
-            Icon(Icons.Default.ChevronRight, contentDescription = "后一天")
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(
+                onClick = onStop,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.height(26.dp),
+            ) {
+                Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(3.dp))
+                Text("结束", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
 
 @Composable
-private fun EventSummaryCard(
+private fun CompactEventSummaryCard(
     event: EventEntity,
     onClick: () -> Unit,
 ) {
@@ -656,58 +531,56 @@ private fun EventSummaryCard(
         "进行中"
     } else {
         val minutes = ((event.endTimeMillis - event.startTimeMillis) / 60_000L).toInt()
-        "${minutes.coerceAtLeast(0)}分"
+        "${minutes.coerceAtLeast(0)}m"
     }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isInProgress) accentColor.copy(alpha = 0.6f)
-            else MaterialTheme.colorScheme.outlineVariant,
-        ),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.small,
+        tonalElevation = if (isInProgress) 1.dp else 0.dp,
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Accent line on left
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .background(
+                        if (isInProgress) accentColor
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        shape = MaterialTheme.shapes.small
+                    )
+            )
+            Spacer(Modifier.width(10.dp))
             Text(
                 text = event.name,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            Spacer(Modifier.width(4.dp))
             Text(
                 text = timeRange,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = if (isInProgress) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                modifier = Modifier.padding(start = 8.dp),
             )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = durationLabel,
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isInProgress) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .size(20.dp),
+                fontWeight = FontWeight.Medium,
             )
         }
     }
