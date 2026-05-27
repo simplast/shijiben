@@ -313,20 +313,55 @@ class EventViewModel(
         }
     }
 
-    fun quickStartEvent(name: String) {
+    fun quickAddEvent(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
         viewModelScope.launch {
-            // First stop any current active event
-            stopActiveEvent()
-            
-            val now = System.currentTimeMillis()
-            val newEvent = EventEntity(
-                name = name,
-                startTimeMillis = now,
-                endTimeMillis = now, // Placeholder
-                dayKey = "", // Will be derived in repository
-                status = "IN_PROGRESS"
+            val dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            repository.upsert(
+                EventEntity(
+                    name = trimmed,
+                    startTimeMillis = 0L,
+                    endTimeMillis = 0L,
+                    dayKey = dayKey,
+                    status = "PENDING"
+                )
             )
-            repository.upsert(newEvent)
+        }
+    }
+
+    fun quickStartEvent(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            stopActiveEvent()
+
+            val now = System.currentTimeMillis()
+            repository.upsert(
+                EventEntity(
+                    name = trimmed,
+                    startTimeMillis = now,
+                    endTimeMillis = now,
+                    dayKey = "",
+                    status = "IN_PROGRESS"
+                )
+            )
+        }
+    }
+
+    fun startEvent(event: EventEntity) {
+        viewModelScope.launch {
+            stopActiveEvent()
+
+            val now = System.currentTimeMillis()
+            repository.upsert(
+                event.copy(
+                    startTimeMillis = now,
+                    endTimeMillis = now,
+                    dayKey = "",
+                    status = "IN_PROGRESS"
+                )
+            )
         }
     }
 

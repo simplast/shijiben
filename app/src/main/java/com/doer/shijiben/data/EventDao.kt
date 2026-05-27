@@ -14,7 +14,7 @@ interface EventDao {
         """
         SELECT * FROM events 
         WHERE dayKey = :dayKey 
-        ORDER BY startTimeMillis ASC
+        ORDER BY CASE WHEN status = 'PENDING' THEN id ELSE startTimeMillis END ASC
         """,
     )
     fun observeEventsForDay(dayKey: String): Flow<List<EventEntity>>
@@ -31,13 +31,13 @@ interface EventDao {
     @Delete
     suspend fun delete(event: EventEntity)
 
-    /** Distinct trimmed names ordered by last use (`startTimeMillis`), for quick-pick. */
+    /** Distinct trimmed names ordered by usage frequency, for quick-pick. */
     @Query(
         """
         SELECT trim(name) AS name FROM events
         WHERE trim(name) != ''
         GROUP BY trim(name)
-        ORDER BY MAX(startTimeMillis) DESC
+        ORDER BY COUNT(*) DESC, MAX(startTimeMillis) DESC
         LIMIT 10
         """,
     )

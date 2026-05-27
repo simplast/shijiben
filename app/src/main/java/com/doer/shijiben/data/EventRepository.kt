@@ -41,5 +41,6 @@ class EventRepository(
     }
 
     private fun EventEntity.withDerivedDayKey(): EventEntity =
-        copy(dayKey = TimeFormats.dayKeyFromMillis(startTimeMillis))
+        if (status == "PENDING" && dayKey.isNotBlank()) this
+        else copy(dayKey = TimeFormats.dayKeyFromMillis(startTimeMillis))
 }

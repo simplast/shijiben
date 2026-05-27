@@ -1,0 +1,56 @@
+schema: spec-driven
+
+context: |
+  Project: 事记本 (Shijiben), a Chinese-language Android app for daily event logging.
+
+  Purpose:
+  Keep event capture low-friction: pick a day, write one short event name, preserve start/end times and duration, then review the day later.
+
+  Product principles:
+  - Chinese UI copy for all user-visible strings.
+  - Calm, restrained diary-like feel, not a heavy project-management workflow.
+  - Prefer small, focused changes that strengthen quick capture and daily review.
+  - Avoid feature creep, broad refactors, and complex workflows unless explicitly justified.
+
+  Technical stack:
+  - Kotlin
+  - Jetpack Compose
+  - Material 3
+  - Room / SQLite (`shijiben.db`, table `events`)
+  - Navigation Compose
+  - ViewModel + StateFlow
+  - minSdk 26
+  - JDK 17
+
+  Architecture:
+  Main package: `app/src/main/java/com/doer/shijiben/`
+  - `data/`: EventEntity, EventDao, EventRepository, AppDatabase, TimeFormats
+  - `ui/`: EventViewModel, theme, screens, navigation
+  - `MainActivity.kt`
+  - `ShijibenApplication.kt`: repository singleton
+
+  Important screens:
+  - `ui/screens/HomeScreen.kt`: daily stats, event list, bottom date bar, FAB opens editor
+  - `ui/screens/EventEditorScreen.kt`: bottom-sheet editor via `EventEditorContent`
+  - `ui/screens/DayPickerDialog.kt`: shared date picker
+
+  Data model:
+  `EventEntity`: `id`, `name`, `startTimeMillis`, `endTimeMillis`, `dayKey`, `status`.
+  Statuses: `IN_PROGRESS`, `COMPLETED`.
+
+  Database changes must increment `AppDatabase.version` and add a real migration.
+  Do not use `fallbackToDestructiveMigration()`.
+
+  Build / verification:
+  Use `./gradlew assembleDebug`.
+  Release builds may require local signing configuration.
+
+rules:
+  proposal:
+    - Keep proposals focused on one product change.
+    - Include explicit non-goals when a feature could expand into project-management complexity.
+  specs:
+    - User-visible behavior and acceptance criteria should be written for Chinese UI behavior.
+  tasks:
+    - Keep implementation tasks small and scoped to existing Compose / Room patterns.
+    - Include `./gradlew assembleDebug` as verification when Android code changes.

@@ -11,7 +11,7 @@ data class EventEntity(
     val endTimeMillis: Long,
     /** Local-date key (`yyyy-MM-dd`) derived from start time for daily queries. */
     val dayKey: String,
-    /** Status of the event: "IN_PROGRESS" or "COMPLETED" */
+    /** Status of the event: "PENDING", "IN_PROGRESS" or "COMPLETED" */
     val status: String = "COMPLETED",
     /** Optional category (e.g., Work, Study, Life) */
     val category: String? = null,
