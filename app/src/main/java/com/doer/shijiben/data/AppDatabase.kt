@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [EventEntity::class, GoalEntity::class],
-    version = 4,
+    version = 6,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -43,13 +43,27 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `goals` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                        `name` TEXT NOT NULL, 
-                        `targetMinutes` INTEGER NOT NULL, 
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `targetMinutes` INTEGER NOT NULL,
                         `weekKey` TEXT NOT NULL
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        /** v4 → v6: skip v5, no schema changes (placeholder for unknown v5 schema) */
+        private val MIGRATION_4_6 = object : Migration(4, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // No schema changes - v5 schema matched v4
+            }
+        }
+
+        /** v5 → v6: no schema changes */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // No schema changes
             }
         }
 
@@ -60,7 +74,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "shijiben.db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_6, MIGRATION_5_6)
                     .build().also { instance = it }
             }
     }

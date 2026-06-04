@@ -1,9 +1,13 @@
 # minimal-line-home Specification
 
 ## Purpose
-TBD - created by archiving change minimal-line-home-redesign. Update Purpose after archive.
+
+Minimal line-frame homepage for daily event logging with completed/pending sections.
+
 ## Requirements
+
 ### Requirement: Minimal line-frame homepage
+
 The homepage SHALL present primary daily logging content in a compact line-frame style without event cards, elevated surfaces, FAB-first creation, or a bottom date component.
 
 #### Scenario: Homepage opens with line-frame layout
@@ -18,7 +22,32 @@ The homepage SHALL present primary daily logging content in a compact line-frame
 - **WHEN** the user taps the top-left calendar icon
 - **THEN** the DayPickerDialog opens for date selection
 
+### Requirement: 首页已完成区块
+
+首页 SHALL 在顶部显示"今天已完成"区块，包含当天所有 COMPLETED 状态的事件。
+
+#### Scenario: 已完成区块显示
+- **WHEN** 用户打开首页且当天存在已完成事件
+- **THEN** 屏幕顶部显示"今天已完成"标题，下方列出所有已完成事件
+
+#### Scenario: 已完成区块为空
+- **WHEN** 当天没有任何已完成事件
+- **THEN** 已完成区块显示为空状态区域
+
+### Requirement: 首页待办区块
+
+首页 SHALL 在底部显示"今日待办"区块，包含当天所有 PENDING 和 IN_PROGRESS 状态的事件。
+
+#### Scenario: 待办区块显示
+- **WHEN** 用户打开首页
+- **THEN** 屏幕底部显示"今日待办"标题，下方列出所有未完成事件
+
+#### Scenario: 待办区块显示推荐信息
+- **WHEN** 待办区块有推荐事件
+- **THEN** 显示"今日待办 (X/5)"格式的标题，X为已完成推荐数
+
 ### Requirement: Name-only event creation
+
 The homepage SHALL allow a user to create an event by entering only a name.
 
 #### Scenario: Add event by name
@@ -30,6 +59,7 @@ The homepage SHALL allow a user to create an event by entering only a name.
 - **THEN** no event is created
 
 ### Requirement: Not-started events behave as todos
+
 A newly added event SHALL be shown as a not-started todo until the user starts it.
 
 #### Scenario: New event shows todo state
@@ -41,6 +71,7 @@ A newly added event SHALL be shown as a not-started todo until the user starts i
 - **THEN** the event status becomes in-progress and timing begins from the current time
 
 ### Requirement: Active event self-timing
+
 An in-progress event SHALL show elapsed time and a stop action on its homepage row.
 
 #### Scenario: Active event elapsed time updates
@@ -51,21 +82,14 @@ An in-progress event SHALL show elapsed time and a stop action on its homepage r
 - **WHEN** the user taps stop on an in-progress event row
 - **THEN** the event status becomes completed and the end time is saved
 
-### Requirement: Frequent event shortcuts
-The homepage SHALL show the 10 most frequently used event names by default for quick reuse.
+### Requirement: Repeat event with "again" action
 
-#### Scenario: Frequent names displayed
-- **WHEN** the homepage is displayed and historical event names exist
-- **THEN** up to 10 names are shown as compact shortcuts ordered by usage frequency
+A completed event SHALL allow user to create a new pending event with the same name.
 
-#### Scenario: Shortcut adds todo event
-- **WHEN** the user taps a frequent-name shortcut
-- **THEN** a not-started event with that name is added to the selected day
+#### Scenario: Tap "again" on completed event
+- **WHEN** user taps "再来一次" button on a completed event
+- **THEN** a new pending event with the same name is created for today
 
-### Requirement: Compact no-scroll priority
-The homepage SHALL prioritize fitting the input line, frequent shortcuts, and normal daily event rows without requiring scrolling in common cases.
-
-#### Scenario: Common day fits primary content
-- **WHEN** the selected day has a small number of events and up to 10 frequent shortcuts
-- **THEN** the primary controls and rows are visible in a compact vertical layout
-
+#### Scenario: Completed event shows "again" button
+- **WHEN** an event is completed
+- **THEN** its row shows a "再来一次" button
