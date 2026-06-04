@@ -57,4 +57,19 @@ interface EventDao {
 
     @Query("SELECT * FROM events ORDER BY startTimeMillis DESC")
     suspend fun getAllEvents(): List<EventEntity>
+
+    /**
+     * Get top event names by total occurrence count in the given day range.
+     * Usually startDay is 14 days before today (in yyyy-MM-dd format).
+     */
+    @Query(
+        """
+        SELECT trim(name) AS name FROM events
+        WHERE dayKey >= :startDay AND trim(name) != ''
+        GROUP BY trim(name)
+        ORDER BY COUNT(*) DESC, MAX(startTimeMillis) DESC
+        LIMIT :limit
+        """,
+    )
+    fun getTopEventNamesInRange(startDay: String, limit: Int = 5): Flow<List<String>>
 }

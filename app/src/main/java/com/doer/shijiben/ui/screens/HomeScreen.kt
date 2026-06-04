@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,13 +28,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,9 +76,10 @@ fun HomeScreen(
 ) {
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dateLabel by viewModel.selectedDateLabel.collectAsState()
-    val events by viewModel.eventsForSelectedDay.collectAsState()
     val elapsedMinutes by viewModel.activeEventElapsedMinutes.collectAsState()
-    val frequentNames by viewModel.recentDistinctEventNames.collectAsState()
+    val recommendedNames by viewModel.recommendedEventNames.collectAsState()
+    val completedEvents by viewModel.completedEventsForSelectedDay.collectAsState()
+    val pendingEvents by viewModel.pendingEventsForSelectedDay.collectAsState()
 
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -168,7 +168,6 @@ fun HomeScreen(
             LineTopBar(
                 dateLabel = dateLabel,
                 onPickDate = { datePickerVisible = true },
-                onSmartMerge = { viewModel.smartMergeEvents() },
                 onOpenReview = onOpenReview,
                 onExportCsv = {
                     csvExportLauncher.launch("shijiben_export_${System.currentTimeMillis()}.csv")
@@ -192,13 +191,6 @@ fun HomeScreen(
                 },
             )
 
-            if (frequentNames.isNotEmpty()) {
-                FrequentNameLines(
-                    names = frequentNames,
-                    onNameClick = { viewModel.quickAddEvent(it) },
-                )
-            }
-
             Hairline()
 
             LazyColumn(
@@ -206,21 +198,31 @@ fun HomeScreen(
                 contentPadding = PaddingValues(bottom = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
-                if (events.isEmpty()) {
-                    item {
-                        EmptyLine()
-                    }
-                }
-                items(events, key = { it.id }) { event ->
-                    LineEventRow(
-                        event = event,
-                        activeElapsedMinutes = elapsedMinutes,
-                        onStart = { viewModel.startEvent(event) },
-                        onStop = { viewModel.stopActiveEvent() },
-                        onClick = {
-                            editingEventId = event.id
+                item {
+                    CompletedSection(
+                        events = completedEvents,
+                        onRestart = { viewModel.restartEvent(it) },
+                        onDelete = { viewModel.deleteEvent(it) },
+                        onOpen = {
+                            editingEventId = it.id
                             editorSheetVisible = true
-                        },
+                        }
+                    )
+                }
+
+                item {
+                    PendingSection(
+                        events = pendingEvents,
+                        recommendedNames = recommendedNames,
+                        activeElapsedMinutes = elapsedMinutes,
+                        onStart = { viewModel.startEvent(it) },
+                        onStop = { viewModel.stopActiveEvent() },
+                        onAdd = { viewModel.quickAddEvent(it) },
+                        onDelete = { viewModel.deleteEvent(it) },
+                        onOpen = {
+                            editingEventId = it.id
+                            editorSheetVisible = true
+                        }
                     )
                 }
             }
@@ -229,10 +231,264 @@ fun HomeScreen(
 }
 
 @Composable
+private fun CompletedSection(
+    events: List<EventEntity>,
+    onRestart: (EventEntity) -> Unit,
+    onDelete: (EventEntity) -> Unit,
+    onOpen: (EventEntity) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "今天已完成",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.alpha(0.72f),
+        )
+        Spacer(Modifier.height(4.dp))
+
+        if (events.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "暂无记录",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.alpha(0.5f),
+                )
+            }
+        } else {
+            events.forEach { event ->
+                EventRowWithDelete(
+                    event = event,
+                    activeElapsedMinutes = 0L,
+                    onRestart = { onRestart(event) },
+                    onDelete = { onDelete(event) },
+                    onClick = { onOpen(event) },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Hairline()
+    }
+}
+
+@Composable
+private fun PendingSection(
+    events: List<EventEntity>,
+    recommendedNames: List<String>,
+    activeElapsedMinutes: Long,
+    onStart: (EventEntity) -> Unit,
+    onStop: () -> Unit,
+    onAdd: (String) -> Unit,
+    onDelete: (EventEntity) -> Unit,
+    onOpen: (EventEntity) -> Unit
+) {
+    // Get names that are already in pending/completed to avoid duplicates in recommendations
+    val existingNames = events.map { it.name.trim() }.toSet()
+    val completedNames = events.filter { it.status == "COMPLETED" }.map { it.name.trim() }.toSet()
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "今日待办",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.alpha(0.72f),
+        )
+        Spacer(Modifier.height(4.dp))
+
+        // Show recommendations first
+        recommendedNames.forEach { name ->
+            val trimmedName = name.trim()
+            val hasPending = existingNames.contains(trimmedName)
+            val isCompleted = completedNames.contains(trimmedName)
+
+            if (!hasPending) {
+                RecommendationItem(
+                    name = trimmedName,
+                    isCompleted = isCompleted,
+                    onAdd = { onAdd(trimmedName) }
+                )
+            }
+        }
+
+        // Then show the actual pending events
+        events.forEach { event ->
+            EventRowWithDelete(
+                event = event,
+                activeElapsedMinutes = activeElapsedMinutes,
+                onStart = { onStart(event) },
+                onStop = onStop,
+                onDelete = { onDelete(event) },
+                onClick = { onOpen(event) },
+            )
+        }
+
+        if (recommendedNames.isEmpty() && events.isEmpty()) {
+            EmptyLine()
+        }
+    }
+}
+
+@Composable
+private fun RecommendationItem(
+    name: String,
+    isCompleted: Boolean,
+    onAdd: () -> Unit
+) {
+    val color = if (isCompleted) {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clickable(onClick = onAdd, enabled = !isCompleted),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .height(20.dp)
+                .background(
+                    if (isCompleted) {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color,
+            fontWeight = if (isCompleted) FontWeight.Normal else FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        if (!isCompleted) {
+            TextButton(onClick = onAdd, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                Text("添加", style = MaterialTheme.typography.labelSmall)
+            }
+        } else {
+            Text(
+                text = "已完成",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+            Spacer(Modifier.width(8.dp))
+        }
+    }
+    Hairline(alpha = 0.45f)
+}
+
+@Composable
+private fun EventRowWithDelete(
+    event: EventEntity,
+    activeElapsedMinutes: Long,
+    onStart: (() -> Unit)? = null,
+    onStop: (() -> Unit)? = null,
+    onRestart: (() -> Unit)? = null,
+    onDelete: () -> Unit,
+    onClick: () -> Unit,
+) {
+    val isPending = event.status == "PENDING"
+    val isActive = event.status == "IN_PROGRESS"
+    val isCompleted = event.status == "COMPLETED"
+    val accent = when {
+        isActive -> MaterialTheme.colorScheme.primary
+        isPending -> MaterialTheme.colorScheme.outline
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val meta = when {
+        isPending -> "待开始"
+        isActive -> "${activeElapsedMinutes}m"
+        isCompleted -> {
+            val minutes = ((event.endTimeMillis - event.startTimeMillis) / 60_000L).coerceAtLeast(0L)
+            "${TimeFormats.formatTimeMillis(event.startTimeMillis)}—${TimeFormats.formatTimeMillis(event.endTimeMillis)} · ${minutes}m"
+        }
+        else -> event.status
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(20.dp)
+                    .background(accent)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = event.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = meta,
+                style = MaterialTheme.typography.labelSmall,
+                color = accent,
+                maxLines = 1,
+            )
+            Spacer(Modifier.width(4.dp))
+            if (isPending) {
+                TextButton(onClick = onStart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Text("开始", style = MaterialTheme.typography.labelSmall)
+                }
+            } else if (isActive) {
+                OutlinedButton(
+                    onClick = onStop!!,
+                    contentPadding = PaddingValues(horizontal = 6.dp),
+                    modifier = Modifier.height(28.dp),
+                ) {
+                    Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Text("结束", style = MaterialTheme.typography.labelSmall)
+                }
+            } else if (isCompleted) {
+                TextButton(onClick = onRestart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Text("再来一次", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "删除",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                )
+            }
+        }
+        Hairline(alpha = 0.45f)
+    }
+}
+
+@Composable
 private fun LineTopBar(
     dateLabel: String,
     onPickDate: () -> Unit,
-    onSmartMerge: () -> Unit,
     onOpenReview: () -> Unit,
     onExportCsv: () -> Unit,
     onExportJson: () -> Unit,
@@ -256,9 +512,6 @@ private fun LineTopBar(
                 .weight(1f)
                 .clickable(onClick = onPickDate),
         )
-        IconButton(onClick = onSmartMerge) {
-            Icon(Icons.Default.CleaningServices, contentDescription = "整理记录", modifier = Modifier.size(18.dp))
-        }
         IconButton(onClick = onOpenReview) {
             Icon(Icons.Default.QueryStats, contentDescription = "数据统计", modifier = Modifier.size(18.dp))
         }
@@ -318,127 +571,6 @@ private fun QuickNameLine(
         IconButton(onClick = onAdd) {
             Icon(Icons.Default.Add, contentDescription = "添加", modifier = Modifier.size(20.dp))
         }
-    }
-}
-
-@Composable
-private fun FrequentNameLines(
-    names: List<String>,
-    onNameClick: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 6.dp),
-    ) {
-        Text(
-            text = "常用",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.alpha(0.72f),
-        )
-        Spacer(Modifier.height(4.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            names.take(10).forEach { name ->
-                AssistChip(
-                    onClick = { onNameClick(name) },
-                    label = {
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    leadingIcon = {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .background(MaterialTheme.colorScheme.outline, CircleShape)
-                        )
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LineEventRow(
-    event: EventEntity,
-    activeElapsedMinutes: Long,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onClick: () -> Unit,
-) {
-    val isPending = event.status == "PENDING"
-    val isActive = event.status == "IN_PROGRESS"
-    val isCompleted = event.status == "COMPLETED"
-    val accent = when {
-        isActive -> MaterialTheme.colorScheme.primary
-        isPending -> MaterialTheme.colorScheme.outline
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val meta = when {
-        isPending -> "待开始"
-        isActive -> "${activeElapsedMinutes}m"
-        isCompleted -> {
-            val minutes = ((event.endTimeMillis - event.startTimeMillis) / 60_000L).coerceAtLeast(0L)
-            "${TimeFormats.formatTimeMillis(event.startTimeMillis)}—${TimeFormats.formatTimeMillis(event.endTimeMillis)} · ${minutes}m"
-        }
-        else -> event.status
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clickable(onClick = onClick),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(20.dp)
-                    .background(accent)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = event.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = meta,
-                style = MaterialTheme.typography.labelSmall,
-                color = accent,
-                maxLines = 1,
-            )
-            Spacer(Modifier.width(8.dp))
-            if (isPending) {
-                TextButton(onClick = onStart, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Text("开始", style = MaterialTheme.typography.labelSmall)
-                }
-            } else if (isActive) {
-                OutlinedButton(
-                    onClick = onStop,
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                    modifier = Modifier.height(28.dp),
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Text("结束", style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-        Hairline(alpha = 0.45f)
     }
 }
 

@@ -82,6 +82,47 @@ class EventViewModel(
             emptyList(),
         )
 
+    val recommendedEventNames: StateFlow<List<String>> =
+        _selectedDate
+            .flatMapLatest { date: LocalDate ->
+                val startDate = date.minusDays(13) // 14 days including the selected date
+                val startKey = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                repository.getTopEventNamesInRange(startKey, limit = 5)
+            }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList(),
+            )
+
+    val completedEventsForSelectedDay: StateFlow<List<EventEntity>> =
+        eventsForSelectedDay.map { events ->
+            events.filter { it.status == "COMPLETED" }
+                .sortedByDescending { it.endTimeMillis }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
+    val pendingEventsForSelectedDay: StateFlow<List<EventEntity>> =
+        eventsForSelectedDay.map { events ->
+            events.filter { it.status == "PENDING" || it.status == "IN_PROGRESS" }
+                .sortedWith(
+                    compareBy<EventEntity> {
+                        when (it.status) {
+                            "IN_PROGRESS" -> 0
+                            "PENDING" -> 1
+                            else -> 2
+                        }
+                    }.thenBy { it.id }
+                )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
+
     val activeEvent: StateFlow<EventEntity?> =
         repository.observeActiveEvent().stateIn(
             viewModelScope,
@@ -306,10 +347,77 @@ class EventViewModel(
         viewModelScope.launch {
             val currentActive = activeEvent.value ?: return@launch
             val now = System.currentTimeMillis()
-            upsert(currentActive.copy(
+            val dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            val completedEvent = currentActive.copy(
                 endTimeMillis = now,
+                dayKey = dayKey,
                 status = "COMPLETED"
-            ))
+            )
+            upsert(completedEvent)
+
+            // Smart merge as default behavior
+            val events = eventsForSelectedDay.value
+                .filter { it.status == "COMPLETED" }
+                .sortedBy { it.startTimeMillis }
+
+            if (events.size >= 2) {
+                val toDelete = mutableListOf<EventEntity>()
+                val toUpdate = mutableListOf<EventEntity>()
+
+                var current = events[0]
+                for (i in 1 until events.size) {
+                    val next = events[i]
+                    // Criteria: Same name AND Gap < 5 minutes
+                    val gap = next.startTimeMillis - current.endTimeMillis
+                    if (current.name.trim() == next.name.trim() && gap < 5 * 60_000L) {
+                        // Merge next into current
+                        current = current.copy(
+                            endTimeMillis = maxOf(current.endTimeMillis, next.endTimeMillis)
+                        )
+                        toDelete.add(next)
+                    } else {
+                        if (current !== events[i - 1]) {
+                            toUpdate.add(current)
+                        }
+                        current = next
+                    }
+                }
+                if (current !== events.last() || (toUpdate.isEmpty() && toDelete.isNotEmpty())) {
+                    toUpdate.add(current)
+                }
+
+                toDelete.forEach { repository.delete(it) }
+                toUpdate.forEach { repository.upsert(it) }
+            }
+        }
+    }
+
+    fun restartEvent(event: EventEntity) {
+        val trimmed = event.name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            repository.upsert(
+                EventEntity(
+                    name = trimmed,
+                    startTimeMillis = 0L,
+                    endTimeMillis = 0L,
+                    dayKey = dayKey,
+                    status = "PENDING"
+                )
+            )
+        }
+    }
+
+    fun deleteEvent(event: EventEntity) {
+        viewModelScope.launch {
+            // If the event is active, stop it first
+            if (event.status == "IN_PROGRESS") {
+                stopActiveEvent()
+                // Wait a bit for the stop to complete and then delete
+                delay(100)
+            }
+            repository.delete(event)
         }
     }
 

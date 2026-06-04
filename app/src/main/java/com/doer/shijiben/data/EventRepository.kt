@@ -12,6 +12,9 @@ class EventRepository(
     fun observeRecentDistinctEventNames(): Flow<List<String>> =
         dao.observeRecentDistinctNames()
 
+    fun getTopEventNamesInRange(startDay: String, limit: Int = 5): Flow<List<String>> =
+        dao.getTopEventNamesInRange(startDay, limit)
+
     fun observeActiveEvent(): Flow<EventEntity?> = dao.observeActiveEvent()
 
     fun observeEventsInRange(startDay: String, endDay: String): Flow<List<EventEntity>> =
