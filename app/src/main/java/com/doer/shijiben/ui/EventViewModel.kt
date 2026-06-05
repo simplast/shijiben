@@ -45,6 +45,10 @@ data class DaySummary(val dateLabel: String, val totalMinutes: Long, val count: 
 data class EventSummary(val name: String, val totalMinutes: Long, val count: Int)
 data class GoalProgress(val name: String, val targetMinutes: Long, val currentMinutes: Long)
 
+enum class DatePerspective {
+    PAST, TODAY, FUTURE
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventViewModel(
     private val repository: EventRepository,
@@ -55,6 +59,20 @@ class EventViewModel(
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
+
+    val datePerspective: StateFlow<DatePerspective> =
+        _selectedDate.map { date ->
+            val today = LocalDate.now()
+            when {
+                date.isBefore(today) -> DatePerspective.PAST
+                date.isAfter(today) -> DatePerspective.FUTURE
+                else -> DatePerspective.TODAY
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            DatePerspective.TODAY
+        )
 
     val selectedDateLabel: StateFlow<String> =
         _selectedDate.map { it.format(selectedDateFormatter) }.stateIn(

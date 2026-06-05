@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.doer.shijiben.data.EventEntity
 import com.doer.shijiben.data.TimeFormats
+import com.doer.shijiben.ui.DatePerspective
 import com.doer.shijiben.ui.EventViewModel
 import kotlinx.coroutines.launch
 
@@ -76,6 +77,7 @@ fun HomeScreen(
 ) {
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dateLabel by viewModel.selectedDateLabel.collectAsState()
+    val datePerspective by viewModel.datePerspective.collectAsState()
     val elapsedMinutes by viewModel.activeEventElapsedMinutes.collectAsState()
     val recommendedNames by viewModel.recommendedEventNames.collectAsState()
     val completedEvents by viewModel.completedEventsForSelectedDay.collectAsState()
@@ -179,19 +181,21 @@ fun HomeScreen(
 
             Hairline()
 
-            QuickNameLine(
-                value = quickInputName,
-                onValueChange = { quickInputName = it },
-                onAdd = {
-                    val name = quickInputName.trim()
-                    if (name.isNotEmpty()) {
-                        viewModel.quickAddEvent(name)
-                        quickInputName = ""
-                    }
-                },
-            )
+            if (datePerspective != DatePerspective.PAST) {
+                QuickNameLine(
+                    value = quickInputName,
+                    onValueChange = { quickInputName = it },
+                    onAdd = {
+                        val name = quickInputName.trim()
+                        if (name.isNotEmpty()) {
+                            viewModel.quickAddEvent(name)
+                            quickInputName = ""
+                        }
+                    },
+                )
 
-            Hairline()
+                Hairline()
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -201,6 +205,7 @@ fun HomeScreen(
                 item {
                     CompletedSection(
                         events = completedEvents,
+                        datePerspective = datePerspective,
                         onRestart = { viewModel.restartEvent(it) },
                         onDelete = { viewModel.deleteEvent(it) },
                         onOpen = {
@@ -213,6 +218,7 @@ fun HomeScreen(
                 item {
                     PendingSection(
                         events = pendingEvents,
+                        datePerspective = datePerspective,
                         recommendedNames = recommendedNames,
                         activeElapsedMinutes = elapsedMinutes,
                         onStart = { viewModel.startEvent(it) },
@@ -233,6 +239,7 @@ fun HomeScreen(
 @Composable
 private fun CompletedSection(
     events: List<EventEntity>,
+    datePerspective: DatePerspective,
     onRestart: (EventEntity) -> Unit,
     onDelete: (EventEntity) -> Unit,
     onOpen: (EventEntity) -> Unit
@@ -240,7 +247,7 @@ private fun CompletedSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "今天已完成",
+            text = if (datePerspective == DatePerspective.TODAY) "今天已完成" else "已完成",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.alpha(0.72f),
@@ -265,6 +272,7 @@ private fun CompletedSection(
             events.forEach { event ->
                 EventRowWithDelete(
                     event = event,
+                    datePerspective = datePerspective,
                     activeElapsedMinutes = 0L,
                     onRestart = { onRestart(event) },
                     onDelete = { onDelete(event) },
@@ -281,6 +289,7 @@ private fun CompletedSection(
 @Composable
 private fun PendingSection(
     events: List<EventEntity>,
+    datePerspective: DatePerspective,
     recommendedNames: List<String>,
     activeElapsedMinutes: Long,
     onStart: (EventEntity) -> Unit,
@@ -296,7 +305,7 @@ private fun PendingSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "今日待办",
+            text = if (datePerspective == DatePerspective.TODAY) "今日待办" else "待办",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.alpha(0.72f),
@@ -304,17 +313,19 @@ private fun PendingSection(
         Spacer(Modifier.height(4.dp))
 
         // Show recommendations first
-        recommendedNames.forEach { name ->
-            val trimmedName = name.trim()
-            val hasPending = existingNames.contains(trimmedName)
-            val isCompleted = completedNames.contains(trimmedName)
+        if (datePerspective != DatePerspective.PAST) {
+            recommendedNames.forEach { name ->
+                val trimmedName = name.trim()
+                val hasPending = existingNames.contains(trimmedName)
+                val isCompleted = completedNames.contains(trimmedName)
 
-            if (!hasPending) {
-                RecommendationItem(
-                    name = trimmedName,
-                    isCompleted = isCompleted,
-                    onAdd = { onAdd(trimmedName) }
-                )
+                if (!hasPending) {
+                    RecommendationItem(
+                        name = trimmedName,
+                        isCompleted = isCompleted,
+                        onAdd = { onAdd(trimmedName) }
+                    )
+                }
             }
         }
 
@@ -322,6 +333,7 @@ private fun PendingSection(
         events.forEach { event ->
             EventRowWithDelete(
                 event = event,
+                datePerspective = datePerspective,
                 activeElapsedMinutes = activeElapsedMinutes,
                 onStart = { onStart(event) },
                 onStop = onStop,
@@ -330,8 +342,8 @@ private fun PendingSection(
             )
         }
 
-        if (recommendedNames.isEmpty() && events.isEmpty()) {
-            EmptyLine()
+        if (recommendedNames.isEmpty() && events.isEmpty() || (datePerspective == DatePerspective.PAST && events.isEmpty())) {
+            EmptyLine(datePerspective)
         }
     }
 }
@@ -397,6 +409,7 @@ private fun RecommendationItem(
 @Composable
 private fun EventRowWithDelete(
     event: EventEntity,
+    datePerspective: DatePerspective,
     activeElapsedMinutes: Long,
     onStart: (() -> Unit)? = null,
     onStop: (() -> Unit)? = null,
@@ -452,7 +465,7 @@ private fun EventRowWithDelete(
                 maxLines = 1,
             )
             Spacer(Modifier.width(4.dp))
-            if (isPending) {
+            if (isPending && datePerspective == DatePerspective.TODAY) {
                 TextButton(onClick = onStart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
                     Text("开始", style = MaterialTheme.typography.labelSmall)
@@ -466,7 +479,7 @@ private fun EventRowWithDelete(
                     Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
                     Text("结束", style = MaterialTheme.typography.labelSmall)
                 }
-            } else if (isCompleted) {
+            } else if (isCompleted && datePerspective != DatePerspective.PAST) {
                 TextButton(onClick = onRestart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
                     Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                     Text("再来一次", style = MaterialTheme.typography.labelSmall)
@@ -575,7 +588,12 @@ private fun QuickNameLine(
 }
 
 @Composable
-private fun EmptyLine() {
+private fun EmptyLine(datePerspective: DatePerspective) {
+    val text = when (datePerspective) {
+        DatePerspective.PAST -> "那天似乎什么也没发生"
+        DatePerspective.FUTURE -> "这一天还很空，不如规划点什么？"
+        else -> "写下一件事，先不用开始"
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -583,7 +601,7 @@ private fun EmptyLine() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "写下一件事，先不用开始",
+            text = text,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
