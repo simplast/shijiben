@@ -72,4 +72,7 @@ interface EventDao {
         """,
     )
     fun getTopEventNamesInRange(startDay: String, limit: Int = 5): Flow<List<String>>
+
+    @Query("UPDATE events SET dayKey = :todayKey WHERE status = 'PENDING' AND dayKey < :todayKey")
+    suspend fun movePendingTasksToDate(todayKey: String)
 }

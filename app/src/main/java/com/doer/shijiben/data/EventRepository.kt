@@ -30,6 +30,10 @@ class EventRepository(
 
     suspend fun getById(id: Long): EventEntity? = dao.getById(id)
 
+    suspend fun movePendingTasksToDate(todayKey: String) {
+        dao.movePendingTasksToDate(todayKey)
+    }
+
     suspend fun upsert(event: EventEntity) {
         val withDay = event.withDerivedDayKey()
         if (event.id == 0L) {

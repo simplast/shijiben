@@ -300,7 +300,11 @@ private fun PendingSection(
 ) {
     // Get names that are already in pending/completed to avoid duplicates in recommendations
     val existingNames = events.map { it.name.trim() }.toSet()
-    val completedNames = events.filter { it.status == "COMPLETED" }.map { it.name.trim() }.toSet()
+
+    if (datePerspective == DatePerspective.PAST && events.isEmpty()) {
+        EmptyLine(datePerspective)
+        return
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(12.dp))
@@ -313,19 +317,16 @@ private fun PendingSection(
         Spacer(Modifier.height(4.dp))
 
         // Show recommendations first
-        if (datePerspective != DatePerspective.PAST) {
-            recommendedNames.forEach { name ->
-                val trimmedName = name.trim()
-                val hasPending = existingNames.contains(trimmedName)
-                val isCompleted = completedNames.contains(trimmedName)
+        recommendedNames.forEach { name ->
+            val trimmedName = name.trim()
+            val hasPending = existingNames.contains(trimmedName)
 
-                if (!hasPending) {
-                    RecommendationItem(
-                        name = trimmedName,
-                        isCompleted = isCompleted,
-                        onAdd = { onAdd(trimmedName) }
-                    )
-                }
+            if (!hasPending) {
+                RecommendationItem(
+                    name = trimmedName,
+                    isCompleted = false, // VM already handles filtering; if it's here, it's a recommendation
+                    onAdd = { onAdd(trimmedName) }
+                )
             }
         }
 

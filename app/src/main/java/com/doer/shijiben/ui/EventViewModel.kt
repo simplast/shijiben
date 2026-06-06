@@ -60,6 +60,17 @@ class EventViewModel(
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
 
+    init {
+        moveUnfinishedTasksToToday()
+    }
+
+    private fun moveUnfinishedTasksToToday() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val todayKey = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            repository.movePendingTasksToDate(todayKey)
+        }
+    }
+
     val datePerspective: StateFlow<DatePerspective> =
         _selectedDate.map { date ->
             val today = LocalDate.now()
@@ -101,17 +112,20 @@ class EventViewModel(
         )
 
     val recommendedEventNames: StateFlow<List<String>> =
-        _selectedDate
-            .flatMapLatest { date: LocalDate ->
-                val startDate = date.minusDays(13) // 14 days including the selected date
+        combine(_selectedDate, datePerspective) { date, perspective ->
+            if (perspective == DatePerspective.TODAY) {
+                val startDate = date.minusDays(13)
                 val startKey = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
                 repository.getTopEventNamesInRange(startKey, limit = 5)
+            } else {
+                kotlinx.coroutines.flow.flowOf(emptyList())
             }
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList(),
-            )
+        }.flatMapLatest { it }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList(),
+        )
 
     val completedEventsForSelectedDay: StateFlow<List<EventEntity>> =
         eventsForSelectedDay.map { events ->
@@ -124,17 +138,18 @@ class EventViewModel(
         )
 
     val pendingEventsForSelectedDay: StateFlow<List<EventEntity>> =
-        eventsForSelectedDay.map { events ->
-            events.filter { it.status == "PENDING" || it.status == "IN_PROGRESS" }
-                .sortedWith(
-                    compareBy<EventEntity> {
-                        when (it.status) {
-                            "IN_PROGRESS" -> 0
-                            "PENDING" -> 1
-                            else -> 2
-                        }
-                    }.thenBy { it.id }
-                )
+        combine(eventsForSelectedDay, datePerspective) { events, perspective ->
+            events.filter { 
+                it.status == "IN_PROGRESS" || (it.status == "PENDING" && perspective != DatePerspective.PAST)
+            }.sortedWith(
+                compareBy<EventEntity> {
+                    when (it.status) {
+                        "IN_PROGRESS" -> 0
+                        "PENDING" -> 1
+                        else -> 2
+                    }
+                }.thenBy { it.id }
+            )
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
