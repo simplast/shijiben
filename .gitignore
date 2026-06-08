@@ -1,5 +1,9 @@
 *.iml
 .gradle
+.gradle_home/
+.gradle_local/
+.kotlin/
+.codebuddy/
 /local.properties
 /.idea/
 .DS_Store

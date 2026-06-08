@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -70,6 +71,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -86,6 +88,23 @@ import com.doer.shijiben.ui.EventViewModel
 import com.doer.shijiben.ui.theme.ActiveGradientStart
 import com.doer.shijiben.ui.theme.ActiveGradientMiddle
 import com.doer.shijiben.ui.theme.ActiveGradientEnd
+import com.doer.shijiben.ui.theme.StatusPending
+import com.doer.shijiben.ui.theme.StatusActive
+import com.doer.shijiben.ui.theme.StatusCompleted
+import com.doer.shijiben.ui.theme.AccentMint
+import com.doer.shijiben.ui.theme.PrimaryGold
+import com.doer.shijiben.ui.theme.PrimaryGoldSoft
+import com.doer.shijiben.ui.theme.PrimaryGoldDark
+import com.doer.shijiben.ui.theme.PrimaryGoldDeep
+import com.doer.shijiben.ui.theme.WarmGray50
+import com.doer.shijiben.ui.theme.WarmGray100
+import com.doer.shijiben.ui.theme.WarmGray200
+import com.doer.shijiben.ui.theme.WarmGray300
+import com.doer.shijiben.ui.theme.WarmGray500
+import com.doer.shijiben.ui.theme.WarmGray600
+import com.doer.shijiben.ui.theme.BorderWarm
+import com.doer.shijiben.ui.theme.BorderWarmLight
+import com.doer.shijiben.ui.theme.SurfaceWhite
 import kotlinx.coroutines.launch
 
 @Composable
@@ -104,6 +123,10 @@ fun HomeScreen(
     val completedEvents by viewModel.completedEventsForSelectedDay.collectAsState()
     val pendingEvents by viewModel.pendingEventsForSelectedDay.collectAsState()
     val filteredPendingEvents = pendingEvents.filter { it.status != "IN_PROGRESS" }
+
+    val todayTotalMinutes = if (datePerspective == DatePerspective.TODAY) {
+        completedEvents.sumOf { (it.endTimeMillis - it.startTimeMillis) / 60_000L }
+    } else 0L
 
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -191,7 +214,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
             ) {
                 LineTopBar(
                     dateLabel = dateLabel,
@@ -209,6 +232,16 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                // ── Today Overview Hero (only shown for TODAY) ──
+                if (datePerspective == DatePerspective.TODAY) {
+                    TodayOverviewCard(
+                        totalMinutes = todayTotalMinutes,
+                        completedCount = completedEvents.size,
+                        pendingCount = filteredPendingEvents.size,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+
                 activeEvent?.let { event ->
                     ActiveEventCard(
                         event = event,
@@ -223,7 +256,7 @@ fun HomeScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 90.dp),
+                    contentPadding = PaddingValues(bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     item {
@@ -248,6 +281,7 @@ fun HomeScreen(
                             onStart = { viewModel.startEvent(it) },
                             onStop = { viewModel.stopActiveEvent() },
                             onAdd = { viewModel.quickAddEvent(it) },
+                            onQuickStart = { viewModel.quickStartEvent(it) },
                             onDelete = { viewModel.deleteEvent(it) },
                             onOpen = {
                                 editingEventId = it.id
@@ -262,7 +296,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(horizontal = 14.dp, vertical = 16.dp)
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     QuickNameLine(
                         value = quickInputName,
@@ -280,6 +314,87 @@ fun HomeScreen(
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Today Overview Hero Card
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun TodayOverviewCard(
+    totalMinutes: Long,
+    completedCount: Int,
+    pendingCount: Int,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        border = BorderStroke(0.5.dp, BorderWarm),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OverviewStat(
+                value = "${totalMinutes}m",
+                label = "已专注",
+                color = PrimaryGold,
+            )
+            OverviewDivider()
+            OverviewStat(
+                value = "$completedCount",
+                label = "已完成",
+                color = AccentMint,
+            )
+            OverviewDivider()
+            OverviewStat(
+                value = "$pendingCount",
+                label = "待办",
+                color = StatusPending,
+            )
+        }
+    }
+}
+
+@Composable
+private fun OverviewStat(
+    value: String,
+    label: String,
+    color: Color,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = color,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = WarmGray500,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+@Composable
+private fun OverviewDivider() {
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(36.dp)
+            .background(WarmGray200)
+    )
+}
+
+// ═══════════════════════════════════════════════════════════
+// Completed Section
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun CompletedSection(
@@ -301,26 +416,26 @@ private fun CompletedSection(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = WarmGray100
             ),
             border = BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                0.5.dp,
+                BorderWarmLight,
             )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .animateContentSize()
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 if (events.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(56.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
@@ -350,6 +465,10 @@ private fun CompletedSection(
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Pending Section (with Quick-Start recommendations)
+// ═══════════════════════════════════════════════════════════
+
 @Composable
 private fun PendingSection(
     events: List<EventEntity>,
@@ -359,6 +478,7 @@ private fun PendingSection(
     onStart: (EventEntity) -> Unit,
     onStop: () -> Unit,
     onAdd: (String) -> Unit,
+    onQuickStart: (String) -> Unit,
     onDelete: (EventEntity) -> Unit,
     onOpen: (EventEntity) -> Unit
 ) {
@@ -388,22 +508,27 @@ private fun PendingSection(
                     Box(
                         modifier = Modifier
                             .background(
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                                shape = CircleShape
+                                color = PrimaryGoldSoft,
+                                shape = RoundedCornerShape(100.dp)
+                            )
+                            .border(
+                                0.5.dp,
+                                PrimaryGold.copy(alpha = 0.25f),
+                                RoundedCornerShape(100.dp)
                             )
                             .clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
-                                onClick = { onAdd(name) }
+                                onClick = { onQuickStart(name) }
                             )
                             .pressScaleEffect(interactionSource)
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .padding(horizontal = 14.dp, vertical = 7.dp)
                     ) {
                         Text(
                             text = name,
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Medium
+                            color = PrimaryGoldDeep,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -426,26 +551,22 @@ private fun PendingSection(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ),
-            border = BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+            border = BorderStroke(0.5.dp, BorderWarm),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .animateContentSize()
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 if (events.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(56.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
@@ -480,6 +601,10 @@ private fun PendingSection(
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Event Row (simplified: icon buttons, colored status bars)
+// ═══════════════════════════════════════════════════════════
+
 @Composable
 private fun EventRowWithDelete(
     event: EventEntity,
@@ -495,18 +620,17 @@ private fun EventRowWithDelete(
     val isActive = event.status == "IN_PROGRESS"
     val isCompleted = event.status == "COMPLETED"
     val accent = when {
-        isActive -> MaterialTheme.colorScheme.primary
-        isPending -> MaterialTheme.colorScheme.outline
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        isActive -> StatusActive
+        isPending -> StatusPending
+        else -> StatusCompleted
     }
     val meta = when {
-        isPending -> "待开始"
         isActive -> "${activeElapsedMinutes}m"
         isCompleted -> {
             val minutes = ((event.endTimeMillis - event.startTimeMillis) / 60_000L).coerceAtLeast(0L)
             "${TimeFormats.formatTimeMillis(event.startTimeMillis)}—${TimeFormats.formatTimeMillis(event.endTimeMillis)} · ${minutes}m"
         }
-        else -> event.status
+        else -> null
     }
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -514,7 +638,7 @@ private fun EventRowWithDelete(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(56.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -525,9 +649,10 @@ private fun EventRowWithDelete(
     ) {
         Box(
             modifier = Modifier
-                .width(3.dp)
-                .height(20.dp)
-                .background(accent, RoundedCornerShape(1.5.dp))
+                .width(4.dp)
+                .height(22.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(accent)
         )
         Spacer(Modifier.width(10.dp))
         Text(
@@ -538,31 +663,48 @@ private fun EventRowWithDelete(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = meta,
-            style = MaterialTheme.typography.labelSmall,
-            color = accent,
-            maxLines = 1,
-        )
-        Spacer(Modifier.width(4.dp))
+        if (meta != null) {
+            Text(
+                text = meta,
+                style = MaterialTheme.typography.labelSmall,
+                color = accent,
+                maxLines = 1,
+            )
+            Spacer(Modifier.width(4.dp))
+        }
         if (isPending && datePerspective == DatePerspective.TODAY) {
-            TextButton(onClick = onStart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
-                Text("开始", style = MaterialTheme.typography.labelSmall)
+            IconButton(
+                onClick = onStart!!,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = "开始",
+                    modifier = Modifier.size(20.dp),
+                    tint = PrimaryGold,
+                )
             }
         } else if (isActive) {
             OutlinedButton(
                 onClick = onStop!!,
-                contentPadding = PaddingValues(horizontal = 6.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp),
                 modifier = Modifier.height(28.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
                 Text("结束", style = MaterialTheme.typography.labelSmall)
             }
         } else if (isCompleted && datePerspective != DatePerspective.PAST) {
-            TextButton(onClick = onRestart!!, contentPadding = PaddingValues(horizontal = 6.dp)) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
-                Text("再来一次", style = MaterialTheme.typography.labelSmall)
+            IconButton(
+                onClick = onRestart!!,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "再来一次",
+                    modifier = Modifier.size(18.dp),
+                    tint = StatusCompleted,
+                )
             }
         }
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
@@ -570,11 +712,15 @@ private fun EventRowWithDelete(
                 Icons.Default.Delete,
                 contentDescription = "删除",
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
             )
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Top Bar
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun LineTopBar(
@@ -591,7 +737,7 @@ private fun LineTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onPickDate) {
-            Icon(Icons.Default.CalendarMonth, contentDescription = "选择日期", modifier = Modifier.size(21.dp))
+            Icon(Icons.Default.CalendarMonth, contentDescription = "选择日期", modifier = Modifier.size(21.dp), tint = WarmGray600)
         }
         Text(
             text = dateLabel,
@@ -604,16 +750,20 @@ private fun LineTopBar(
                 .clickable(onClick = onPickDate),
         )
         IconButton(onClick = onOpenReview) {
-            Icon(Icons.Default.QueryStats, contentDescription = "数据统计", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.QueryStats, contentDescription = "数据统计", modifier = Modifier.size(18.dp), tint = WarmGray600)
         }
         IconButton(onClick = onExportCsv) {
-            Icon(Icons.Default.FileDownload, contentDescription = "导出 CSV", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.FileDownload, contentDescription = "导出 CSV", modifier = Modifier.size(18.dp), tint = WarmGray600)
         }
         IconButton(onClick = onExportJson) {
-            Icon(Icons.Default.History, contentDescription = "备份 JSON", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.History, contentDescription = "备份 JSON", modifier = Modifier.size(18.dp), tint = WarmGray600)
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Quick Name Line (glassmorphism floating bar)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun QuickNameLine(
@@ -622,32 +772,32 @@ private fun QuickNameLine(
     onAdd: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = CircleShape,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceWhite.copy(alpha = 0.92f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        border = BorderStroke(0.5.dp, BorderWarm),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .padding(start = 18.dp, end = 4.dp),
+                .height(52.dp)
+                .padding(start = 20.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 Icons.Default.Add,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary,
+                tint = PrimaryGold,
             )
             Spacer(Modifier.width(10.dp))
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
+                    .height(52.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (value.isEmpty()) {
@@ -675,12 +825,16 @@ private fun QuickNameLine(
                     Icons.Default.PlayArrow,
                     contentDescription = "添加",
                     modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = PrimaryGold,
                 )
             }
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Shared Utilities
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun EmptyLine(datePerspective: DatePerspective) {
@@ -709,7 +863,7 @@ private fun Hairline(alpha: Float = 0.7f) {
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = alpha))
+            .background(WarmGray200.copy(alpha = alpha))
     )
 }
 
@@ -720,9 +874,13 @@ private fun LineDragHandle() {
             .padding(top = 12.dp)
             .width(34.dp)
             .height(2.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .background(WarmGray300, CircleShape)
     )
 }
+
+// ═══════════════════════════════════════════════════════════
+// Active Event Hero Card (breathing gradient)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun ActiveEventCard(
@@ -776,7 +934,7 @@ private fun ActiveEventCard(
                     onTap = { onClick() }
                 )
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
     ) {
         Box(
@@ -786,7 +944,7 @@ private fun ActiveEventCard(
                         colors = listOf(ActiveGradientStart, ActiveGradientMiddle, ActiveGradientEnd)
                     )
                 )
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -841,7 +999,7 @@ private fun ActiveEventCard(
                         ),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                         modifier = Modifier.height(32.dp),
-                        shape = CircleShape
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Icon(
                             Icons.Default.Stop,
@@ -857,6 +1015,10 @@ private fun ActiveEventCard(
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Modifier Extension
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun Modifier.pressScaleEffect(interactionSource: MutableInteractionSource): Modifier {
@@ -874,4 +1036,3 @@ private fun Modifier.pressScaleEffect(interactionSource: MutableInteractionSourc
         scaleY = scale
     }
 }
-

@@ -457,6 +457,13 @@ class EventViewModel(
     fun quickAddEvent(name: String) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
+
+        // Deduplication: skip if a PENDING event with the same name already exists today
+        val alreadyExists = pendingEventsForSelectedDay.value.any {
+            it.name.trim().equals(trimmed, ignoreCase = true) && it.status == "PENDING"
+        }
+        if (alreadyExists) return
+
         viewModelScope.launch {
             val dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
             repository.upsert(
