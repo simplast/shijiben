@@ -16,6 +16,9 @@ private val DarkColors = darkColorScheme(
     surface = DarkSurface,
     onSurface = DarkOnSurface,
     onSurfaceVariant = DarkOnSurface.copy(alpha = 0.7f),
+    outlineVariant = DarkMuted,
+    primaryContainer = DarkMuted,
+    onPrimaryContainer = SecondaryIndigo,
 )
 
 private val LightColors = lightColorScheme(

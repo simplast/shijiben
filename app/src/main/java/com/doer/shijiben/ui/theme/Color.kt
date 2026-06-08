@@ -16,3 +16,14 @@ val DarkBackground = Color(0xFF0F172A)
 val DarkSurface = Color(0xFF1E293B)
 val DarkOnSurface = Color(0xFFF1F5F9)
 val DarkMuted = Color(0xFF334155)
+
+// Refactored UI Tokens
+val ActiveGradientStart = Color(0xFF6366F1)
+val ActiveGradientEnd = Color(0xFF8B5CF6)
+val ActiveGradientMiddle = Color(0xFFEC4899) // Hot pink highlight
+
+val LightCardBg = Color(0xFFFFFFFF)
+val LightCardBorder = Color(0xFFE2E8F0)
+val DarkCardBg = Color(0xFF1E293B)
+val DarkCardBorder = Color(0xFF334155)
+
