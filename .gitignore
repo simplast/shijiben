@@ -4,6 +4,7 @@
 .gradle_local/
 .kotlin/
 .codebuddy/
+.workbuddy/memory/
 /local.properties
 /.idea/
 .DS_Store
