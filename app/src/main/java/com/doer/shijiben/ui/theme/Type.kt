@@ -12,24 +12,16 @@ import androidx.compose.ui.unit.sp
 // ============================================================
 //
 // Font strategy:
-//   Outfit   → display/hero headings (geometric warmth)
-//   Inter    → body/caption (reading comfort)
-//   JetBrains Mono → numbers/timers (scanability)
+//   Monospace → display/hero headings & numbers (8-bit pixel aesthetic)
+//   FontFamily.Default → body/caption (Chinese text readability)
 //
-// Currently using FontFamily.Default (Roboto) as a fallback.
-// To enable the full typeface experience, download the font files
-// from Google Fonts (OFL licensed) and place them in res/font/,
-// then replace the FontFamily references below.
-//
-//   Outfit: https://fonts.google.com/specimen/Outfit
-//   Inter:  https://fonts.google.com/specimen/Inter
-//   JetBrains Mono: https://fonts.google.com/specimen/JetBrains+Mono
+// Uses system Monospace fallback for broad compatibility.
 // ============================================================
 
-// ── Font Family references (swappable) ──
-private val DisplayFont = FontFamily.Default   // → Outfit
-private val BodyFont = FontFamily.Default      // → Inter
-private val MonoFont = FontFamily.Default      // → JetBrains Mono
+// ── Font Family references ──
+private val DisplayFont = FontFamily.Monospace   // pixel feel headings
+private val BodyFont = FontFamily.Default  // Chinese body readable
+private val MonoFont = FontFamily.Monospace      // pixel numbers/timers
 
 // ── 9-Level Type Scale ──
 // Tokens: display / hero / h1 / h2 / h3 / body / body-sm / caption / nano
@@ -111,6 +103,24 @@ val LabelUppercase = TextStyle(
     fontWeight = FontWeight.Medium,
     lineHeight = 13.sp,
     letterSpacing = 0.1.em,
+)
+
+/** 8-bit Pixel Display: large monospace numbers for overview/active cards */
+val PixelDisplay = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 32.sp,
+    fontWeight = FontWeight.Black,
+    lineHeight = 38.sp,
+    letterSpacing = 0.05.em,
+)
+
+/** 8-bit Pixel Label: tiny uppercase monospace for section headers / meta */
+val PixelLabel = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 10.sp,
+    fontWeight = FontWeight.Bold,
+    lineHeight = 13.sp,
+    letterSpacing = 0.12.em,
 )
 
 val Typography = Typography(

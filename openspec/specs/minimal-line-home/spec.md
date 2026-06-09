@@ -8,7 +8,7 @@ Minimal line-frame homepage for daily event logging with completed/pending secti
 
 ### Requirement: Minimal line-frame homepage
 
-The homepage SHALL present primary daily logging content in a structured card-grouped style with rounded corners, subtle shadows, and visual feedback for interactive elements.
+The homepage SHALL present primary daily logging content in a structured card-grouped style with visual feedback for interactive elements.
 
 #### Scenario: Homepage opens with card-grouped layout
 - **WHEN** the user opens the homepage
@@ -64,10 +64,10 @@ The homepage SHALL present primary daily logging content in a structured card-gr
 
 ### Requirement: Name-only event creation
 
-首页 SHALL 允许用户通过底部的悬浮胶囊输入栏（Floating Capsule Input Bar）输入名称来创建事件，但在历史视角下应隐藏此功能。
+首页 SHALL 允许用户通过底部的像素风输入栏（Pixel Input Bar）输入名称来创建事件，但在历史视角下应隐藏此功能。
 
 #### Scenario: Add event by name
-- **WHEN** the user enters a non-empty event name in the floating input bar and confirms add
+- **WHEN** the user enters a non-empty event name in the pixel input bar and confirms add
 - **THEN** a new event row appears on the selected day without starting a timer
 
 #### Scenario: Empty name is ignored
@@ -76,20 +76,21 @@ The homepage SHALL present primary daily logging content in a structured card-gr
 
 #### Scenario: 历史视角下隐藏添加框
 - **WHEN** 用户选择过去日期
-- **THEN** 悬浮胶囊输入栏被隐藏
+- **THEN** 像素风输入栏被隐藏
 
 #### Scenario: 今日或未来视角下显示添加框
 - **WHEN** 用户选择今天或未来日期
-- **THEN** 显示悬浮胶囊输入栏
+- **THEN** 显示像素风输入栏
 
 ### Requirement: Not-started events behave as todos
 
-未开始的事件在首页显示为精简待办事项，带状态色条和图标操作按钮。
+未开始的事件在首页显示为像素风待办事项。
 
-#### Scenario: Pending item shows minimal controls
-- **WHEN** an event has not been started (status is PENDING)
-- **THEN** its row shows: left accent bar (4dp, amber #FFB347), event name, a PlayArrow icon button (no text label), and a delete icon button
-- **AND** no status text like "待开始" is displayed
+#### Scenario: Pending item 像素风样式
+- **WHEN** 事件状态为 PENDING
+- **THEN** 事件行显示：左侧 3dp PixelAmberOrange 色条、事件名称、方块形播放按钮（28dp，多彩背景 + 白色三角形）、删除按钮
+- **AND** 播放按钮使用直角矩形（0dp 圆角）
+- **AND** 每个播放按钮使用不同的色彩背景（从 PixelCoralRed / PixelLavender / PixelTeal / PixelSkyBlue / PixelHotPink 中轮换）
 
 #### Scenario: Start pending event via icon
 - **WHEN** the user taps the PlayArrow icon on a pending event row
@@ -97,7 +98,7 @@ The homepage SHALL present primary daily logging content in a structured card-gr
 
 #### Scenario: Pending accent bar uses amber color
 - **WHEN** an event status is PENDING
-- **THEN** its left accent bar (4dp wide) uses the amber color (#FFB347)
+- **THEN** its left accent bar (3dp wide) uses the amber color (#FFB347)
 - **AND** IN_PROGRESS uses warm gold dark (#E5B050)
 - **AND** COMPLETED uses mint green (#7DD3A8)
 
@@ -111,11 +112,13 @@ The homepage SHALL present primary daily logging content in a structured card-gr
 
 ### Requirement: Active event self-timing
 
-An in-progress event SHALL be prominently displayed as a visual "Hero Card" at the top of the homepage, featuring a warm gold gradient background (#F5C469 → #FFB347 → #7DD3A8), breathing animation, real-time timer, and quick action controls.
+进行中的事件 SHALL 以 8-bit 像素风 Hero Card 展示。
 
-#### Scenario: Active event shown as Hero Card with warm gradient
-- **WHEN** an event is in progress (status is IN_PROGRESS)
-- **THEN** it is displayed in a dedicated card at the top of the homepage with a warm gradient background and a breathing animation indicator
+#### Scenario: Active event 显示为像素风 Hero Card
+- **WHEN** 事件正在进行中 (status is IN_PROGRESS)
+- **THEN** 显示为 PixelHotPink 纯色背景 + 3dp PixelDeepNavy 边框的直角矩形卡片
+- **AND** 左侧有 PixelStarYellow 方块闪烁指示灯
+- **AND** 卡片内文字为白色
 
 #### Scenario: Active event elapsed time updates
 - **WHEN** an event is in progress
@@ -124,6 +127,27 @@ An in-progress event SHALL be prominently displayed as a visual "Hero Card" at t
 #### Scenario: Stop active event
 - **WHEN** the user taps stop on the Hero Card
 - **THEN** the event status becomes completed and the end time is saved
+
+#### Scenario: 结束按钮样式
+- **WHEN** Hero Card 显示结束按钮
+- **THEN** 按钮使用 PixelTeal 背景 + 2dp PixelDeepNavy 边框 + 深色文字
+- **AND** 按钮为直角矩形（0dp 圆角）
+
+### Requirement: 首页区块间距节奏
+
+首页各区块之间 SHALL 使用差异化间距制造视觉段落感。
+
+#### Scenario: 概览到进行中卡片间距
+- **WHEN** 首页同时显示概览卡片和 ActiveEventCard
+- **THEN** 两者之间的间距为 16dp
+
+#### Scenario: 进行中到已完成区块间距
+- **WHEN** 首页同时显示 ActiveEventCard 和已完成区块
+- **THEN** 两者之间的间距为 12dp
+
+#### Scenario: 已完成到待办区块间距
+- **WHEN** 首页同时显示已完成区块和待办区块
+- **THEN** 两者之间的间距为 20dp
 
 ### Requirement: Repeat event with "again" action
 
@@ -176,14 +200,15 @@ The homepage list items SHALL transition smoothly when added, deleted, or moved 
 
 ### Requirement: 今日概览摘要区块
 
-首页 SHALL 在今日视角下显示一个摘要卡片，展示当日专注时长、完成数和待办数，使用暖金主色和 labelUppercase 排版。
+首页 SHALL 在今日视角下显示一个非对称仪表盘概览卡片，使用 8-bit 像素扁平风格。
 
 #### Scenario: 今日视角显示概览卡片
 - **WHEN** 用户选择今天
-- **THEN** 首页上方（ActiveEventCard 之前）显示一个三列概览卡片，分别展示"已专注 X 分钟"、"完成 Y 件"、"待办 Z 件"
-- **AND** 数字使用 PrimaryGold (#F5C469) 主色
-- **AND** 标签使用 labelUppercase 排版（10sp / Medium / letter-spacing 0.1em）
-- **AND** 卡片圆角 20dp
+- **THEN** 首页上方显示非对称概览卡片，左侧为大号白色时间数字（PixelDisplay 32sp Black），右侧为两个垂直堆叠的彩色徽章
+- **AND** 卡片背景使用 PixelSkyBlue + 3dp PixelDeepNavy 边框
+- **AND** 右上角徽章使用 PixelCoralRed 背景显示已完成数
+- **AND** 右下角徽章使用 PixelLavender 背景显示待办数
+- **AND** 卡片使用直角矩形（0dp 圆角）
 
 #### Scenario: 非今日视角隐藏概览卡片
 - **WHEN** 用户选择过去或未来日期
@@ -195,27 +220,32 @@ The homepage list items SHALL transition smoothly when added, deleted, or moved 
 
 ### Requirement: 卡片视觉层次
 
-首页的待办卡片和已完成卡片 SHALL 有明确的视觉层次区分，使用暖调阴影系统。
+首页的待办卡片和已完成卡片 SHALL 使用 8-bit 边框系统和直角矩形区分层级。
 
 #### Scenario: 待办卡片更突出
 - **WHEN** 首页显示待办 Section
-- **THEN** 待办 Card 使用白色 surface 背景 + shadow-sm 暖调阴影
-- **AND** 卡片圆角 20dp
+- **THEN** 待办 Card 使用白色背景 + 2dp PixelAmberOrange 边框 + 左侧 5dp 金色边缘条
+- **AND** 卡片为直角矩形（0dp 圆角）
+- **AND** 无阴影
 
 #### Scenario: 已完成卡片更低调
 - **WHEN** 首页显示已完成 Section
-- **THEN** 已完成 Card 使用暖灰淡色背景 (#FDF5E8)，无阴影
-- **AND** 卡片圆角 20dp
+- **THEN** 已完成 Card 使用 PixelMintLight 背景 + 2dp PixelTeal 边框
+- **AND** 列表项高度为 48dp（紧凑模式）
+- **AND** 事件名字号为 bodySmall (12sp)
+- **AND** 左侧色条 3dp 宽，颜色按事件顺序轮换多彩色
+- **AND** 卡片为直角矩形（0dp 圆角）
 
-### Requirement: 底部输入栏毛玻璃质感
+### Requirement: 底部输入栏像素风样式
 
-底部快捷输入栏 SHALL 具有半透明毛玻璃浮动效果，使用暖金色焦点色。
+底部快捷输入栏 SHALL 采用 8-bit 像素扁平风格。
 
-#### Scenario: 浮动输入栏显示毛玻璃效果
+#### Scenario: 浮动输入栏像素风样式
 - **WHEN** 底部 QuickNameLine 显示
-- **THEN** 其背景为半透明 surface 色 + 轻微阴影，产生浮动于内容之上的视觉感受
-- **AND** 输入框聚焦时边框色为 PrimaryGold (#F5C469)，焦点光晕为 PrimaryGoldSoft (#FEF3D9)
-- **AND** 输入框圆角 16dp
+- **THEN** 使用白色背景 + 2dp PixelLavender 边框 + 直角矩形（0dp 圆角）
+- **AND** "+"图标使用 PixelHotPink 着色
+- **AND** 提交按钮使用 PixelAmberOrange 背景方块 + 白色播放图标
+- **AND** 无阴影，无毛玻璃效果
 
 ### Requirement: Warm Gold 暖色主题
 
@@ -237,59 +267,20 @@ The homepage list items SHALL transition smoothly when added, deleted, or moved 
 - **WHEN** 未来启用深色模式
 - **THEN** Warm Gold 主色保持可辨识，暗色背景使用 #1A1A2E 暖深色调
 
+## REMOVED Requirements
+
 ### Requirement: 排版体系
-
-首页 SHALL 使用 Outfit（展示标题）+ Inter（正文）+ JetBrains Mono（数字/时间）三字体系统，并定义 9 级 Type Scale。
-
-#### Scenario: 展示级标题使用 Outfit 字体
-- **WHEN** 首页渲染 display/hero/h1 级标题
-- **THEN** 使用 Outfit 字体族（Bold/Semibold）
-
-#### Scenario: 正文使用 Inter 字体
-- **WHEN** 首页渲染正文内容
-- **THEN** 使用 Inter 字体族（Regular/Medium）
-
-#### Scenario: 数字和时间使用 JetBrains Mono
-- **WHEN** 首页渲染计时数字、统计数据
-- **THEN** 使用 JetBrains Mono 字体族
+**Reason**: The Outfit + Inter + JetBrains Mono three-font system and 9-level Type Scale are replaced by the 8-bit pixel monospace system defined in the homescreen-8bit-colorful change.
+**Migration**: Use the 8-bit pixel monospace font system (PixelDisplay / PixelBody / PixelLabel) as defined in the homescreen-8bit-colorful spec.
 
 ### Requirement: 标签排版规范
-
-首页所有区块标签 SHALL 使用全大写 + 加宽字距的 labelUppercase 排版风格。
-
-#### Scenario: 区块标题使用全大写标签
-- **WHEN** 首页显示 Section 标题（如"今日待办"、"已完成"、"建议快速开始"）
-- **THEN** 标签使用 10sp / Medium / letter-spacing 0.1em 排版
-- **AND** 颜色为 WarmGray500
+**Reason**: The labelUppercase (10sp / Medium / letter-spacing 0.1em) style is replaced by the PixelLabel style defined in the 8-bit pixel system.
+**Migration**: Use PixelLabel style from the homescreen-8bit-colorful spec for all section labels.
 
 ### Requirement: 圆角与间距体系
-
-首页 SHALL 使用 DESIGN.md 定义的圆角和间距体系。
-
-#### Scenario: 卡片圆角
-- **WHEN** 首页渲染任何卡片组件
-- **THEN** 卡片圆角为 20dp
-
-#### Scenario: 按钮圆角
-- **WHEN** 首页渲染任何按钮组件
-- **THEN** 按钮圆角为 16dp
-
-#### Scenario: 安全边距
-- **WHEN** 首页渲染内容区域
-- **THEN** 左右安全边距为 20dp
-
-#### Scenario: 列表项最小高度
-- **WHEN** 首页渲染事件列表项
-- **THEN** 列表项最小高度为 56dp
+**Reason**: The rounded corner system (20dp cards, 16dp buttons, 56dp min row height) conflicts with the 8-bit pixel design which uses 0dp corners throughout.
+**Migration**: Use the PixelShape (0dp) system from the homescreen-8bit-colorful spec for all components.
 
 ### Requirement: 暖调阴影系统
-
-首页 SHALL 使用暖调阴影系统替代默认冷灰阴影。
-
-#### Scenario: 卡片使用暖调阴影
-- **WHEN** 首页渲染带阴影的卡片
-- **THEN** 阴影使用暖调 rgba(26,26,46,...) 而非默认冷灰色
-
-#### Scenario: 阴影层级
-- **WHEN** 首页组件需要不同高度的阴影
-- **THEN** 使用 6 级暖调阴影（xs/sm/md/lg/xl/xxl）
+**Reason**: The warm-tone shadow system (6 levels of rgba shadows) is replaced by the pixel border system which uses solid borders instead of shadows.
+**Migration**: Use the pixel border system (2dp-3dp solid PixelDeepNavy borders) from the homescreen-8bit-colorful spec for elevation and depth.

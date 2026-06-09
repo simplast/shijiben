@@ -481,6 +481,17 @@ class EventViewModel(
     fun quickStartEvent(name: String) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
+
+        // Look for a same-day PENDING event with matching name
+        val existingEvent = pendingEventsForSelectedDay.value.firstOrNull {
+            it.name.trim().equals(trimmed, ignoreCase = true) && it.status == "PENDING"
+        }
+
+        if (existingEvent != null) {
+            startEvent(existingEvent)
+            return
+        }
+
         viewModelScope.launch {
             stopActiveEvent()
 
@@ -490,7 +501,7 @@ class EventViewModel(
                     name = trimmed,
                     startTimeMillis = now,
                     endTimeMillis = now,
-                    dayKey = "",
+                    dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE),
                     status = "IN_PROGRESS"
                 )
             )
@@ -506,7 +517,7 @@ class EventViewModel(
                 event.copy(
                     startTimeMillis = now,
                     endTimeMillis = now,
-                    dayKey = "",
+                    dayKey = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE),
                     status = "IN_PROGRESS"
                 )
             )

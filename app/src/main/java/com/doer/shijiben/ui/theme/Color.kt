@@ -1,6 +1,8 @@
 package com.doer.shijiben.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 // ============================================================
 // Warm Gold Palette (DESIGN.md v2 aligned)
@@ -122,3 +124,21 @@ val DarkCardBorder = DarkMutedWarm
 // Old accent aliases
 @Deprecated("Use AccentMint instead", ReplaceWith("AccentMint"))
 val AccentTeal = AccentMint
+
+// ── 8-bit Colorful Palette ──
+val PixelSkyBlue = Color(0xFF6BC5F5)     // Overview card bg
+val PixelHotPink = Color(0xFFFF6B9D)     // Active event card bg
+val PixelCoralRed = Color(0xFFFF8A6B)    // Completed badge / tags
+val PixelLavender = Color(0xFFC4B5E0)    // Pending badge / input border
+val PixelTeal = Color(0xFF4DC9B8)        // Completed color bar / tags
+val PixelAmberOrange = Color(0xFFFFB347) // Pending border / submit btn
+val PixelMintLight = Color(0xFFE8F8F0)   // Completed section bg
+val PixelStarYellow = Color(0xFFFFD93D)  // Pixel star / decorations
+val PixelDeepNavy = Color(0xFF1A1A2E)    // Main border color
+
+// ── Pixel Border Tokens ──
+val PixelBorder = PixelDeepNavy              // dark navy — main border
+val PixelBorderLight = Color(0x331A1A2E)     // 20% alpha — light divider
+
+// ── Pixel Shape (global 0dp corner = sharp rectangle) ──
+val PixelShape = RoundedCornerShape(0.dp)

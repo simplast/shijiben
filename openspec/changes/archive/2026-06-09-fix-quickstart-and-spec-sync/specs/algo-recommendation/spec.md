@@ -1,26 +1,6 @@
-# algo-recommendation Specification
+# algo-recommendation Specification (Delta)
 
-## Purpose
-
-基于用户历史行为数据，通过算法自动生成"今日待办"推荐列表，帮助用户快速开始每一天的工作。
-
-## Requirements
-
-### Requirement: 推荐算法生成待办列表
-
-系统 SHALL 统计最近14天内每个事件名称的总出现次数，按次数降序排列，取前5名作为"今日待办"推荐。
-
-#### Scenario: 正常推荐生成
-- **WHEN** 用户打开首页
-- **THEN** 系统统计最近14天的事件数据，生成最多5个推荐名称
-
-#### Scenario: 历史数据不足5个
-- **WHEN** 最近14天内不同事件名称少于5个
-- **THEN** 系统显示所有已有事件名称作为推荐
-
-#### Scenario: 无历史数据
-- **WHEN** 最近14天内没有任何事件记录
-- **THEN** 推荐列表为空，底部待办区仅显示用户添加的事件
+## MODIFIED Requirements
 
 ### Requirement: 推荐与事件的关联显示
 
