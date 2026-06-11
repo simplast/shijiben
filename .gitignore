@@ -8,6 +8,7 @@
 /local.properties
 /.idea/
 .DS_Store
+.claude/
 /build
 **/build/
 captures/

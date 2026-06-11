@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时记本 - 8-bit 像素风格演示</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 主色系（海与天空） */
+            --sea-blue: #4DB6AC;
+            --light-sea-blue: #80CBC4;
+            --mint-blue: #B2DFDB;
+            --mist-blue: #E0F2F1;
+            
+            /* 点缀色（阳光与沙滩） */
+            --sun-yellow: #FFD54F;
+            --coral-orange: #FF8A65;
+            
+            /* 特殊状态色 */
+            --light-pink: #F48FB1;
+            
+            /* 基础色 */
+            --cream-white: #FFF8E1;
+            --deep-teal: #263238;
+            
+            /* 暖灰阶 */
+            --warm-gray-100: #FFF3D6;
+            --warm-gray-200: #F5E6C8;
+            --warm-gray-300: #E8D5B0;
+            --warm-gray-500: #8D6E63;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* Android 手机框架 */
+        .phone-mockup {
+            width: 375px;
+            height: 812px;
+            background: var(--cream-white);
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3),
+                        inset 0 0 0 2px #000;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 状态栏 */
+        .status-bar {
+            height: 44px;
+            background: var(--deep-teal);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+        }
+        
+        /* 双线像素边框工具类 */
+        .double-border {
+            position: relative;
+            border: 2px solid var(--border-outer, var(--deep-teal));
+            background: var(--bg-color, white);
+        }
+        
+        .double-border::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            border: 1px solid rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+        
+        .double-border-thin {
+            position: relative;
+            border: 1.5px solid var(--border-outer, var(--deep-teal));
+            background: var(--bg-color, white);
+        }
+        
+        .double-border-thin::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            border: 0.5px solid rgba(255,255,255,0.6);
+            pointer-events: none;
+        }
+        
+        /* 顶栏 */
+        .top-bar {
+            height: 56px;
+            background: var(--cream-white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 2px solid var(--deep-teal);
+        }
+        
+        .top-bar-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        
+        .top-bar-date {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            color: var(--deep-teal);
+            letter-spacing: 0.05em;
+        }
+        
+        /* 内容区 */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        /* 像素图标 - Canvas绘制 */
+        .pixel-icon {
+            display: inline-block;
+        }
+        
+        /* 概览卡片 */
+        .overview-card {
+            --bg-color: var(--sea-blue);
+            --border-outer: var(--deep-teal);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .overview-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .overview-time {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 32px;
+            color: white;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+        }
+        
+        .overview-label {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: white;
+            letter-spacing: 0.12em;
+            opacity: 0.9;
+        }
+        
+        .overview-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .badge {
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            color: white;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        
+        .badge-coral {
+            --bg-color: var(--coral-orange);
+            --border-outer: var(--deep-teal);
+        }
+        
+        .badge-lavender {
+            --bg-color: var(--light-sea-blue);
+            --border-outer: var(--deep-teal);
+        }
+        
+        /* 进行中卡片 */
+        .progress-card {
+            --bg-color: var(--light-pink);
+            --border-outer: var(--deep-teal);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .pixel-indicator {
+            width: 12px;
+            height: 12px;
+            background: var(--sun-yellow);
+            animation: pixelBlink 0.8s step-end infinite;
+        }
+        
+        @keyframes pixelBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .progress-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .progress-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .progress-timer {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 18px;
+            color: white;
+            letter-spacing: 0.05em;
+        }
+        
+        .btn-stop {
+            --bg-color: var(--mint-blue);
+            --border-outer: var(--deep-teal);
+            padding: 10px 16px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            color: var(--deep-teal);
+            cursor: pointer;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Section 标题 */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .section-accent {
+            width: 12px;
+            height: 3px;
+        }
+        
+        .section-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: var(--deep-teal);
+            letter-spacing: 0.12em;
+        }
+        
+        .section-title-cn {
+            font-size: 13px;
+            color: var(--warm-gray-500);
+            margin-left: 4px;
+        }
+        
+        /* 已完成区 */
+        .completed-section {
+            --bg-color: var(--mist-blue);
+            --border-outer: var(--sea-blue);
+            padding: 12px;
+        }
+        
+        .completed-item {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .completed-item:last-child {
+            border-bottom: none;
+        }
+        
+        .color-strip {
+            width: 3px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        
+        .completed-name {
+            flex: 1;
+            font-size: 12px;
+            color: var(--deep-teal);
+        }
+        
+        .completed-time {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            color: var(--warm-gray-500);
+            letter-spacing: 0.05em;
+        }
+        
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--bg-color, var(--mint-blue));
+            border: 1.5px solid var(--deep-teal);
+        }
+        
+        /* 待办区 */
+        .todo-section {
+            --bg-color: var(--cream-white);
+            --border-outer: var(--coral-orange);
+            padding: 12px;
+            border-left: 5px solid var(--sun-yellow) !important;
+        }
+        
+        .todo-item {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+        
+        .play-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--deep-teal);
+        }
+        
+        .todo-name {
+            flex: 1;
+            font-size: 14px;
+            color: var(--deep-teal);
+            font-weight: 500;
+        }
+        
+        /* 底部输入栏 */
+        .bottom-bar {
+            height: 64px;
+            background: var(--cream-white);
+            border-top: 2px solid var(--deep-teal);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+        }
+        
+        .input-field {
+            flex: 1;
+            height: 40px;
+            background: white;
+            border: 2px solid var(--light-sea-blue);
+            padding: 0 12px;
+            font-size: 14px;
+            color: var(--deep-teal);
+            outline: none;
+        }
+        
+        .btn-add {
+            width: 40px;
+            height: 40px;
+            background: var(--light-pink);
+            border: 2px solid var(--deep-teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            font-weight: 700;
+        }
+        
+        .btn-submit {
+            width: 40px;
+            height: 40px;
+            background: var(--coral-orange);
+            border: 2px solid var(--deep-teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        /* 像素图标 SVG */
+        .pixel-icon-svg {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-mockup">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>●●●</span>
+        </div>
+        
+        <!-- 顶栏 -->
+        <div class="top-bar">
+            <svg class="top-bar-icon" viewBox="0 0 24 24" fill="none">
+                <!-- 像素日历图标 -->
+                <rect x="2" y="4" width="20" height="18" stroke="var(--sea-blue)" stroke-width="2"/>
+                <line x1="2" y1="10" x2="22" y2="10" stroke="var(--sea-blue)" stroke-width="2"/>
+                <rect x="6" y="2" width="2" height="4" fill="var(--sea-blue)"/>
+                <rect x="16" y="2" width="2" height="4" fill="var(--sea-blue)"/>
+            </svg>
+            <div class="top-bar-date">2026-06-10 WED</div>
+            <svg class="top-bar-icon" viewBox="0 0 24 24" fill="var(--deep-teal)">
+                <circle cx="12" cy="5" r="1.5"/>
+                <circle cx="12" cy="12" r="1.5"/>
+                <circle cx="12" cy="19" r="1.5"/>
+            </svg>
+        </div>
+        
+        <!-- 内容区 -->
+        <div class="content-area">
+            <!-- 概览卡片 -->
+            <div class="double-border overview-card">
+                <div class="overview-left">
+                    <div class="overview-time">128m</div>
+                    <div class="overview-label">已专注</div>
+                </div>
+                <div class="overview-badges">
+                    <div class="double-border badge badge-coral">
+                        ✓ 5 已完成
+                    </div>
+                    <div class="double-border badge badge-lavender">
+                        ◇ 3 待办
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 进行中卡片 -->
+            <div class="double-border progress-card">
+                <div class="pixel-indicator"></div>
+                <div class="progress-info">
+                    <div class="progress-name">🎨 设计 8-bit 界面</div>
+                    <div class="progress-timer">01:28</div>
+                </div>
+                <div class="double-border btn-stop">结束</div>
+            </div>
+            
+            <!-- 已完成区 -->
+            <div class="section-header">
+                <div class="section-accent" style="background: var(--sea-blue);"></div>
+                <span class="section-title">COMPLETED</span>
+                <span class="section-title-cn">已完成</span>
+            </div>
+            <div class="double-border-thin completed-section">
+                <div class="completed-item">
+                    <div class="color-strip" style="background: var(--sea-blue);"></div>
+                    <span class="completed-name">阅读《设计心理学》</span>
+                    <span class="completed-time">45m</span>
+                    <div class="icon-btn">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="var(--deep-teal)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="completed-item">
+                    <div class="color-strip" style="background: var(--light-sea-blue);"></div>
+                    <span class="completed-name">晨间冥想</span>
+                    <span class="completed-time">20m</span>
+                    <div class="icon-btn">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="var(--deep-teal)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="completed-item">
+                    <div class="color-strip" style="background: var(--sun-yellow);"></div>
+                    <span class="completed-name">写周报</span>
+                    <span class="completed-time">63m</span>
+                    <div class="icon-btn">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="var(--deep-teal)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 待办区 -->
+            <div class="section-header">
+                <div class="section-accent" style="background: var(--coral-orange);"></div>
+                <span class="section-title">TODO</span>
+                <span class="section-title-cn">待办</span>
+            </div>
+            <div class="double-border-thin todo-section">
+                <div class="todo-item">
+                    <div class="play-btn" style="background: var(--coral-orange);">
+                        <svg width="12" height="14" viewBox="0 0 12 14">
+                            <polygon points="0,0 12,7 0,14" fill="white"/>
+                        </svg>
+                    </div>
+                    <span class="todo-name">学习 Compose 动画</span>
+                    <div class="icon-btn" style="background: var(--coral-orange);">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="todo-item">
+                    <div class="play-btn" style="background: var(--light-sea-blue);">
+                        <svg width="12" height="14" viewBox="0 0 12 14">
+                            <polygon points="0,0 12,7 0,14" fill="white"/>
+                        </svg>
+                    </div>
+                    <span class="todo-name">整理设计系统文档</span>
+                    <div class="icon-btn" style="background: var(--coral-orange);">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="todo-item">
+                    <div class="play-btn" style="background: var(--mint-blue);">
+                        <svg width="12" height="14" viewBox="0 0 12 14">
+                            <polygon points="0,0 12,7 0,14" fill="white"/>
+                        </svg>
+                    </div>
+                    <span class="todo-name">健身 30 分钟</span>
+                    <div class="icon-btn" style="background: var(--coral-orange);">
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M2 2 L10 10 M10 2 L2 10" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部输入栏 -->
+        <div class="bottom-bar">
+            <input class="input-field" type="text" placeholder="添加新事件...">
+            <div class="btn-add">+</div>
+            <div class="btn-submit">
+                <svg width="16" height="18" viewBox="0 0 16 18">
+                    <polygon points="0,0 16,9 0,18" fill="white"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

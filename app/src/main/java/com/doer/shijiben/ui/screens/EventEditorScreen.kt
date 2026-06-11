@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,32 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -52,17 +32,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.doer.shijiben.data.EventEntity
 import com.doer.shijiben.data.TimeFormats
 import com.doer.shijiben.ui.EventViewModel
+import com.doer.shijiben.ui.theme.CoralOrange
+import com.doer.shijiben.ui.theme.CoralOrangeDark
+import com.doer.shijiben.ui.theme.CreamWhite
+import com.doer.shijiben.ui.theme.DeepTeal
+import com.doer.shijiben.ui.theme.LightSeaBlue
+import com.doer.shijiben.ui.theme.MintBlue
+import com.doer.shijiben.ui.theme.MistBlue
+import com.doer.shijiben.ui.theme.PixelBadge
+import com.doer.shijiben.ui.theme.PixelButton
+import com.doer.shijiben.ui.theme.PixelCalendarIcon
+import com.doer.shijiben.ui.theme.PixelCard
+import com.doer.shijiben.ui.theme.PixelCardLevel
+import com.doer.shijiben.ui.theme.PixelCheckIcon
+import com.doer.shijiben.ui.theme.PixelCloseIcon
+import com.doer.shijiben.ui.theme.PixelDialog
+import com.doer.shijiben.ui.theme.PixelIconButton
+import com.doer.shijiben.ui.theme.PixelInput
+import com.doer.shijiben.ui.theme.PixelLabel
+import com.doer.shijiben.ui.theme.PixelPlayIcon
+import com.doer.shijiben.ui.theme.PixelStarIcon
+import com.doer.shijiben.ui.theme.SeaBlue
+import com.doer.shijiben.ui.theme.SeaBlueDark
+import com.doer.shijiben.ui.theme.SeaBlueLight
+import com.doer.shijiben.ui.theme.SunYellow
+import com.doer.shijiben.ui.theme.WarmGray500
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -81,10 +88,10 @@ fun EventEditorContent(
     var category by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var startMillis by remember { mutableStateOf(System.currentTimeMillis()) }
-    var durationMin by remember { mutableIntStateOf(0) } // Default to 0
+    var durationMin by remember { mutableIntStateOf(0) }
     var endMillis by remember { mutableStateOf(System.currentTimeMillis()) }
     var status by remember { mutableStateOf("IN_PROGRESS") }
-    
+
     var loadedEntity by remember { mutableStateOf<EventEntity?>(null) }
 
     var startDatePickerOpen by remember { mutableStateOf(false) }
@@ -208,98 +215,98 @@ fun EventEditorContent(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("重温与修正", style = MaterialTheme.typography.titleMedium)
+                    PixelStarIcon(color = SunYellow, size = 16.dp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "重温与修正",
+                        style = PixelLabel,
+                        color = DeepTeal,
+                    )
                 }
             }
 
-            OutlinedTextField(
+            // Name input
+            PixelInput(
+                value = name,
+                onValueChange = { name = it },
+                placeholder = "此刻正在发生什么？",
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester),
-                value = name,
-                onValueChange = { name = it },
-                placeholder = {
-                    Text(
-                        "此刻正在发生什么？",
-                        style = if (isNew) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
-                    )
-                },
-                singleLine = true,
                 textStyle = if (isNew) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                )
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             )
 
+            // Suggestion chips
             if (isNew && suggestionNames.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(suggestionNames, key = { it }) { suggestion ->
-                        AssistChip(
-                            onClick = { 
+                        PixelBadge(
+                            text = suggestion,
+                            backgroundColor = LightSeaBlue,
+                            contentColor = Color.White,
+                            modifier = Modifier.clickable {
                                 name = suggestion
-                                saveEvent() 
-                            },
-                            label = {
-                                Text(
-                                    text = suggestion,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                                saveEvent()
                             },
                         )
                     }
                 }
             }
 
+            // Category + Note
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    modifier = Modifier.weight(1f),
+                PixelInput(
                     value = category,
                     onValueChange = { category = it },
-                    label = { Text("分类 (可选)", style = MaterialTheme.typography.labelSmall) },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium
-                )
-                OutlinedTextField(
+                    placeholder = "分类 (可选)",
                     modifier = Modifier.weight(1f),
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                )
+                PixelInput(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("备注 (可选)", style = MaterialTheme.typography.labelSmall) },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium
+                    placeholder = "备注 (可选)",
+                    modifier = Modifier.weight(1f),
+                    textStyle = MaterialTheme.typography.bodyMedium,
                 )
             }
 
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            // Date + time card
+            PixelCard(
+                level = PixelCardLevel.Secondary,
+                backgroundColor = MintBlue,
+                borderOuterColor = SeaBlue,
+                borderInnerColor = Color.White,
+                contentPadding = PaddingValues(if (isNew) 10.dp else 16.dp),
             ) {
-                Column(Modifier.padding(if (isNew) 10.dp else 16.dp)) {
+                Column(Modifier.fillMaxWidth()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(if (isNew) 16.dp else 20.dp),
+                        PixelCalendarIcon(
+                            color = SeaBlue,
+                            size = if (isNew) 16.dp else 20.dp,
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = TimeFormats.formatDateMillis(startMillis),
                             style = if (isNew) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                            color = DeepTeal,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(
+                        PixelButton(
                             onClick = { startDatePickerOpen = true },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            backgroundColor = Color.Transparent,
+                            pressedBackgroundColor = SeaBlue.copy(alpha = 0.15f),
+                            contentColor = SeaBlue,
+                            borderColor = Color.Transparent,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         ) {
                             Text(
                                 "改日期",
-                                style = if (isNew) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
+                                style = PixelLabel,
+                                color = SeaBlue,
                             )
                         }
                     }
@@ -317,11 +324,9 @@ fun EventEditorContent(
                             compact = isNew,
                             onClick = { startTimePickerOpen = true },
                         )
-                        Icon(
-                            Icons.Default.AccessTime,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            modifier = Modifier.size(14.dp),
+                        PixelPlayIcon(
+                            color = MistBlue,
+                            size = 14.dp,
                         )
                         TimeSelectionBlock(
                             label = if (status == "IN_PROGRESS") "进行中" else "结束",
@@ -333,6 +338,7 @@ fun EventEditorContent(
                 }
             }
 
+            // Duration slider
             Column(verticalArrangement = Arrangement.spacedBy(if (isNew) 0.dp else 4.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -341,12 +347,14 @@ fun EventEditorContent(
                 ) {
                     Text(
                         "持续时长",
-                        style = if (isNew) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+                        style = PixelLabel,
+                        color = DeepTeal,
                     )
                     Text(
                         if (durationMin > 0) "${durationMin} 分钟" else "正在进行",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = SeaBlue,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 Slider(
@@ -357,49 +365,78 @@ fun EventEditorContent(
                     },
                     valueRange = 0f..120f,
                     steps = 24,
+                    colors = androidx.compose.material3.SliderDefaults.colors(
+                        thumbColor = SeaBlue,
+                        activeTrackColor = SeaBlue,
+                        inactiveTrackColor = MistBlue,
+                    ),
                 )
             }
 
-            Button(
-                modifier = Modifier.fillMaxWidth(),
+            // Save button
+            PixelButton(
                 onClick = { saveEvent() },
-                shape = MaterialTheme.shapes.medium,
-                contentPadding = PaddingValues(vertical = if (isNew) 8.dp else 12.dp),
+                backgroundColor = SeaBlue,
+                pressedBackgroundColor = SeaBlueDark,
+                contentColor = Color.White,
+                borderColor = DeepTeal,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = if (isNew) 10.dp else 14.dp),
             ) {
+                PixelPlayIcon(color = Color.White, size = 16.dp)
+                Spacer(Modifier.width(6.dp))
                 Text(
                     if (isNew) "开始记录" else "更新",
-                    style = if (isNew) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
                 )
             }
 
             if (eventId != null && loadedEntity != null) {
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    ),
+                PixelButton(
                     onClick = {
                         viewModel.delete(loadedEntity!!) { err ->
                             if (err != null) showMessage(err.message ?: "删除失败")
                             else onDelete()
                         }
                     },
-                    elevation = null
+                    backgroundColor = CoralOrange.copy(alpha = 0.15f),
+                    pressedBackgroundColor = CoralOrange.copy(alpha = 0.25f),
+                    contentColor = CoralOrange,
+                    borderColor = CoralOrange,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 10.dp),
                 ) {
-                    Text("删除此段记忆", style = MaterialTheme.typography.bodySmall)
+                    PixelCloseIcon(color = CoralOrange, size = 16.dp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "删除此段记忆",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
-                
+
                 if (status == "IN_PROGRESS") {
-                    OutlinedButton(
+                    PixelButton(
+                        onClick = { saveEvent("COMPLETED") },
+                        backgroundColor = MintBlue,
+                        pressedBackgroundColor = SeaBlueLight,
+                        contentColor = DeepTeal,
+                        borderColor = SeaBlue,
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { saveEvent("COMPLETED") }
+                        contentPadding = PaddingValues(vertical = 10.dp),
                     ) {
-                        Text("标记完成")
+                        PixelCheckIcon(color = SeaBlue, size = 16.dp)
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "标记完成",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
                     }
                 }
             }
-            
+
             Spacer(Modifier.height(if (isNew) 8.dp else 24.dp))
         }
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
@@ -421,13 +458,13 @@ private fun TimeSelectionBlock(
     ) {
         Text(
             label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = PixelLabel,
+            color = WarmGray500,
         )
         Text(
             time,
             style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = DeepTeal,
         )
     }
 }
@@ -445,14 +482,43 @@ private fun EventTimePickerDialog(
         initialMinute = minute,
         is24Hour = true,
     )
-    AlertDialog(
+    PixelDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = { onConfirm(state.hour, state.minute) }) { Text("确定") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
-        },
-        text = { TimePicker(state = state) },
-    )
+        backgroundColor = CreamWhite,
+        borderOuterColor = DeepTeal,
+        borderInnerColor = Color.White,
+    ) {
+        TimePicker(state = state)
+        Spacer(modifier = Modifier.padding(top = 8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            PixelButton(
+                onClick = onDismiss,
+                backgroundColor = Color.Transparent,
+                pressedBackgroundColor = CoralOrange.copy(alpha = 0.1f),
+                contentColor = CoralOrange,
+                borderColor = Color.Transparent,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                PixelCloseIcon(color = CoralOrange, size = 14.dp)
+                Spacer(Modifier.width(4.dp))
+                Text("取消", style = PixelLabel, color = CoralOrange)
+            }
+            Spacer(Modifier.width(8.dp))
+            PixelButton(
+                onClick = { onConfirm(state.hour, state.minute) },
+                backgroundColor = SeaBlue,
+                pressedBackgroundColor = SeaBlueDark,
+                contentColor = Color.White,
+                borderColor = DeepTeal,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                PixelCheckIcon(color = Color.White, size = 14.dp)
+                Spacer(Modifier.width(4.dp))
+                Text("确定", style = PixelLabel, color = Color.White)
+            }
+        }
+    }
 }

@@ -28,40 +28,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QueryStats
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import com.doer.shijiben.ui.theme.PixelInput
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -73,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -82,7 +57,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -90,25 +64,44 @@ import com.doer.shijiben.data.EventEntity
 import com.doer.shijiben.data.TimeFormats
 import com.doer.shijiben.ui.DatePerspective
 import com.doer.shijiben.ui.EventViewModel
-import com.doer.shijiben.ui.theme.PixelSkyBlue
-import com.doer.shijiben.ui.theme.PixelHotPink
-import com.doer.shijiben.ui.theme.PixelCoralRed
-import com.doer.shijiben.ui.theme.PixelLavender
-import com.doer.shijiben.ui.theme.PixelTeal
-import com.doer.shijiben.ui.theme.PixelAmberOrange
-import com.doer.shijiben.ui.theme.PixelMintLight
-import com.doer.shijiben.ui.theme.PixelStarYellow
-import com.doer.shijiben.ui.theme.PixelDeepNavy
-import com.doer.shijiben.ui.theme.PixelBorder
-import com.doer.shijiben.ui.theme.PixelBorderLight
-import com.doer.shijiben.ui.theme.PixelShape
-import com.doer.shijiben.ui.theme.PixelDisplay
-import com.doer.shijiben.ui.theme.PixelLabel
+import com.doer.shijiben.ui.theme.SeaBlue
+import com.doer.shijiben.ui.theme.SeaBlueDark
+import com.doer.shijiben.ui.theme.SeaBlueLight
+import com.doer.shijiben.ui.theme.LightSeaBlue
+import com.doer.shijiben.ui.theme.MintBlue
+import com.doer.shijiben.ui.theme.MistBlue
+import com.doer.shijiben.ui.theme.SunYellow
+import com.doer.shijiben.ui.theme.CoralOrange
+import com.doer.shijiben.ui.theme.CoralOrangeDark
+import com.doer.shijiben.ui.theme.LightPink
+import com.doer.shijiben.ui.theme.CreamWhite
+import com.doer.shijiben.ui.theme.DeepTeal
 import com.doer.shijiben.ui.theme.WarmGray50
 import com.doer.shijiben.ui.theme.WarmGray200
 import com.doer.shijiben.ui.theme.WarmGray300
 import com.doer.shijiben.ui.theme.WarmGray500
-import com.doer.shijiben.ui.theme.SurfaceWhite
+import com.doer.shijiben.ui.theme.PixelDisplay
+import com.doer.shijiben.ui.theme.PixelLabel
+import com.doer.shijiben.ui.theme.PixelCard
+import com.doer.shijiben.ui.theme.PixelCardLevel
+import com.doer.shijiben.ui.theme.PixelButton
+import com.doer.shijiben.ui.theme.PixelIconButton
+import com.doer.shijiben.ui.theme.PixelBadge
+import com.doer.shijiben.ui.theme.PixelSectionHeader
+import com.doer.shijiben.ui.theme.PixelShape
+import com.doer.shijiben.ui.theme.primaryDoubleBorder
+import com.doer.shijiben.ui.theme.secondaryDoubleBorder
+import com.doer.shijiben.ui.theme.tertiaryDoubleBorder
+import com.doer.shijiben.ui.theme.doublePixelBorder
+import com.doer.shijiben.ui.theme.PixelPlayIcon
+import com.doer.shijiben.ui.theme.PixelStopIcon
+import com.doer.shijiben.ui.theme.PixelCloseIcon
+import com.doer.shijiben.ui.theme.PixelRefreshIcon
+import com.doer.shijiben.ui.theme.PixelMoreIcon
+import com.doer.shijiben.ui.theme.PixelCalendarIcon
+import com.doer.shijiben.ui.theme.PixelAddIcon
+import com.doer.shijiben.ui.theme.PixelHopNumber
+import com.doer.shijiben.ui.theme.pixelStateTransition
 import kotlinx.coroutines.launch
 
 @Composable
@@ -330,23 +323,6 @@ fun HomeScreen(
 }
 
 // ═══════════════════════════════════════════════════════════
-// Pixel Section Header (Task 8.1)
-// ═══════════════════════════════════════════════════════════
-
-@Composable
-private fun PixelSectionHeader(title: String, accent: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(12.dp).height(3.dp).background(accent))
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = title.uppercase(),
-            style = PixelLabel,
-            color = PixelDeepNavy,
-        )
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
 // Today Overview Hero Card (Tasks 4.1-4.3)
 // ═══════════════════════════════════════════════════════════
 
@@ -356,26 +332,26 @@ private fun TodayOverviewCard(
     completedCount: Int,
     pendingCount: Int,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .pixelBorder(PixelBorder, 3.dp),
-        shape = PixelShape,
-        colors = CardDefaults.cardColors(containerColor = PixelSkyBlue),
+    PixelCard(
+        modifier = Modifier.fillMaxWidth(),
+        level = PixelCardLevel.Primary,
+        backgroundColor = SeaBlue,
+        borderOuterColor = DeepTeal,
+        borderInnerColor = Color.White,
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left: large time number (Task 4.2)
+            // Left: large time number
             Column(horizontalAlignment = Alignment.Start) {
-                Text(
-                    text = "${totalMinutes}m",
-                    style = PixelDisplay,
-                    color = Color.White,
+                PixelHopNumber(
+                    targetValue = totalMinutes,
+                    format = { "${it}m" },
+                    textStyle = PixelDisplay,
+                    contentColor = Color.White,
                 )
                 Text(
                     text = "已专注",
@@ -385,66 +361,37 @@ private fun TodayOverviewCard(
                 )
             }
 
-            // Right: stacked badges (Task 4.3)
+            // Right: stacked badges
             Column(horizontalAlignment = Alignment.End) {
-                // Completed badge — CoralRed
-                Box(
-                    modifier = Modifier
-                        .background(PixelCoralRed, PixelShape)
-                        .pixelBorder(PixelBorder, 2.dp)
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "✓ $completedCount",
-                            style = PixelLabel,
-                            color = Color.White,
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "已完成",
-                            style = PixelLabel,
-                            color = Color.White.copy(alpha = 0.85f),
-                        )
-                    }
-                }
+                // Completed badge — CoralOrange
+                PixelBadge(
+                    text = "✓ $completedCount 已完成",
+                    backgroundColor = CoralOrange,
+                    contentColor = Color.White,
+                )
                 Spacer(Modifier.height(6.dp))
-                // Pending badge — Lavender
-                Box(
-                    modifier = Modifier
-                        .background(PixelLavender, PixelShape)
-                        .pixelBorder(PixelBorder, 2.dp)
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "◇ $pendingCount",
-                            style = PixelLabel,
-                            color = Color.White,
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "待办",
-                            style = PixelLabel,
-                            color = Color.White.copy(alpha = 0.85f),
-                        )
-                    }
-                }
+                // Pending badge — LightSeaBlue
+                PixelBadge(
+                    text = "◇ $pendingCount 待办",
+                    backgroundColor = LightSeaBlue,
+                    contentColor = Color.White,
+                )
             }
         }
     }
 }
+
 
 // ═══════════════════════════════════════════════════════════
 // Completed Section (Tasks 6.1-6.5, 8.2)
 // ═══════════════════════════════════════════════════════════
 
 private val completedBarColors = listOf(
-    PixelTeal,
-    PixelSkyBlue,
-    PixelLavender,
-    PixelCoralRed,
-    PixelStarYellow,
+    SeaBlue,
+    LightSeaBlue,
+    SunYellow,
+    CoralOrange,
+    MintBlue,
 )
 
 @Composable
@@ -456,19 +403,21 @@ private fun CompletedSection(
     onOpen: (EventEntity) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Task 8.2: PixelTeal section header
+        // PixelSectionHeader with SeaBlue accent + Chinese title
         PixelSectionHeader(
-            title = if (datePerspective == DatePerspective.TODAY) "今天已完成" else "已完成",
-            accent = PixelTeal,
+            title = "COMPLETED",
+            chineseTitle = if (datePerspective == DatePerspective.TODAY) "今天已完成" else "已完成",
+            accentColor = SeaBlue,
         )
         Spacer(Modifier.height(8.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .pixelBorder(PixelTeal, 2.dp),
-            shape = PixelShape,
-            colors = CardDefaults.cardColors(containerColor = PixelMintLight),
+        PixelCard(
+            modifier = Modifier.fillMaxWidth(),
+            level = PixelCardLevel.Secondary,
+            backgroundColor = MintBlue,
+            borderOuterColor = SeaBlue,
+            borderInnerColor = Color.White,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -531,6 +480,7 @@ private fun CompletedEventRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)  // Task 6.2: compact row
+            .pixelStateTransition(stateKey = event.id)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -562,38 +512,26 @@ private fun CompletedEventRow(
             color = WarmGray500,
             maxLines = 1,
         )
-        // Restart button, pixel square
+        // Restart button — pixel style
         if (datePerspective != DatePerspective.PAST) {
-            IconButton(
+            PixelIconButton(
                 onClick = onRestart,
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(PixelTeal.copy(alpha = 0.15f), PixelShape)
-                    .pixelBorder(PixelTeal, 1.dp),
-            ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "再来一次",
-                    modifier = Modifier.size(14.dp),
-                    tint = PixelTeal,
-                )
-            }
-        }
-        // Delete button, pixel square
-        IconButton(
-            onClick = onDelete,
-            modifier = Modifier
-                .size(24.dp)
-                .background(PixelCoralRed.copy(alpha = 0.10f), PixelShape)
-                .pixelBorder(PixelCoralRed.copy(alpha = 0.6f), 1.dp),
-        ) {
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = "删除",
-                modifier = Modifier.size(14.dp),
-                tint = PixelCoralRed.copy(alpha = 0.6f)
+                icon = { PixelRefreshIcon(color = SeaBlue, size = 18.dp) },
+                backgroundColor = MistBlue,
+                pressedBackgroundColor = SeaBlueLight,
+                borderColor = SeaBlue,
+                size = 28.dp,
             )
         }
+        // Delete button — pixel style (larger for better hit area)
+        PixelIconButton(
+            onClick = onDelete,
+            icon = { PixelCloseIcon(color = CoralOrange, size = 18.dp) },
+            backgroundColor = CoralOrange.copy(alpha = 0.12f),
+            pressedBackgroundColor = CoralOrange.copy(alpha = 0.25f),
+            borderColor = CoralOrange,
+            size = 28.dp,
+        )
     }
 }
 
@@ -602,11 +540,11 @@ private fun CompletedEventRow(
 // ═══════════════════════════════════════════════════════════
 
 private val playButtonColors = listOf(
-    PixelCoralRed,
-    PixelLavender,
-    PixelTeal,
-    PixelSkyBlue,
-    PixelHotPink,
+    CoralOrange,
+    LightSeaBlue,
+    SeaBlue,
+    SunYellow,
+    MintBlue,
 )
 
 @Composable
@@ -632,14 +570,15 @@ private fun PendingSection(
 
         if (validRecommendations.isNotEmpty() && datePerspective != DatePerspective.PAST) {
             Spacer(Modifier.height(12.dp))
-            // Task 8.4: PixelCoralRed section header for recommendations
+            // PixelCoralRed section header for recommendations
             PixelSectionHeader(
-                title = "建议快速开始",
-                accent = PixelCoralRed,
+                title = "QUICK START",
+                chineseTitle = "建议快速开始",
+                accentColor = CoralOrange,
             )
             Spacer(Modifier.height(6.dp))
             // Tasks 9.1-9.2: Colorful pixel tags
-            val tagColors = listOf(PixelCoralRed, PixelTeal, PixelAmberOrange, PixelSkyBlue)
+            val tagColors = listOf(CoralOrange, SeaBlue, SunYellow, LightSeaBlue)
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(bottom = 6.dp),
@@ -649,24 +588,18 @@ private fun PendingSection(
                     val name = validRecommendations[index]
                     val tagColor = tagColors[index % tagColors.size]
                     val interactionSource = remember { MutableInteractionSource() }
-                    Box(
+                    PixelBadge(
+                        text = name,
+                        backgroundColor = tagColor,
+                        contentColor = Color.White,
                         modifier = Modifier
-                            .background(color = tagColor, shape = PixelShape)
-                            .pixelBorder(PixelBorder, 1.dp)
                             .clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
                                 onClick = { onQuickStart(name) }
                             )
-                            .pressScaleEffect(interactionSource)
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = name,
-                            style = PixelLabel,
-                            color = Color.White,
-                        )
-                    }
+                            .pressScaleEffect(interactionSource),
+                    )
                 }
             }
         }
@@ -677,20 +610,22 @@ private fun PendingSection(
         }
 
         Spacer(Modifier.height(12.dp))
-        // Task 8.3: PixelAmberOrange section header for pending
+        // SunYellow section header for pending
         PixelSectionHeader(
-            title = if (datePerspective == DatePerspective.TODAY) "今日待办" else "待办",
-            accent = PixelAmberOrange,
+            title = "PENDING",
+            chineseTitle = if (datePerspective == DatePerspective.TODAY) "今日待办" else "待办",
+            accentColor = SunYellow,
         )
         Spacer(Modifier.height(8.dp))
 
         // Task 7.1: White bg + 2dp amber border + 5dp gold left edge
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .pixelBorder(PixelAmberOrange, 2.dp),
-            shape = PixelShape,
-            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        PixelCard(
+            modifier = Modifier.fillMaxWidth(),
+            level = PixelCardLevel.Secondary,
+            backgroundColor = CreamWhite,
+            borderOuterColor = SeaBlue,
+            borderInnerColor = Color.White,
+            contentPadding = PaddingValues(all = 0.dp),
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 // Left 5dp gold edge bar
@@ -698,7 +633,7 @@ private fun PendingSection(
                     modifier = Modifier
                         .width(5.dp)
                         .fillMaxHeight()
-                        .background(PixelStarYellow)
+                        .background(SunYellow)
                 )
                 Column(
                     modifier = Modifier
@@ -769,8 +704,9 @@ private fun PendingEventRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
+            .pixelStateTransition(stateKey = event.id)
             .then(
-                if (isPressed) Modifier.background(PixelAmberOrange.copy(alpha = 0.15f))
+                if (isPressed) Modifier.background(SunYellow.copy(alpha = 0.15f))
                 else Modifier
             )
             .clickable(
@@ -781,12 +717,12 @@ private fun PendingEventRow(
             .pressScaleEffect(interactionSource),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 3dp amber left bar
+        // 3dp sun yellow left bar
         Box(
             modifier = Modifier
                 .width(3.dp)
                 .height(20.dp)
-                .background(PixelAmberOrange)
+                .background(SunYellow)
         )
         Spacer(Modifier.width(10.dp))
         Text(
@@ -799,33 +735,23 @@ private fun PendingEventRow(
         Spacer(Modifier.width(4.dp))
 
         if (datePerspective == DatePerspective.TODAY) {
-            // 28dp square colorful play button with white PlayArrow + 1dp pixel border
-            IconButton(
+            PixelIconButton(
                 onClick = onStart,
-                modifier = Modifier
-                    .size(28.dp)
-                    .background(playButtonColor, PixelShape)
-                    .pixelBorder(PixelBorder, 1.dp),
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = "开始",
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.White,
-                )
-            }
-        }
-        IconButton(
-            onClick = onDelete,
-            modifier = Modifier.size(24.dp),
-        ) {
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = "删除",
-                modifier = Modifier.size(14.dp),
-                tint = PixelCoralRed.copy(alpha = 0.6f)
+                icon = { PixelPlayIcon(color = Color.White, size = 18.dp) },
+                backgroundColor = playButtonColor,
+                pressedBackgroundColor = playButtonColor.copy(alpha = 0.8f),
+                borderColor = DeepTeal,
+                size = 32.dp,
             )
         }
+        PixelIconButton(
+            onClick = onDelete,
+            icon = { PixelCloseIcon(color = CoralOrange, size = 18.dp) },
+            backgroundColor = CoralOrange.copy(alpha = 0.12f),
+            pressedBackgroundColor = CoralOrange.copy(alpha = 0.25f),
+            borderColor = CoralOrange,
+            size = 32.dp,
+        )
     }
 }
 
@@ -849,15 +775,15 @@ private fun LineTopBar(
             .height(42.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Task 10.1: Calendar icon (PixelTeal tint)
-        IconButton(onClick = onPickDate) {
-            Icon(
-                Icons.Default.CalendarMonth,
-                contentDescription = "选择日期",
-                modifier = Modifier.size(21.dp),
-                tint = PixelTeal
-            )
-        }
+        // Pixel calendar icon
+        PixelIconButton(
+            onClick = onPickDate,
+            icon = { PixelCalendarIcon(color = SeaBlue, size = 20.dp) },
+            backgroundColor = Color.Transparent,
+            pressedBackgroundColor = SeaBlue.copy(alpha = 0.15f),
+            borderColor = Color.Transparent,
+            size = 36.dp,
+        )
         Text(
             text = dateLabel,
             style = MaterialTheme.typography.labelLarge,
@@ -870,14 +796,14 @@ private fun LineTopBar(
         )
         // Task 10.1: MoreVert icon (PixelDeepNavy tint)
         Box {
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "更多",
-                    modifier = Modifier.size(21.dp),
-                    tint = PixelDeepNavy
-                )
-            }
+            PixelIconButton(
+                onClick = { menuExpanded = true },
+                icon = { PixelMoreIcon(color = DeepTeal, size = 20.dp) },
+                backgroundColor = Color.Transparent,
+                pressedBackgroundColor = DeepTeal.copy(alpha = 0.1f),
+                borderColor = Color.Transparent,
+                size = 36.dp,
+            )
             // Task 10.2-10.3: DropdownMenu with pixel style
             DropdownMenu(
                 expanded = menuExpanded,
@@ -886,8 +812,11 @@ private fun LineTopBar(
                 tonalElevation = 0.dp,
                 shadowElevation = 0.dp,
                 modifier = Modifier
-                    .background(SurfaceWhite)
-                    .pixelBorder(PixelBorder, 2.dp),
+                    .background(CreamWhite)
+                    .secondaryDoubleBorder(
+                        outerColor = SeaBlue,
+                        innerColor = Color.White,
+                    ),
             ) {
                 DropdownMenuItem(
                     text = { Text("数据统计", style = MaterialTheme.typography.bodyMedium) },
@@ -896,12 +825,7 @@ private fun LineTopBar(
                         onOpenReview()
                     },
                     leadingIcon = {
-                        Icon(
-                            Icons.Default.QueryStats,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = PixelDeepNavy
-                        )
+                        PixelMoreIcon(color = DeepTeal, size = 18.dp)
                     },
                 )
                 DropdownMenuItem(
@@ -911,12 +835,7 @@ private fun LineTopBar(
                         onExportCsv()
                     },
                     leadingIcon = {
-                        Icon(
-                            Icons.Default.FileDownload,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = PixelDeepNavy
-                        )
+                        PixelAddIcon(color = DeepTeal, size = 18.dp)
                     },
                 )
                 DropdownMenuItem(
@@ -926,12 +845,7 @@ private fun LineTopBar(
                         onExportJson()
                     },
                     leadingIcon = {
-                        Icon(
-                            Icons.Default.History,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = PixelDeepNavy
-                        )
+                        PixelCalendarIcon(color = DeepTeal, size = 18.dp)
                     },
                 )
             }
@@ -949,69 +863,34 @@ private fun QuickNameLine(
     onValueChange: (String) -> Unit,
     onAdd: () -> Unit,
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .pixelBorder(PixelLavender, 2.dp),
-        shape = PixelShape,
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+            .height(52.dp)
+            .padding(start = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .padding(start = 20.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Task 11.2: HotPink "+" icon
-            Icon(
-                Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = PixelHotPink,
-            )
-            Spacer(Modifier.width(10.dp))
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (value.isEmpty()) {
-                    Text(
-                        "今天想做点什么...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WarmGray500,
-                        modifier = Modifier.alpha(0.55f),
-                    )
-                }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { onAdd() }),
-                )
-            }
-            // Task 11.3: AmberOrange submit button square + white play icon
-            IconButton(
-                onClick = onAdd,
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(PixelAmberOrange, PixelShape),
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = "添加",
-                    modifier = Modifier.size(20.dp),
-                    tint = Color.White,
-                )
-            }
-        }
+        // Coral "+" icon
+        PixelAddIcon(
+            color = CoralOrange,
+            size = 18.dp,
+        )
+        Spacer(Modifier.width(10.dp))
+        PixelInput(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = "今天想做点什么...",
+            modifier = Modifier.weight(1f),
+        )
+        // Submit button — coral orange + play icon
+        PixelIconButton(
+            onClick = onAdd,
+            icon = { PixelPlayIcon(color = Color.White, size = 20.dp) },
+            backgroundColor = CoralOrange,
+            pressedBackgroundColor = CoralOrangeDark,
+            borderColor = DeepTeal,
+            size = 36.dp,
+        )
     }
 }
 
@@ -1035,7 +914,7 @@ private fun EmptyLine(datePerspective: DatePerspective) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = WarmGray500,
         )
     }
 }
@@ -1072,7 +951,7 @@ private fun ActiveEventCard(
     onStop: () -> Unit,
     onClick: () -> Unit,
 ) {
-    // Task 5.3: Pixel blink animation — keyframes instant-switch (800ms cycle)
+    // Pixel blink animation — keyframes instant-switch (800ms cycle)
     val infiniteTransition = rememberInfiniteTransition(label = "pixelBlink")
     val blinkAlpha by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -1096,9 +975,10 @@ private fun ActiveEventCard(
         label = "pressScale"
     )
 
-    Card(
+    PixelCard(
         modifier = Modifier
             .fillMaxWidth()
+            .pixelStateTransition(stateKey = event.id)
             .graphicsLayer {
                 scaleX = cardScale
                 scaleY = cardScale
@@ -1112,88 +992,78 @@ private fun ActiveEventCard(
                     },
                     onTap = { onClick() }
                 )
-            }
-            .pixelBorder(PixelBorder, 3.dp),
-        shape = PixelShape,
-        colors = CardDefaults.cardColors(containerColor = PixelHotPink),
+            },
+        level = PixelCardLevel.Primary,
+        backgroundColor = LightPink,
+        borderOuterColor = DeepTeal,
+        borderInnerColor = Color.White,
+        contentPadding = PaddingValues(20.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .padding(20.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Task 5.2: 8dp square block, PixelStarYellow, pixel blink
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .graphicsLayer { alpha = blinkAlpha }
-                                .background(PixelStarYellow, PixelShape)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "正在记录时间...",
-                            style = PixelLabel,
-                            color = Color.White.copy(alpha = 0.85f),
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Blinking indicator square
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .graphicsLayer { alpha = blinkAlpha }
+                            .background(SunYellow, PixelShape)
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = event.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        text = "正在记录时间...",
+                        style = PixelLabel,
+                        color = Color.White.copy(alpha = 0.85f),
                     )
                 }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = event.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-                Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(16.dp))
 
-                Column(horizontalAlignment = Alignment.End) {
-                    // Task 5.5: PixelDisplay style timer
+            Column(horizontalAlignment = Alignment.End) {
+                PixelHopNumber(
+                    targetValue = elapsedMinutes,
+                    format = { "${it}m" },
+                    textStyle = PixelDisplay,
+                    contentColor = Color.White,
+                )
+                Spacer(Modifier.height(8.dp))
+                // Stop button
+                PixelButton(
+                    onClick = onStop,
+                    backgroundColor = SeaBlue,
+                    pressedBackgroundColor = SeaBlueDark,
+                    contentColor = Color.White,
+                    borderColor = DeepTeal,
+                    borderInnerColor = Color.White,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                ) {
+                    PixelStopIcon(color = Color.White, size = 16.dp)
+                    Spacer(Modifier.width(4.dp))
                     Text(
-                        text = "${elapsedMinutes}m",
-                        style = PixelDisplay,
-                        color = Color.White,
+                        "结束",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
-                    Spacer(Modifier.height(8.dp))
-                    // Task 5.4: PixelTeal stop button + 2dp navy border
-                    Button(
-                        onClick = onStop,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PixelTeal,
-                            contentColor = PixelDeepNavy
-                        ),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                        modifier = Modifier
-                            .height(32.dp)
-                            .pixelBorder(PixelBorder, 2.dp),
-                        shape = PixelShape
-                    ) {
-                        Icon(
-                            Icons.Default.Stop,
-                            contentDescription = "结束",
-                            modifier = Modifier.size(16.dp),
-                            tint = PixelDeepNavy
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            "结束",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PixelDeepNavy
-                        )
-                    }
                 }
             }
         }
     }
 }
+
 
 // ═══════════════════════════════════════════════════════════
 // Pixel Border Modifier (8-bit dashed style)
