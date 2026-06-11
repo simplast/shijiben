@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -60,11 +61,11 @@ fun DayPickerDialog(
                 pressedBackgroundColor = CoralOrange.copy(alpha = 0.1f),
                 contentColor = CoralOrange,
                 borderColor = Color.Transparent,
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                PixelCloseIcon(color = CoralOrange, size = 14.dp)
-                Spacer(Modifier.width(4.dp))
-                Text("取消", style = PixelLabel, color = CoralOrange)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("取消", style = PixelLabel, color = CoralOrange)
+                }
             }
             Spacer(Modifier.width(8.dp))
             PixelButton(
@@ -80,11 +81,11 @@ fun DayPickerDialog(
                 pressedBackgroundColor = SeaBlueDark,
                 contentColor = Color.White,
                 borderColor = DeepTeal,
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                PixelCheckIcon(color = Color.White, size = 14.dp)
-                Spacer(Modifier.width(4.dp))
-                Text("确定", style = PixelLabel, color = Color.White)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("确定", style = PixelLabel, color = Color.White)
+                }
             }
         }
     }

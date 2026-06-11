@@ -25,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -32,6 +34,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -105,7 +109,14 @@ fun PixelButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val bgColor = if (isPressed) pressedBackgroundColor else backgroundColor
-    val scale = if (isPressed) pressScale else 1f
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) pressScale else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.6f,
+            stiffness = 300f
+        ),
+        label = "buttonPress"
+    )
 
     Box(
         modifier = modifier
@@ -140,11 +151,20 @@ fun PixelIconButton(
     borderColor: Color = DeepTeal,
     size: Dp = 32.dp,
     pressScale: Float = 0.92f,
+    borderless: Boolean = false,
+    contentDescription: String? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val bgColor = if (isPressed) pressedBackgroundColor else backgroundColor
-    val scale = if (isPressed) pressScale else 1f
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) pressScale else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.6f,
+            stiffness = 300f
+        ),
+        label = "iconButtonPress"
+    )
 
     Box(
         modifier = modifier
@@ -154,10 +174,17 @@ fun PixelIconButton(
             }
             .size(size)
             .background(bgColor)
-            .tertiaryDoubleBorder(
-                outerColor = borderColor,
-                innerColor = Color.White,
+            .then(
+                if (!borderless) {
+                    Modifier.tertiaryDoubleBorder(
+                        outerColor = borderColor,
+                        innerColor = Color.White,
+                    )
+                } else Modifier
             )
+            .semantics {
+                contentDescription?.let { this.contentDescription = it }
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -215,19 +242,10 @@ fun PixelSectionHeader(
         )
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = title.uppercase(),
+            text = chineseTitle ?: title,
             color = DeepTeal,
             style = PixelLabel,
         )
-        if (chineseTitle != null) {
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = chineseTitle,
-                color = DeepTeal,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
-            )
-        }
     }
 }
 

@@ -208,8 +208,7 @@ fun WeeklyReviewScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         PixelSectionHeader(
-                            title = "GOALS",
-                            chineseTitle = "本周目标",
+                            title = "本周目标",
                             accentColor = CoralOrange,
                         )
                         PixelButton(
@@ -247,8 +246,7 @@ fun WeeklyReviewScreen(
 
                 item {
                     PixelSectionHeader(
-                        title = "DAILY",
-                        chineseTitle = "每日进展",
+                        title = "每日进展",
                         accentColor = SeaBlue,
                     )
                 }
@@ -259,8 +257,7 @@ fun WeeklyReviewScreen(
 
                 item {
                     PixelSectionHeader(
-                        title = "TOP EVENTS",
-                        chineseTitle = "时间去哪儿了",
+                        title = "时间去哪儿了",
                         accentColor = LightSeaBlue,
                     )
                 }
@@ -441,8 +438,7 @@ private fun GoalDialog(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             PixelSectionHeader(
-                title = "SET GOAL",
-                chineseTitle = "设定本周目标",
+                title = "设定本周目标",
                 accentColor = CoralOrange,
             )
             Spacer(Modifier.height(4.dp))

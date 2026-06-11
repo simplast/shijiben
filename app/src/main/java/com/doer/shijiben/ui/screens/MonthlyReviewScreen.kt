@@ -124,8 +124,7 @@ fun MonthlyReviewScreen(
                 if (stats!!.categorySummaries.isNotEmpty()) {
                     item {
                         PixelSectionHeader(
-                            title = "CATEGORIES",
-                            chineseTitle = "分类统计",
+                            title = "分类统计",
                             accentColor = CoralOrange,
                         )
                     }
@@ -136,8 +135,7 @@ fun MonthlyReviewScreen(
 
                 item {
                     PixelSectionHeader(
-                        title = "TOP EVENTS",
-                        chineseTitle = "时间去哪儿了",
+                        title = "时间去哪儿了",
                         accentColor = LightSeaBlue,
                     )
                 }

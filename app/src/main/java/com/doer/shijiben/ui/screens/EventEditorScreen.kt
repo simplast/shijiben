@@ -383,13 +383,13 @@ fun EventEditorContent(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(vertical = if (isNew) 10.dp else 14.dp),
             ) {
-                PixelPlayIcon(color = Color.White, size = 16.dp)
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    if (isNew) "开始记录" else "更新",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (isNew) "开始记录" else "更新",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
 
             if (eventId != null && loadedEntity != null) {
@@ -407,13 +407,13 @@ fun EventEditorContent(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(vertical = 10.dp),
                 ) {
-                    PixelCloseIcon(color = CoralOrange, size = 16.dp)
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "删除此段记忆",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "删除此段记忆",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
                 }
 
                 if (status == "IN_PROGRESS") {
@@ -426,13 +426,13 @@ fun EventEditorContent(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(vertical = 10.dp),
                     ) {
-                        PixelCheckIcon(color = SeaBlue, size = 16.dp)
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "标记完成",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "标记完成",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }
@@ -502,9 +502,9 @@ private fun EventTimePickerDialog(
                 borderColor = Color.Transparent,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
             ) {
-                PixelCloseIcon(color = CoralOrange, size = 14.dp)
-                Spacer(Modifier.width(4.dp))
-                Text("取消", style = PixelLabel, color = CoralOrange)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("取消", style = PixelLabel, color = CoralOrange)
+                }
             }
             Spacer(Modifier.width(8.dp))
             PixelButton(
@@ -515,9 +515,9 @@ private fun EventTimePickerDialog(
                 borderColor = DeepTeal,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
             ) {
-                PixelCheckIcon(color = Color.White, size = 14.dp)
-                Spacer(Modifier.width(4.dp))
-                Text("确定", style = PixelLabel, color = Color.White)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("确定", style = PixelLabel, color = Color.White)
+                }
             }
         }
     }

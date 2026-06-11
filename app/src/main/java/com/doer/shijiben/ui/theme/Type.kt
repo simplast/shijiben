@@ -2,26 +2,28 @@ package com.doer.shijiben.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.doer.shijiben.R
 
 // ============================================================
 // DESIGN.md §3 — Typography System
 // ============================================================
 //
 // Font strategy:
-//   Monospace → display/hero headings & numbers (8-bit pixel aesthetic)
+//   Press Start 2P → display/hero headings & numbers (8-bit pixel aesthetic)
 //   FontFamily.Default → body/caption (Chinese text readability)
 //
-// Uses system Monospace fallback for broad compatibility.
 // ============================================================
 
 // ── Font Family references ──
-private val DisplayFont = FontFamily.Monospace   // pixel feel headings
+val PixelFont = FontFamily(Font(R.font.pressstart2p))  // 8-bit pixel font
+private val DisplayFont = PixelFont   // pixel feel headings
 private val BodyFont = FontFamily.Default  // Chinese body readable
-private val MonoFont = FontFamily.Monospace      // pixel numbers/timers
+private val MonoFont = PixelFont      // pixel numbers/timers
 
 // ── 9-Level Type Scale ──
 // Tokens: display / hero / h1 / h2 / h3 / body / body-sm / caption / nano
@@ -105,18 +107,18 @@ val LabelUppercase = TextStyle(
     letterSpacing = 0.1.em,
 )
 
-/** 8-bit Pixel Display: large monospace numbers for overview/active cards */
+/** 8-bit Pixel Display: large pixel numbers for overview/active cards */
 val PixelDisplay = TextStyle(
-    fontFamily = FontFamily.Monospace,
+    fontFamily = PixelFont,
     fontSize = 32.sp,
     fontWeight = FontWeight.Black,
     lineHeight = 38.sp,
     letterSpacing = 0.05.em,
 )
 
-/** 8-bit Pixel Label: tiny uppercase monospace for section headers / meta */
+/** 8-bit Pixel Label: tiny uppercase pixel font for section headers / meta */
 val PixelLabel = TextStyle(
-    fontFamily = FontFamily.Monospace,
+    fontFamily = PixelFont,
     fontSize = 10.sp,
     fontWeight = FontWeight.Bold,
     lineHeight = 13.sp,

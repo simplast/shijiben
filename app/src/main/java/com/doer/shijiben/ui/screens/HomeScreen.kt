@@ -517,8 +517,10 @@ private fun CompletedEventRow(
                 backgroundColor = MistBlue,
                 pressedBackgroundColor = SeaBlueLight,
                 borderColor = SeaBlue,
-                size = 28.dp,
+                size = 44.dp,
+                contentDescription = "重来",
             )
+            Spacer(Modifier.width(8.dp))
         }
         // Delete button — pixel style (larger for better hit area)
         PixelIconButton(
@@ -527,7 +529,8 @@ private fun CompletedEventRow(
             backgroundColor = CoralOrange.copy(alpha = 0.12f),
             pressedBackgroundColor = CoralOrange.copy(alpha = 0.25f),
             borderColor = CoralOrange,
-            size = 28.dp,
+            size = 44.dp,
+            contentDescription = "删除",
         )
     }
 }
@@ -569,8 +572,7 @@ private fun PendingSection(
             Spacer(Modifier.height(12.dp))
             // PixelCoralRed section header for recommendations
             PixelSectionHeader(
-                title = "QUICK START",
-                chineseTitle = "建议快速开始",
+                title = "建议快速开始",
                 accentColor = CoralOrange,
             )
             Spacer(Modifier.height(6.dp))
@@ -729,7 +731,7 @@ private fun PendingEventRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(8.dp))
 
         if (datePerspective == DatePerspective.TODAY) {
             PixelIconButton(
@@ -737,8 +739,10 @@ private fun PendingEventRow(
                 icon = { PixelPlayIcon(color = Color.White, size = 18.dp) },
                 backgroundColor = playButtonColor,
                 pressedBackgroundColor = playButtonColor.copy(alpha = 0.8f),
-                borderColor = DeepTeal,
-                size = 32.dp,
+                borderColor = Color.Transparent,
+                size = 44.dp,
+                borderless = true,
+                contentDescription = "开始",
             )
         }
         PixelIconButton(
@@ -746,8 +750,10 @@ private fun PendingEventRow(
             icon = { PixelCloseIcon(color = CoralOrange, size = 18.dp) },
             backgroundColor = CoralOrange.copy(alpha = 0.12f),
             pressedBackgroundColor = CoralOrange.copy(alpha = 0.25f),
-            borderColor = CoralOrange,
-            size = 32.dp,
+            borderColor = Color.Transparent,
+            size = 44.dp,
+            borderless = true,
+            contentDescription = "删除",
         )
     }
 }
@@ -780,6 +786,7 @@ private fun LineTopBar(
             pressedBackgroundColor = SeaBlue.copy(alpha = 0.15f),
             borderColor = Color.Transparent,
             size = 36.dp,
+            contentDescription = "选择日期",
         )
         Text(
             text = dateLabel,
@@ -800,6 +807,7 @@ private fun LineTopBar(
                 pressedBackgroundColor = DeepTeal.copy(alpha = 0.1f),
                 borderColor = Color.Transparent,
                 size = 36.dp,
+                contentDescription = "菜单",
             )
             // Task 10.2-10.3: DropdownMenu with pixel style
             DropdownMenu(
@@ -863,30 +871,41 @@ private fun QuickNameLine(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .padding(start = 12.dp, end = 4.dp),
+            .height(56.dp)
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Coral "+" icon
-        PixelAddIcon(
-            color = CoralOrange,
-            size = 18.dp,
+        // Coral "+" button — 40dp square, no border
+        PixelIconButton(
+            onClick = onAdd,
+            icon = { PixelAddIcon(color = Color.White, size = 20.dp) },
+            backgroundColor = LightPink,
+            pressedBackgroundColor = LightPink.copy(alpha = 0.8f),
+            borderColor = Color.Transparent,
+            size = 40.dp,
+            borderless = true,
+            contentDescription = "添加",
         )
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
         PixelInput(
             value = value,
             onValueChange = onValueChange,
             placeholder = "今天想做点什么...",
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp),
         )
-        // Submit button — coral orange + play icon
+        Spacer(Modifier.width(8.dp))
+        // Submit button — coral orange, 40dp, no border
         PixelIconButton(
             onClick = onAdd,
-            icon = { PixelPlayIcon(color = Color.White, size = 20.dp) },
+            icon = { PixelPlayIcon(color = Color.White, size = 18.dp) },
             backgroundColor = CoralOrange,
             pressedBackgroundColor = CoralOrangeDark,
-            borderColor = DeepTeal,
-            size = 36.dp,
+            borderColor = Color.Transparent,
+            size = 40.dp,
+            borderless = true,
+            contentDescription = "提交",
         )
     }
 }
