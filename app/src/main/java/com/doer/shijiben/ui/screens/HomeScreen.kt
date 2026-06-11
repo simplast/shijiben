@@ -49,11 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -1064,50 +1061,8 @@ private fun ActiveEventCard(
     }
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// Pixel Border Modifier (8-bit dashed style)
-// ═══════════════════════════════════════════════════════════
-
-fun Modifier.pixelBorder(
-    color: Color,
-    width: Dp = 2.dp,
-    pixelSize: Dp = 4.dp,
-    gap: Dp = 2.dp,
-): Modifier = this.drawBehind {
-    val strokeWidth = width.toPx()
-    val px = pixelSize.toPx()
-    val gp = gap.toPx()
-    val step = px + gp
-
-    // Top edge
-    var x = 0f
-    while (x < size.width) {
-        drawRect(color, Offset(x, 0f), Size(px.coerceAtMost(size.width - x), strokeWidth))
-        x += step
-    }
-    // Bottom edge
-    x = 0f
-    while (x < size.width) {
-        drawRect(color, Offset(x, size.height - strokeWidth), Size(px.coerceAtMost(size.width - x), strokeWidth))
-        x += step
-    }
-    // Left edge
-    var y = 0f
-    while (y < size.height) {
-        drawRect(color, Offset(0f, y), Size(strokeWidth, px.coerceAtMost(size.height - y)))
-        y += step
-    }
-    // Right edge
-    y = 0f
-    while (y < size.height) {
-        drawRect(color, Offset(size.width - strokeWidth, y), Size(strokeWidth, px.coerceAtMost(size.height - y)))
-        y += step
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-// Modifier Extension
+// Modifier Extensions
 // ═══════════════════════════════════════════════════════════
 
 @Composable
