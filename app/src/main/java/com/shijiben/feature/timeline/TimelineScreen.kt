@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import java.util.TimeZone
 
 @Composable
 fun TimelineScreen(
+    onTagsClick: () -> Unit = {},
     viewModel: TimelineViewModel = hiltViewModel()
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
@@ -63,8 +65,13 @@ fun TimelineScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = { viewModel.goToPreviousDay() }) {
-                        Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onTagsClick) {
+                            Icon(Icons.Default.Star, contentDescription = "标签")
+                        }
+                        IconButton(onClick = { viewModel.goToPreviousDay() }) {
+                            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天")
+                        }
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
