@@ -1,0 +1,18 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# App module build outputs
+/app/build
+/app/.cxx
+/app/release
+
+# Kotlin
+/.kotlin
