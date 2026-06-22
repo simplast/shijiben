@@ -38,7 +38,7 @@ fun DayProgressBar(
         // 12-24h 色块
         TimeBlock(
             hasRecord = events.any { hourOfDay(it.startTime) >= 12 },
-            isPast = false, // 12-24h 永远不算"已过去未记录"（因为 24h 是一天结束）；用 hasRecord 判断
+            isPast = nowHour >= 12, // 12-24h 中已有部分过去且无记录 → 蓝色；还未到 → 米白
             isNow = nowHour >= 12,
             modifier = Modifier.size(56.dp)
         )

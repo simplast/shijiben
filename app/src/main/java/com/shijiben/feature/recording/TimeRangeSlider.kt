@@ -7,15 +7,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.ui.theme.PixelBackground
+import com.shijiben.ui.theme.PixelBorder
 import com.shijiben.ui.theme.PixelGreen
 import com.shijiben.ui.theme.PixelIndigo
 import com.shijiben.ui.theme.PixelRed
@@ -37,6 +40,14 @@ fun TimeRangeSlider(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
+        // 8-bit 风格滑块配色：靛蓝手柄/激活轨道，深灰淡化非激活轨道；刻度过密置透明
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = PixelIndigo,
+            activeTrackColor = PixelIndigo,
+            inactiveTrackColor = PixelBorder.copy(alpha = 0.3f),
+            activeTickColor = Color.Transparent,
+            inactiveTickColor = Color.Transparent
+        )
         // 第一行 0-12h 视觉
         TimeRowVisual(
             startMin = startMinutes,
@@ -85,7 +96,8 @@ fun TimeRangeSlider(
                 onMinutesChange(startMinutes, ne)
             },
             valueRange = 0f..1440f,
-            steps = 1439
+            steps = 1439,
+            colors = sliderColors
         )
     }
 }

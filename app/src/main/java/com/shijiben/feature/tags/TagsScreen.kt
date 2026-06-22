@@ -79,7 +79,9 @@ fun TagsScreen(
                 ) {
                     Text(
                         text = "还没有标签，点右上角 + 创建",
-                        color = PixelTextSecondary
+                        color = PixelTextSecondary,
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = 15.sp
                     )
                 }
             } else {

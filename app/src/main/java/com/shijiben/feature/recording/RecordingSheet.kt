@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -82,6 +83,7 @@ fun RecordingSheet(
                 onValueChange = viewModel::onTitleChange,
                 label = { Text("做了什么 / 打算做什么") },
                 singleLine = true,
+                shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth()
             )
             // 时间滑块
@@ -123,6 +125,7 @@ fun RecordingSheet(
                 value = note,
                 onValueChange = viewModel::onNoteChange,
                 label = { Text("备注（可选）") },
+                shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )

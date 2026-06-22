@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 深灰像素方块（居中 48x48，位于 adaptive icon 安全区内） -->
+    <path
+        android:fillColor="#2A2828"
+        android:pathData="M30,30h48v48h-48z" />
+    <!-- 金色对角线，呼应 8-bit 高饱和色板 -->
+    <path
+        android:strokeColor="#F2C94C"
+        android:strokeWidth="7"
+        android:pathData="M30,30L78,78" />
+</vector>

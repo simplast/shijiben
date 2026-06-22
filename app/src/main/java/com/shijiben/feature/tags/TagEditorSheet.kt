@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +72,7 @@ fun TagEditorSheet(
                 onValueChange = { name = it },
                 label = { Text("标签名称") },
                 singleLine = true,
+                shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth()
             )
             Text(

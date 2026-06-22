@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,9 +62,12 @@ fun EventList(
 
 @Composable
 private fun EventCard(event: EventEntity, onClick: () -> Unit) {
+    val isNotStarted = event.status == EventStatus.NotStarted.value
     PixelCard(
-        modifier = Modifier.fillMaxWidth(),
-        shadow = event.status != EventStatus.NotStarted.value // notStarted 无阴影（半透明感）
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (isNotStarted) Modifier.alpha(0.7f) else Modifier),
+        shadow = !isNotStarted // notStarted 无阴影 + 半透明，区分预写状态
     ) {
         Row(
             modifier = Modifier
@@ -95,7 +99,7 @@ private fun EventCard(event: EventEntity, onClick: () -> Unit) {
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    color = if (event.status == EventStatus.NotStarted.value) PixelTextSecondary else PixelText
+                    color = if (isNotStarted) PixelTextSecondary else PixelText
                 )
                 if (event.note != null) {
                     Text(
@@ -108,7 +112,7 @@ private fun EventCard(event: EventEntity, onClick: () -> Unit) {
                 }
             }
             // 状态标签
-            if (event.status == EventStatus.NotStarted.value) {
+            if (isNotStarted) {
                 PixelOutlinedButton(
                     text = "预写",
                     onClick = onClick,

@@ -63,7 +63,12 @@ fun NotesScreen(
             Spacer(Modifier.height(8.dp))
             if (notes.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("还没有随笔，点右上角 + 记下此刻的想法", color = PixelTextSecondary)
+                    Text(
+                        text = "还没有随笔，点右上角 + 记下此刻的想法",
+                        color = PixelTextSecondary,
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = 15.sp
+                    )
                 }
             } else {
                 LazyColumn(
