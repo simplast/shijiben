@@ -126,6 +126,49 @@ fun RecordingSheet(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
+            // 状态切换（仅编辑模式）
+            if (editingEvent != null) {
+                Text(
+                    text = "状态",
+                    fontSize = 13.sp,
+                    color = PixelTextSecondary
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PixelOutlinedButton(
+                        text = "未开始",
+                        onClick = {
+                            scope.launch {
+                                viewModel.markNotStarted()
+                                onSaved()
+                            }
+                        },
+                        modifier = Modifier.weight(1f).height(40.dp)
+                    )
+                    PixelOutlinedButton(
+                        text = "进行中",
+                        onClick = {
+                            scope.launch {
+                                viewModel.markInProgress()
+                                onSaved()
+                            }
+                        },
+                        modifier = Modifier.weight(1f).height(40.dp)
+                    )
+                    PixelOutlinedButton(
+                        text = "完成",
+                        onClick = {
+                            scope.launch {
+                                viewModel.markCompleted()
+                                onSaved()
+                            }
+                        },
+                        modifier = Modifier.weight(1f).height(40.dp)
+                    )
+                }
+            }
             // 按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shijiben.data.local.EventEntity
 import com.shijiben.data.local.TagEntity
+import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.TagRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +42,7 @@ class RecordingViewModel @Inject constructor(
     val note: StateFlow<String> = _note.asStateFlow()
 
     private var editingId: Long? = null
+    private var currentStatus: Int = EventStatus.NotStarted.value
 
     fun onTitleChange(v: String) { _title.value = v }
     fun onNoteChange(v: String) { _note.value = v }
@@ -65,6 +67,7 @@ class RecordingViewModel @Inject constructor(
     /** 进入"编辑"模式：加载已有事件 */
     fun initEdit(event: EventEntity) {
         editingId = event.id
+        currentStatus = event.status
         _title.value = event.title
         _note.value = event.note ?: ""
         _selectedTagId.value = event.tagId
@@ -118,6 +121,24 @@ class RecordingViewModel @Inject constructor(
         val eid = editingId ?: return false
         eventRepository.deleteEventById(eid)
         return true
+    }
+
+    suspend fun markNotStarted() {
+        val eid = editingId ?: return
+        eventRepository.markNotStarted(eid)
+        currentStatus = EventStatus.NotStarted.value
+    }
+
+    suspend fun markInProgress() {
+        val eid = editingId ?: return
+        eventRepository.markInProgress(eid)
+        currentStatus = EventStatus.InProgress.value
+    }
+
+    suspend fun markCompleted() {
+        val eid = editingId ?: return
+        eventRepository.markCompleted(eid)
+        currentStatus = EventStatus.Completed.value
     }
 
     private fun minutesToTimestamp(y: Int, m: Int, d: Int, minutes: Int): Long {

@@ -59,6 +59,28 @@ class EventRepository @Inject constructor(
 
     suspend fun clearTagReference(tagId: Long) = eventDao.clearTagReference(tagId)
 
+    /** 手动把事件标记为已完成（停止计时） */
+    suspend fun markCompleted(eventId: Long) {
+        val event = eventDao.getEventById(eventId) ?: return
+        val now = System.currentTimeMillis()
+        val endTime = if (event.endTime == null) now else event.endTime
+        eventDao.updateEvent(event.copy(endTime = endTime, status = EventStatus.Completed.value, updatedAt = now))
+    }
+
+    /** 手动把事件标记为进行中（开始计时），end_time 置 null */
+    suspend fun markInProgress(eventId: Long) {
+        val event = eventDao.getEventById(eventId) ?: return
+        val now = System.currentTimeMillis()
+        eventDao.updateEvent(event.copy(endTime = null, status = EventStatus.InProgress.value, updatedAt = now))
+    }
+
+    /** 手动把事件标记为未开始（预写） */
+    suspend fun markNotStarted(eventId: Long) {
+        val event = eventDao.getEventById(eventId) ?: return
+        val now = System.currentTimeMillis()
+        eventDao.updateEvent(event.copy(status = EventStatus.NotStarted.value, updatedAt = now))
+    }
+
     /**
      * 自动顺延：把指定日期之前仍未开始的 notStarted 事件移到目标日期的相同时刻。
      * 仅顺延 notStarted，completed/inProgress 不动。
@@ -86,7 +108,7 @@ class EventRepository @Inject constructor(
         return count
     }
 
-    private fun shiftToTargetDay(
+    internal fun shiftToTargetDay(
         e: EventEntity,
         year: Int, month: Int, day: Int,
         now: Long
@@ -108,7 +130,7 @@ class EventRepository @Inject constructor(
         return Pair(newStart, newEnd)
     }
 
-    private fun determineStatus(startTime: Long, endTime: Long?, now: Long): EventStatus {
+    internal fun determineStatus(startTime: Long, endTime: Long?, now: Long): EventStatus {
         // 进行中
         if (endTime == null && startTime <= now) return EventStatus.InProgress
         // 预写
