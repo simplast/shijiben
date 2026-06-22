@@ -1,62 +1,66 @@
 ## Change Impact List — 事记本 V1（灵魂闭环）
 
-> 基于 AGENT.md 上下文和设计 spec 分析。V1 为全新项目，所有变更均为新建文件。
+> 基于 AGENT.md 上下文和设计 spec 分析。V1 为全新原生 Android 项目，所有变更均为新建文件。
 
 ### New Files
 
 | File Path | Purpose | Key Dependencies |
 |-----------|---------|-------------------|
-| `pubspec.yaml` | 项目配置与依赖声明 | flutter, drift, riverpod, go_router |
-| `lib/main.dart` | App 入口，初始化数据库与路由 | drift, riverpod, go_router |
-| `lib/data/database/app_database.dart` | drift 数据库定义，连接管理 | drift |
-| `lib/data/tables/events_table.dart` | Event 表定义 | drift |
-| `lib/data/tables/notes_table.dart` | Note 表定义 | drift |
-| `lib/data/tables/tags_table.dart` | Tag 表定义 | drift |
-| `lib/data/daos/event_dao.dart` | Event 数据访问层（CRUD + 状态流转 + 顺延） | drift, events_table |
-| `lib/data/daos/note_dao.dart` | Note 数据访问层 | drift, notes_table |
-| `lib/data/daos/tag_dao.dart` | Tag 数据访问层 | drift, tags_table |
-| `lib/data/models/event_status.dart` | 事件状态枚举 | dart |
-| `lib/core/theme/app_colors.dart` | 8-bit 柔和复古色板常量 | flutter |
-| `lib/core/theme/app_theme.dart` | 全局主题配置（字体、边框、颜色） | flutter, app_colors |
-| `lib/core/theme/pixel_border.dart` | 像素边框绘制组件 | flutter |
-| `lib/core/widgets/pixel_button.dart` | 8-bit 风格按钮 | flutter, pixel_border |
-| `lib/core/widgets/pixel_card.dart` | 8-bit 风格卡片容器 | flutter, pixel_border |
-| `lib/features/timeline/timeline_screen.dart` | 时间轴主视图页面 | flutter, riverpod, event_dao, note_dao |
-| `lib/features/timeline/widgets/day_section.dart` | 单日时间轴区块（日期头 + 事件块 + 随笔点） | flutter |
-| `lib/features/timeline/widgets/event_block.dart` | 事件块组件（按 tag 着色，高度=时长） | flutter, app_colors |
-| `lib/features/timeline/widgets/note_dot.dart` | 随笔点组件（右侧小圆点，点开展开） | flutter |
-| `lib/features/timeline/widgets/current_time_line.dart` | 当前时间指示线 | flutter |
-| `lib/features/timeline/widgets/ongoing_status_bar.dart` | 进行中事件顶部状态条 | flutter, riverpod |
-| `lib/features/timeline/controllers/timeline_controller.dart` | 时间轴状态管理（日期切换、数据加载） | riverpod, event_dao, note_dao |
-| `lib/features/recording/recording_sheet.dart` | 记录入口底部弹窗（标题/标签/时间输入） | flutter, riverpod, tag_dao |
-| `lib/features/recording/realtime_timer_controller.dart` | 实时计时逻辑（开始/停止/刷新） | riverpod, event_dao |
-| `lib/features/recording/controllers/event_editor_controller.dart` | 事件编辑状态管理 | riverpod, event_dao, tag_dao |
-| `lib/features/tags/tags_screen.dart` | 标签管理页面（列表 + 增删改） | flutter, riverpod, tag_dao |
-| `lib/features/tags/tag_editor_sheet.dart` | 标签编辑弹窗（名称 + 颜色选择） | flutter, app_colors |
-| `lib/features/tags/controllers/tag_controller.dart` | 标签状态管理 | riverpod, tag_dao |
-| `lib/features/notes/note_editor_sheet.dart` | 随笔创建/编辑弹窗 | flutter, riverpod, note_dao |
-| `lib/features/notes/controllers/note_controller.dart` | 随笔状态管理 | riverpod, note_dao |
-| `lib/core/utils/auto_carry.dart` | 未开始事件自动顺延逻辑 | event_dao |
-| `lib/core/router/app_router.dart` | 路由配置 | go_router |
+| `build.gradle.kts` | 项目级 Gradle 配置 | Android Gradle Plugin、Kotlin |
+| `settings.gradle.kts` | Gradle 项目设置 | |
+| `app/build.gradle.kts` | App 模块配置与依赖声明 | Compose、Room、Hilt、Navigation |
+| `app/src/main/AndroidManifest.xml` | 应用清单 | |
+| `app/src/main/java/com/shijiben/ShiJiBenApplication.kt` | Application 类，初始化 Hilt | Hilt |
+| `app/src/main/java/com/shijiben/MainActivity.kt` | 入口 Activity | Navigation Compose |
+| `app/src/main/java/com/shijiben/ui/theme/AppColors.kt` | 8-bit 活泼复古色板常量 | Compose |
+| `app/src/main/java/com/shijiben/ui/theme/AppTheme.kt` | 全局主题配置（字体、边框、颜色） | Compose |
+| `app/src/main/java/com/shijiben/ui/theme/PixelComponents.kt` | 像素边框按钮/卡片组件 | Compose |
+| `app/src/main/java/com/shijiben/data/local/EventEntity.kt` | Event 表 Room Entity | Room |
+| `app/src/main/java/com/shijiben/data/local/NoteEntity.kt` | Note 表 Room Entity | Room |
+| `app/src/main/java/com/shijiben/data/local/TagEntity.kt` | Tag 表 Room Entity | Room |
+| `app/src/main/java/com/shijiben/data/local/EventDao.kt` | Event DAO | Room、Coroutines |
+| `app/src/main/java/com/shijiben/data/local/NoteDao.kt` | Note DAO | Room、Coroutines |
+| `app/src/main/java/com/shijiben/data/local/TagDao.kt` | Tag DAO | Room、Coroutines |
+| `app/src/main/java/com/shijiben/data/local/AppDatabase.kt` | Room Database 定义 | Room |
+| `app/src/main/java/com/shijiben/data/repository/EventRepository.kt` | Event 业务仓库 | DAO、Entity |
+| `app/src/main/java/com/shijiben/data/repository/NoteRepository.kt` | Note 业务仓库 | DAO、Entity |
+| `app/src/main/java/com/shijiben/data/repository/TagRepository.kt` | Tag 业务仓库 | DAO、Entity |
+| `app/src/main/java/com/shijiben/data/model/EventStatus.kt` | 事件状态枚举 | Kotlin |
+| `app/src/main/java/com/shijiben/feature/timeline/TimelineScreen.kt` | 时间轴主页面 | Compose、ViewModel |
+| `app/src/main/java/com/shijiben/feature/timeline/TimelineViewModel.kt` | 时间轴状态管理 | Flow、Repository |
+| `app/src/main/java/com/shijiben/feature/timeline/DayProgressBar.kt` | 左侧时间条（2 个方块） | Compose |
+| `app/src/main/java/com/shijiben/feature/timeline/EventList.kt` | 右侧事件卡片列表 | Compose |
+| `app/src/main/java/com/shijiben/feature/recording/RecordingSheet.kt` | 记录入口底部弹窗 | Compose |
+| `app/src/main/java/com/shijiben/feature/recording/RecordingViewModel.kt` | 记录状态管理 | Repository |
+| `app/src/main/java/com/shijiben/feature/recording/TimeRangeSlider.kt` | 0-12/12-24 时间滑块 | Compose |
+| `app/src/main/java/com/shijiben/feature/tags/TagsScreen.kt` | 标签管理页面 | Compose、ViewModel |
+| `app/src/main/java/com/shijiben/feature/tags/TagsViewModel.kt` | 标签状态管理 | Repository |
+| `app/src/main/java/com/shijiben/feature/tags/TagEditorSheet.kt` | 标签编辑弹窗 | Compose |
+| `app/src/main/java/com/shijiben/feature/notes/NotesScreen.kt` | 随笔列表（v2 完整化） | Compose、ViewModel |
+| `app/src/main/java/com/shijiben/feature/notes/NoteEditorSheet.kt` | 随笔编辑弹窗 | Compose |
+| `app/src/main/java/com/shijiben/navigation/AppNavHost.kt` | Navigation Compose 路由配置 | Navigation |
 
 ### Modified Files
+
 无（全新项目）
 
 ### Deleted Files
+
 无
 
 ### API Changes
+
 无（纯本地应用，无网络 API）
 
 ### Dependency / Config Changes
+
 | Item | Change | Notes |
 |------|--------|-------|
-| flutter SDK | 新增 | 项目基础 |
-| drift | 新增 | SQLite ORM |
-| sqlite3_flutter_libs | 新增 | SQLite 原生库 |
-| riverpod | 新增 | 状态管理 |
-| flutter_riverpod | 新增 | Riverpod Flutter 集成 |
-| go_router | 新增 | 路由管理 |
-| drift_dev | 新增 (dev) | drift 代码生成 |
-| build_runner | 新增 (dev) | 代码生成工具 |
-| flutter_lints | 新增 (dev) | 代码规范 |
+| Android Gradle Plugin | 新增 | 项目基础 |
+| Kotlin | 新增 | 开发语言 |
+| Jetpack Compose | 新增 | UI 框架 |
+| Room | 新增 | SQLite ORM |
+| Hilt | 新增 | 依赖注入 |
+| Navigation Compose | 新增 | 路由管理 |
+| Coroutines / Flow | 新增 | 异步与响应式 |
+| Material3 / Material Icons | 新增 | UI 组件 |
