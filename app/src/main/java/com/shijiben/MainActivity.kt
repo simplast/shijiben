@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.shijiben.feature.notes.NotesScreen
 import com.shijiben.feature.tags.TagsScreen
 import com.shijiben.feature.timeline.TimelineScreen
 import com.shijiben.ui.theme.AppTheme
@@ -27,11 +28,14 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     // 临时验证入口：T-10 会替换为正式 Navigation
-                    var showTags by remember { mutableStateOf(false) }
-                    if (showTags) {
-                        TagsScreen(onBack = { showTags = false })
-                    } else {
-                        TimelineScreen(onTagsClick = { showTags = true })
+                    var screen by remember { mutableStateOf("timeline") }
+                    when (screen) {
+                        "timeline" -> TimelineScreen(
+                            onTagsClick = { screen = "tags" },
+                            onNotesClick = { screen = "notes" }
+                        )
+                        "tags" -> TagsScreen(onBack = { screen = "timeline" })
+                        "notes" -> NotesScreen(onBack = { screen = "timeline" })
                     }
                 }
             }

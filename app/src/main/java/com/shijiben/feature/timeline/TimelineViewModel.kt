@@ -3,7 +3,9 @@ package com.shijiben.feature.timeline
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shijiben.data.local.EventEntity
+import com.shijiben.data.local.NoteEntity
 import com.shijiben.data.repository.EventRepository
+import com.shijiben.data.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +22,8 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TimelineViewModel @Inject constructor(
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val noteRepository: NoteRepository
 ) : ViewModel() {
 
     // 当前查看的日期（年/月/日）
@@ -31,6 +34,14 @@ class TimelineViewModel @Inject constructor(
     val events: StateFlow<List<EventEntity>> = _viewingDate
         .flatMapLatest { (y, m, d) ->
             eventRepository.getEventsByDate(y, m, d)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 当天随笔列表（响应式）
+    val notes: StateFlow<List<NoteEntity>> = _viewingDate
+        .flatMapLatest { (y, m, d) ->
+            val (start, end) = dayRange(y, m, d)
+            noteRepository.getNotesByDateRange(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -68,5 +79,13 @@ class TimelineViewModel @Inject constructor(
             cal.get(Calendar.MONTH) + 1,
             cal.get(Calendar.DAY_OF_MONTH)
         )
+    }
+
+    private fun dayRange(y: Int, m: Int, d: Int): Pair<Long, Long> {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(y, m - 1, d, 0, 0, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val s = cal.timeInMillis
+        return Pair(s, s + 24L * 3600 * 1000)
     }
 }
