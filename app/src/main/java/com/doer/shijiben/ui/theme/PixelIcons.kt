@@ -9,17 +9,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 // ============================================================
-// Pixel Icon Library (8x8 Grid Pixel Art)
+// Pixel Icon Library — 8x8 Grid Pixel Art
 // ============================================================
 // All icons are drawn as 8x8 pixel grids using Canvas drawRect.
-// Each icon is defined as an 8x8 Boolean array where:
-//   true = filled pixel block
-//   false = empty pixel
+// Each icon is an 8x8 Boolean array where true = filled pixel.
 //
-// Size tokens:
-//   Large  — 32dp (primary action buttons)
-//   Medium — 24dp (list actions, secondary buttons)
-//   Small  — 16dp (decorations, badges)
+// Sizes:
+//   Large  — 32dp (primary actions)
+//   Medium — 24dp (list actions)
+//   Small  — 16dp (decorations)
 // ============================================================
 
 object PixelIconSize {
@@ -27,8 +25,6 @@ object PixelIconSize {
     val Medium = 24.dp
     val Small = 16.dp
 }
-
-// ── Pixel Grid Drawing Utility ──
 
 @Composable
 private fun PixelGrid(
@@ -44,11 +40,8 @@ private fun PixelGrid(
                 if (grid[row][col]) {
                     drawRect(
                         color = color,
-                        topLeft = androidx.compose.ui.geometry.Offset(
-                            col * pixelSize,
-                            row * pixelSize
-                        ),
-                        size = androidx.compose.ui.geometry.Size(pixelSize, pixelSize)
+                        topLeft = androidx.compose.ui.geometry.Offset(col * pixelSize, row * pixelSize),
+                        size = androidx.compose.ui.geometry.Size(pixelSize, pixelSize),
                     )
                 }
             }
@@ -56,7 +49,9 @@ private fun PixelGrid(
     }
 }
 
-// ── Play (right-pointing triangle) ──
+// ═══════════════════════════════════════════════════════════
+// Play — right-pointing triangle (redrawn)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelPlayIcon(
@@ -77,7 +72,9 @@ fun PixelPlayIcon(
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Stop (solid square) ──
+// ═══════════════════════════════════════════════════════════
+// Stop — solid square
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelStopIcon(
@@ -98,65 +95,68 @@ fun PixelStopIcon(
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Close / Delete (X shape) ──
+// ═══════════════════════════════════════════════════════════
+// Close / Delete — X shape (bolder)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelCloseIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(true,  false, false, false, false, false, false, true ),
-        booleanArrayOf(false, true,  false, false, false, false, true,  false),
-        booleanArrayOf(false, false, true,  false, false, true,  false, false),
-        booleanArrayOf(false, false, false, true,  true,  false, false, false),
-        booleanArrayOf(false, false, false, true,  true,  false, false, false),
-        booleanArrayOf(false, false, true,  false, false, true,  false, false),
-        booleanArrayOf(false, true,  false, false, false, false, true,  false),
+        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
+        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
+        booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
+        booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
+        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
+        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
         booleanArrayOf(true,  false, false, false, false, false, false, true ),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Check (tick / fold line) ──
+// ═══════════════════════════════════════════════════════════
+// Check — tick mark (redrawn symmetric)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelCheckIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, false, false, false, false, false, false, false),
         booleanArrayOf(false, false, false, false, false, false, true,  false),
         booleanArrayOf(false, false, false, false, false, true,  true,  false),
         booleanArrayOf(false, false, false, false, true,  true,  false, false),
-        booleanArrayOf(true,  true,  true,  true,  true,  false, false, false),
+        booleanArrayOf(true,  false, false, true,  true,  false, false, false),
         booleanArrayOf(true,  true,  true,  true,  false, false, false, false),
-        booleanArrayOf(false, false, false, false, false, false, false, false),
+        booleanArrayOf(true,  true,  true,  false, false, false, false, false),
         booleanArrayOf(false, false, false, false, false, false, false, false),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Add (plus sign) ──
+// ═══════════════════════════════════════════════════════════
+// Add — plus sign
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelAddIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, false, false, false, false, false, false, false),
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
-        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
-        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
+        booleanArrayOf(false, true,  true,  true,  true,  true,  true,  false),
+        booleanArrayOf(false, true,  true,  true,  true,  true,  true,  false),
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
         booleanArrayOf(false, false, false, false, false, false, false, false),
@@ -164,7 +164,9 @@ fun PixelAddIcon(
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── More (three vertical dots) ──
+// ═══════════════════════════════════════════════════════════
+// More — three horizontal dots
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelMoreIcon(
@@ -174,18 +176,20 @@ fun PixelMoreIcon(
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, false, false, false, false, false, false, false),
-        booleanArrayOf(false, false, true,  true,  true,  false, false, false),
-        booleanArrayOf(false, false, true,  true,  true,  false, false, false),
+        booleanArrayOf(false, true,  true,  false, true,  true,  false, false),
+        booleanArrayOf(false, true,  true,  false, true,  true,  false, false),
         booleanArrayOf(false, false, false, false, false, false, false, false),
         booleanArrayOf(false, false, false, false, false, false, false, false),
-        booleanArrayOf(false, false, true,  true,  true,  false, false, false),
-        booleanArrayOf(false, false, true,  true,  true,  false, false, false),
+        booleanArrayOf(false, true,  true,  false, true,  true,  false, false),
+        booleanArrayOf(false, true,  true,  false, true,  true,  false, false),
         booleanArrayOf(false, false, false, false, false, false, false, false),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Pause (two vertical bars) ──
+// ═══════════════════════════════════════════════════════════
+// Pause — two vertical bars
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelPauseIcon(
@@ -206,21 +210,22 @@ fun PixelPauseIcon(
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Refresh (circular arrow) ──
+// ═══════════════════════════════════════════════════════════
+// Refresh — circular arrow (redrawn)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelRefreshIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
-        booleanArrayOf(false, true,  false, false, false, false, true,  false),
-        booleanArrayOf(true,  false, false, false, false, false, false, true ),
-        booleanArrayOf(true,  false, false, false, false, false, true,  true ),
-        booleanArrayOf(true,  false, false, false, false, true,  true,  false),
+        booleanArrayOf(false, true,  false, false, false, true,  false, false),
+        booleanArrayOf(true,  false, false, false, false, false, true,  false),
+        booleanArrayOf(true,  false, false, false, true,  true,  true,  false),
+        booleanArrayOf(true,  false, false, true,  true,  false, false, false),
         booleanArrayOf(true,  false, false, false, false, false, false, false),
         booleanArrayOf(false, true,  false, false, false, false, false, false),
         booleanArrayOf(false, false, true,  true,  true,  false, false, false),
@@ -228,92 +233,140 @@ fun PixelRefreshIcon(
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Calendar (square + horizontal lines) ──
+// ═══════════════════════════════════════════════════════════
+// Calendar — simplified date icon
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelCalendarIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, true,  false, false, false, false, true,  false),
-        booleanArrayOf(false, true,  false, false, false, false, true,  false),
         booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
         booleanArrayOf(true,  false, false, false, false, false, false, true ),
-        booleanArrayOf(true,  false, true,  false, true,  false, false, true ),
+        booleanArrayOf(true,  false, true,  false, false, true,  false, true ),
         booleanArrayOf(true,  false, false, false, false, false, false, true ),
-        booleanArrayOf(true,  false, true,  false, true,  false, false, true ),
+        booleanArrayOf(true,  false, true,  false, false, true,  false, true ),
+        booleanArrayOf(true,  false, false, false, false, false, false, true ),
         booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Star (5-point star) ──
+// ═══════════════════════════════════════════════════════════
+// Star — simplified 4-point star (redrawn)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelStarIcon(
     modifier: Modifier = Modifier,
-    color: Color = SunYellow,
+    color: Color = PixelYellow,
     size: Dp = PixelIconSize.Medium,
-    filled: Boolean = true,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
-        booleanArrayOf(false, false, false, true,  true,  false, false, false),
+        booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
+        booleanArrayOf(false, true,  true,  true,  true,  true,  true,  false),
+        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
         booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
         booleanArrayOf(false, true,  true,  true,  true,  true,  true,  false),
         booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
-        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
-        booleanArrayOf(true,  true,  false, false, false, false, true,  true ),
-        booleanArrayOf(true,  false, false, false, false, false, false, true ),
+        booleanArrayOf(false, false, false, true,  true,  false, false, false),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Stats / Chart (3 vertical bars) ──
+// ═══════════════════════════════════════════════════════════
+// Stats — three vertical bars
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelStatsIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    barWidth: Dp = 3.dp,
 ) {
     val grid = arrayOf(
-        booleanArrayOf(false, false, false, true,  false, false, false, false),
+        booleanArrayOf(false, false, false, false, false, false, false, false),
         booleanArrayOf(false, false, false, true,  false, false, false, false),
         booleanArrayOf(false, false, false, true,  false, true,  false, false),
-        booleanArrayOf(true,  false, false, true,  false, true,  false, false),
-        booleanArrayOf(true,  false, false, true,  false, true,  false, true ),
-        booleanArrayOf(true,  true,  false, true,  true,  true,  false, true ),
-        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
-        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
+        booleanArrayOf(false, true,  false, true,  false, true,  false, false),
+        booleanArrayOf(false, true,  false, true,  false, true,  false, true ),
+        booleanArrayOf(false, true,  true,  true,  true,  true,  false, true ),
+        booleanArrayOf(false, true,  true,  true,  true,  true,  true,  true ),
+        booleanArrayOf(false, false, false, false, false, false, false, false),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }
 
-// ── Diamond (hollow diamond) ──
+// ═══════════════════════════════════════════════════════════
+// NEW: Clock — time-related UI
+// ═══════════════════════════════════════════════════════════
 
 @Composable
-fun PixelDiamondIcon(
+fun PixelClockIcon(
     modifier: Modifier = Modifier,
     color: Color = Color.White,
     size: Dp = PixelIconSize.Medium,
-    filled: Boolean = false,
-    strokeWidth: Dp = 2.dp,
 ) {
     val grid = arrayOf(
-        booleanArrayOf(false, false, false, true,  true,  false, false, false),
         booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
-        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
-        booleanArrayOf(true,  true,  false, false, false, false, true,  true ),
-        booleanArrayOf(true,  true,  false, false, false, false, true,  true ),
-        booleanArrayOf(false, true,  true,  false, false, true,  true,  false),
+        booleanArrayOf(false, true,  false, false, false, false, true,  false),
+        booleanArrayOf(true,  false, false, true,  false, false, false, true ),
+        booleanArrayOf(true,  false, false, true,  false, false, false, true ),
+        booleanArrayOf(true,  false, false, true,  false, false, false, true ),
+        booleanArrayOf(true,  false, false, false, true,  false, false, true ),
+        booleanArrayOf(false, true,  false, false, false, true,  true,  false),
+        booleanArrayOf(false, false, true,  true,  true,  false, false, false),
+    )
+    PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEW: Trash — dedicated delete icon
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+fun PixelTrashIcon(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White,
+    size: Dp = PixelIconSize.Medium,
+) {
+    val grid = arrayOf(
         booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
+        booleanArrayOf(false, true,  false, false, false, false, true,  false),
+        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  true ),
+        booleanArrayOf(false, true,  false, false, false, false, true,  false),
+        booleanArrayOf(false, true,  false, true,  true,  false, true,  false),
+        booleanArrayOf(false, true,  false, true,  true,  false, true,  false),
+        booleanArrayOf(false, true,  false, false, false, false, true,  false),
+        booleanArrayOf(false, false, true,  true,  true,  true,  false, false),
+    )
+    PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEW: Edit — pencil icon
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+fun PixelEditIcon(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White,
+    size: Dp = PixelIconSize.Medium,
+) {
+    val grid = arrayOf(
+        booleanArrayOf(false, false, false, false, false, true,  true,  false),
+        booleanArrayOf(false, false, false, false, true,  true,  false, false),
         booleanArrayOf(false, false, false, true,  true,  false, false, false),
+        booleanArrayOf(false, false, true,  true,  false, false, false, false),
+        booleanArrayOf(false, true,  true,  false, false, false, false, false),
+        booleanArrayOf(true,  true,  false, false, false, false, false, false),
+        booleanArrayOf(true,  true,  true,  true,  true,  true,  true,  false),
+        booleanArrayOf(false, false, false, false, false, false, false, false),
     )
     PixelGrid(grid = grid, modifier = modifier, color = color, size = size)
 }

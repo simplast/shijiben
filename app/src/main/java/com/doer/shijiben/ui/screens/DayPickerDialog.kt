@@ -17,17 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.doer.shijiben.data.TimeFormats
-import com.doer.shijiben.ui.theme.CoralOrange
-import com.doer.shijiben.ui.theme.CoralOrangeDark
-import com.doer.shijiben.ui.theme.CreamWhite
-import com.doer.shijiben.ui.theme.DeepTeal
+import com.doer.shijiben.ui.theme.PixelBorder
 import com.doer.shijiben.ui.theme.PixelButton
-import com.doer.shijiben.ui.theme.PixelCheckIcon
-import com.doer.shijiben.ui.theme.PixelCloseIcon
+import com.doer.shijiben.ui.theme.PixelCoral
+import com.doer.shijiben.ui.theme.PixelCream
 import com.doer.shijiben.ui.theme.PixelDialog
 import com.doer.shijiben.ui.theme.PixelLabel
-import com.doer.shijiben.ui.theme.SeaBlue
-import com.doer.shijiben.ui.theme.SeaBlueDark
+import com.doer.shijiben.ui.theme.PixelTeal
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,9 +39,8 @@ fun DayPickerDialog(
 
     PixelDialog(
         onDismissRequest = onDismiss,
-        backgroundColor = CreamWhite,
-        borderOuterColor = DeepTeal,
-        borderInnerColor = Color.White,
+        backgroundColor = PixelCream,
+        borderColor = PixelBorder,
     ) {
         DatePicker(state = pickerState)
 
@@ -58,14 +53,10 @@ fun DayPickerDialog(
             PixelButton(
                 onClick = onDismiss,
                 backgroundColor = Color.Transparent,
-                pressedBackgroundColor = CoralOrange.copy(alpha = 0.1f),
-                contentColor = CoralOrange,
                 borderColor = Color.Transparent,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("取消", style = PixelLabel, color = CoralOrange)
-                }
+                Text("取消", style = PixelLabel, color = PixelCoral)
             }
             Spacer(Modifier.width(8.dp))
             PixelButton(
@@ -77,15 +68,11 @@ fun DayPickerDialog(
                         onDismiss()
                     }
                 },
-                backgroundColor = SeaBlue,
-                pressedBackgroundColor = SeaBlueDark,
-                contentColor = Color.White,
-                borderColor = DeepTeal,
+                backgroundColor = PixelTeal,
+                borderColor = PixelBorder,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("确定", style = PixelLabel, color = Color.White)
-                }
+                Text("确定", style = PixelLabel, color = Color.White)
             }
         }
     }

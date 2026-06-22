@@ -1,5 +1,13 @@
 package com.doer.shijiben.ui.theme
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,19 +32,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -46,94 +48,82 @@ import kotlinx.coroutines.delay
 // ============================================================
 // Pixel UI Component Library
 // ============================================================
-// Pixel-styled components using double-line borders.
-// These are the building blocks for the pixel UI system.
+// Building blocks for the 8-bit pixel design system.
+// All components use pixel-dashed borders and solid fills.
 // ============================================================
 
-// Card Level
-enum class PixelCardLevel {
-    Primary,
-    Secondary,
-    Tertiary,
-}
+// ═══════════════════════════════════════════════════════════
+// PixelCard
+// ═══════════════════════════════════════════════════════════
+
+enum class PixelCardLevel { Primary, Secondary, Tertiary }
 
 @Composable
 fun PixelCard(
     modifier: Modifier = Modifier,
     level: PixelCardLevel = PixelCardLevel.Secondary,
-    backgroundColor: Color = MistBlue,
-    borderOuterColor: Color = SeaBlue,
-    borderInnerColor: Color = Color.White,
+    backgroundColor: Color = PixelCream,
+    borderColor: Color = PixelBorder,
     contentPadding: PaddingValues = PaddingValues(16.dp),
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val outerWidth = when (level) {
-        PixelCardLevel.Primary -> PixelBorderPrimary.outerWidth
-        PixelCardLevel.Secondary -> PixelBorderSecondary.outerWidth
-        PixelCardLevel.Tertiary -> PixelBorderTertiary.outerWidth
+    val borderModifier = when (level) {
+        PixelCardLevel.Primary -> Modifier.pixelBorderPrimary(borderColor)
+        PixelCardLevel.Secondary -> Modifier.pixelBorderSecondary(borderColor)
+        PixelCardLevel.Tertiary -> Modifier.pixelBorderTertiary(borderColor)
     }
-    val innerWidth = when (level) {
-        PixelCardLevel.Primary -> PixelBorderPrimary.innerWidth
-        PixelCardLevel.Secondary -> PixelBorderSecondary.innerWidth
-        PixelCardLevel.Tertiary -> PixelBorderTertiary.innerWidth
+
+    val clickModifier = if (onClick != null) {
+        val interactionSource = remember { MutableInteractionSource() }
+        Modifier
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .pressScaleEffect(interactionSource)
+    } else {
+        Modifier
     }
 
     Box(
         modifier = modifier
             .background(backgroundColor)
-            .doublePixelBorder(
-                outerColor = borderOuterColor,
-                innerColor = borderInnerColor,
-                outerWidth = outerWidth,
-                innerWidth = innerWidth,
-            )
+            .then(borderModifier)
+            .then(clickModifier)
             .padding(contentPadding),
     ) {
         content()
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// PixelButton
+// ═══════════════════════════════════════════════════════════
+
 @Composable
 fun PixelButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = SeaBlue,
-    pressedBackgroundColor: Color = SeaBlueDark,
+    backgroundColor: Color = PixelTeal,
+    pressedBackgroundColor: Color = PixelTeal,
     contentColor: Color = Color.White,
-    borderColor: Color = DeepTeal,
-    borderInnerColor: Color = Color.White,
+    borderColor: Color = PixelBorder,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-    pressScale: Float = 0.94f,
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val bgColor = if (isPressed) pressedBackgroundColor else backgroundColor
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) pressScale else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.6f,
-            stiffness = 300f
-        ),
-        label = "buttonPress"
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f),
+        label = "btnPress"
     )
 
     Box(
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .background(bgColor)
-            .tertiaryDoubleBorder(
-                outerColor = borderColor,
-                innerColor = borderInnerColor,
-            )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
+            .pixelBorderTertiary(borderColor)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(contentPadding),
         contentAlignment = Alignment.Center,
     ) {
@@ -141,16 +131,19 @@ fun PixelButton(
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// PixelIconButton
+// ═══════════════════════════════════════════════════════════
+
 @Composable
 fun PixelIconButton(
     onClick: () -> Unit,
     icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = SeaBlue,
-    pressedBackgroundColor: Color = SeaBlueDark,
-    borderColor: Color = DeepTeal,
-    size: Dp = 32.dp,
-    pressScale: Float = 0.92f,
+    backgroundColor: Color = Color.Transparent,
+    pressedBackgroundColor: Color = PixelGrayLight,
+    borderColor: Color = PixelBorder,
+    size: Dp = 36.dp,
     borderless: Boolean = false,
     contentDescription: String? = null,
 ) {
@@ -158,77 +151,66 @@ fun PixelIconButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val bgColor = if (isPressed) pressedBackgroundColor else backgroundColor
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) pressScale else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.6f,
-            stiffness = 300f
-        ),
-        label = "iconButtonPress"
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f),
+        label = "iconPress"
     )
 
     Box(
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .size(size)
             .background(bgColor)
-            .then(
-                if (!borderless) {
-                    Modifier.tertiaryDoubleBorder(
-                        outerColor = borderColor,
-                        innerColor = Color.White,
-                    )
-                } else Modifier
-            )
-            .semantics {
-                contentDescription?.let { this.contentDescription = it }
-            }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            ),
+            .then(if (!borderless) Modifier.pixelBorderTertiary(borderColor) else Modifier)
+            .semantics { contentDescription?.let { this.contentDescription = it } }
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         icon()
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// PixelBadge
+// ═══════════════════════════════════════════════════════════
+
 @Composable
 fun PixelBadge(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = CoralOrange,
-    contentColor: Color = Color.White,
-    borderColor: Color = DeepTeal,
-    borderInnerColor: Color = Color.White,
+    backgroundColor: Color = PixelCoral,
+    textColor: Color = Color.White,
+    borderColor: Color = PixelBorder,
+    onClick: (() -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val clickModifier = if (onClick != null) {
+        Modifier
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .pressScaleEffect(interactionSource)
+    } else Modifier
+
     Box(
         modifier = modifier
             .background(backgroundColor)
-            .tertiaryDoubleBorder(
-                outerColor = borderColor,
-                innerColor = borderInnerColor,
-            )
+            .pixelBorderTertiary(borderColor)
+            .then(clickModifier)
             .padding(horizontal = 10.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            color = contentColor,
-            style = PixelLabel,
-        )
+        Text(text = text, color = textColor, style = PixelLabel)
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// PixelSectionHeader
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelSectionHeader(
     title: String,
-    accentColor: Color = SeaBlue,
+    accentColor: Color = PixelTeal,
     modifier: Modifier = Modifier,
-    chineseTitle: String? = null,
 ) {
     Row(
         modifier = modifier,
@@ -240,14 +222,14 @@ fun PixelSectionHeader(
                 .height(3.dp)
                 .background(accentColor),
         )
-        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = chineseTitle ?: title,
-            color = DeepTeal,
-            style = PixelLabel,
-        )
+        Spacer(Modifier.width(8.dp))
+        Text(text = title, color = PixelText, style = PixelLabel)
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// PixelInput
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 fun PixelInput(
@@ -255,7 +237,7 @@ fun PixelInput(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    textStyle: TextStyle = PixelBody,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
@@ -264,24 +246,17 @@ fun PixelInput(
 
     Box(
         modifier = modifier
-            .background(CreamWhite)
-            .secondaryDoubleBorder(
-                outerColor = if (isFocused) SeaBlue else LightSeaBlue,
-                innerColor = Color.White,
-            )
+            .background(PixelCream)
+            .pixelBorderTertiary(if (isFocused) PixelTeal else PixelGrayLight)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         if (value.isEmpty()) {
-            Text(
-                text = placeholder,
-                color = WarmGray300,
-                style = textStyle,
-            )
+            Text(text = placeholder, color = PixelGray, style = textStyle)
         }
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = textStyle.copy(color = DeepTeal),
+            textStyle = textStyle.copy(color = PixelText),
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -290,59 +265,72 @@ fun PixelInput(
     }
 }
 
-// ============================================================
-// Pixel Dialog
-// ============================================================
+// ═══════════════════════════════════════════════════════════
+// PixelBlinkIndicator
+// ═══════════════════════════════════════════════════════════
 
 @Composable
-fun PixelDialog(
-    onDismissRequest: () -> Unit,
+fun PixelBlinkIndicator(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = CreamWhite,
-    borderOuterColor: Color = DeepTeal,
-    borderInnerColor: Color = Color.White,
-    content: @Composable () -> Unit,
+    color: Color = PixelYellow,
+    size: Dp = 8.dp,
 ) {
-    Dialog(onDismissRequest = onDismissRequest) {
-        Box(
-            modifier = modifier
-                .background(backgroundColor)
-                .primaryDoubleBorder(
-                    outerColor = borderOuterColor,
-                    innerColor = borderInnerColor,
-                )
-                .padding(20.dp),
-        ) {
-            content()
-        }
-    }
+    val infiniteTransition = rememberInfiniteTransition(label = "pixelBlink")
+    val blinkAlpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 800
+                0f at 0
+                1f at 400
+                0f at 401 // Instant cut — no smooth interpolation
+            },
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "pixelBlink",
+    )
+
+    Box(
+        modifier = modifier
+            .size(size)
+            .graphicsLayer { alpha = blinkAlpha }
+            .background(color),
+    )
+}
+
+// ═══════════════════════════════════════════════════════════
+// PixelDivider
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+fun PixelDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(PixelGrayLight),
+    )
 }
 
 // ============================================================
-// Pixel Animation Utilities
-// ============================================================
-// Frame-based animations that preserve the pixel aesthetic.
-// No smooth interpolation — instant state changes like 8-bit games.
+// Animation Utilities
 // ============================================================
 
 /**
- * Frame-style fade-in — 3 discrete steps, no smooth interpolation.
- * Gives a "pixel pop" feel when items enter the screen.
- *
- * @param delayFrames delay before animation starts (each frame = 80ms)
+ * Frame-style fade-in: 3 discrete alpha steps (0 → 0.33 → 0.66 → 1.0).
+ * No smooth interpolation — pure pixel pop.
  */
-fun Modifier.pixelFadeInFrame(
-    delayFrames: Int = 0,
-): Modifier = this.composed {
-    val frameDuration = 80
+fun Modifier.pixelFadeInFrame(delayFrames: Int = 0): Modifier = this.composed {
+    val frameDuration = 80L
     val totalFrames = 3
 
     var frame by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        delay((delayFrames * frameDuration).toLong())
+        delay((delayFrames * frameDuration))
         for (i in 1..totalFrames) {
-            delay(frameDuration.toLong())
+            delay(frameDuration)
             frame = i
         }
     }
@@ -358,40 +346,24 @@ fun Modifier.pixelFadeInFrame(
 }
 
 /**
- * Frame-style number hop animation — digit changes in discrete jumps.
- * Creates a "slot machine" like pixel number transition.
- *
- * @param targetValue the target number to display
- * @param frameCount number of hop frames (default: 4)
- * @param frameMs milliseconds per frame
+ * Frame-style number hop: instant digit change, no smooth interpolation.
+ * Creates a "slot machine" pixel number transition.
  */
 @Composable
 fun PixelHopNumber(
     targetValue: Long,
     modifier: Modifier = Modifier,
-    frameCount: Int = 4,
     frameMs: Int = 60,
     format: (Long) -> String = { it.toString() },
-    textStyle: TextStyle = MaterialTheme.typography.titleLarge,
-    contentColor: Color = DeepTeal,
+    textStyle: TextStyle = PixelBody,
+    contentColor: Color = PixelText,
 ) {
     var displayValue by remember { mutableStateOf(targetValue) }
-    var hopStep by remember { mutableStateOf(0) }
 
     LaunchedEffect(targetValue) {
         if (targetValue == displayValue) return@LaunchedEffect
-
-        val diff = targetValue - displayValue
-        val step = (diff / frameCount.coerceAtLeast(1)).coerceAtLeast(1)
-
-        for (i in 1 until frameCount) {
-            delay(frameMs.toLong())
-            displayValue = displayValue + step
-            hopStep = i
-        }
-        delay(frameMs.toLong())
+        // Instant jump — no smooth steps
         displayValue = targetValue
-        hopStep = frameCount
     }
 
     Text(
@@ -399,39 +371,43 @@ fun PixelHopNumber(
         style = textStyle,
         color = contentColor,
         modifier = modifier,
-        fontWeight = FontWeight.Bold,
     )
 }
 
 /**
- * Frame-style state transition animation — slides/color-shifts
- * between states in discrete pixel steps.
- *
- * Use with key state changes like "pending → active → completed".
- *
- * @param stateKey key that triggers the transition when it changes
- * @param transitionFrames number of frames in the transition
+ * Press scale effect — shared across interactive components.
  */
-fun Modifier.pixelStateTransition(
-    stateKey: Any,
-    transitionFrames: Int = 3,
-): Modifier = this.composed {
-    val frameDuration = 70
-    var transitionProgress by remember { mutableStateOf(1f) }
+@Composable
+fun Modifier.pressScaleEffect(interactionSource: MutableInteractionSource): Modifier {
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f),
+        label = "pressScale"
+    )
+    return this.graphicsLayer { scaleX = scale; scaleY = scale }
+}
 
-    LaunchedEffect(stateKey) {
-        transitionProgress = 0f
-        for (i in 1..transitionFrames) {
-            delay(frameDuration.toLong())
-            transitionProgress = i.toFloat() / transitionFrames.toFloat()
+// ═══════════════════════════════════════════════════════════
+// PixelDialog
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+fun PixelDialog(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = PixelCream,
+    borderColor: Color = PixelBorder,
+    content: @Composable () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Box(
+            modifier = modifier
+                .background(backgroundColor)
+                .pixelBorderPrimary(borderColor)
+                .padding(20.dp),
+        ) {
+            content()
         }
-        transitionProgress = 1f
-    }
-
-    this.graphicsLayer {
-        translationX = (1f - transitionProgress) * 20f
-        alpha = transitionProgress
-        scaleX = 0.9f + transitionProgress * 0.1f
-        scaleY = 0.9f + transitionProgress * 0.1f
     }
 }

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事记本 — 8-bit像素风个人时间追踪App</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pixel-black: #1A1A2E;
+    --pixel-cream: #FFF8E1;
+    --pixel-sky: #6BC5F5;
+    --pixel-pink: #FF6B9D;
+    --pixel-coral: #FF8A6B;
+    --pixel-lavender: #C4B5E0;
+    --pixel-teal: #4DC9B8;
+    --pixel-amber: #FFB347;
+    --pixel-mint: #E8F8F0;
+    --pixel-yellow: #FFD93D;
+    --pixel-gray: #9A8E7E;
+    --pixel-gray-light: #F5EEDF;
+    --pixel-red: #E53935;
+    --pixel-green: #66BB6A;
+  }
+
+  body {
+    background: var(--pixel-cream);
+    color: var(--pixel-black);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  .pixel-font {
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  /* Pixel dashed border */
+  .pixel-border-primary {
+    border: 3px dashed var(--pixel-black);
+  }
+  .pixel-border-secondary {
+    border: 2px dashed var(--pixel-black);
+  }
+  .pixel-border-tertiary {
+    border: 1px dashed var(--pixel-black);
+  }
+
+  /* Hero Section */
+  .hero {
+    background: var(--pixel-sky);
+    padding: 48px 24px;
+    text-align: center;
+    border-bottom: 4px dashed var(--pixel-black);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 4px,
+      rgba(255,255,255,0.03) 4px,
+      rgba(255,255,255,0.03) 8px
+    );
+    pointer-events: none;
+  }
+  .hero-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 36px;
+    color: var(--pixel-black);
+    text-shadow: 3px 3px 0 var(--pixel-yellow);
+    margin-bottom: 16px;
+    animation: blink-text 2s steps(1) infinite;
+  }
+  @keyframes blink-text {
+    0%, 70% { opacity: 1; }
+    71%, 100% { opacity: 0.8; }
+  }
+  .hero-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--pixel-black);
+    letter-spacing: 2px;
+    margin-top: 16px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--pixel-yellow);
+    border: 2px dashed var(--pixel-black);
+    padding: 8px 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    margin-top: 24px;
+  }
+
+  /* Section */
+  .section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-bar {
+    width: 12px;
+    height: 4px;
+    display: inline-block;
+  }
+  .section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Pixel Card */
+  .pixel-card {
+    background: white;
+    border: 3px dashed var(--pixel-black);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .pixel-card.sky { background: var(--pixel-sky); }
+  .pixel-card.pink { background: var(--pixel-pink); }
+  .pixel-card.mint { background: var(--pixel-mint); border-color: var(--pixel-teal); }
+  .pixel-card.lavender { background: var(--pixel-lavender); }
+  .pixel-card.amber { background: var(--pixel-amber); }
+
+  /* Pixel Badge */
+  .pixel-badge {
+    display: inline-block;
+    border: 1px dashed var(--pixel-black);
+    padding: 4px 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    text-transform: uppercase;
+  }
+  .pixel-badge.teal { background: var(--pixel-teal); }
+  .pixel-badge.coral { background: var(--pixel-coral); }
+  .pixel-badge.lavender { background: var(--pixel-lavender); }
+  .pixel-badge.yellow { background: var(--pixel-yellow); }
+  .pixel-badge.pink { background: var(--pixel-pink); }
+
+  /* Feature Grid */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .feature-item {
+    background: white;
+    border: 2px dashed var(--pixel-black);
+    padding: 20px;
+    text-align: center;
+  }
+  .feature-icon {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .feature-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+  .feature-desc {
+    font-size: 14px;
+    color: var(--pixel-gray);
+  }
+
+  /* Phone Mockup */
+  .phone-mockup {
+    max-width: 320px;
+    margin: 0 auto;
+    background: var(--pixel-cream);
+    border: 4px dashed var(--pixel-black);
+    padding: 16px;
+  }
+  .phone-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--pixel-black);
+  }
+  .phone-topbar-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+  }
+  .phone-overview {
+    background: var(--pixel-sky);
+    border: 3px dashed var(--pixel-black);
+    padding: 16px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .phone-overview-number {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 32px;
+  }
+  .phone-overview-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    margin-top: 4px;
+  }
+  .phone-active {
+    background: var(--pixel-pink);
+    border: 3px dashed var(--pixel-black);
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .phone-active-name {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .phone-active-time {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+  }
+  .blink-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--pixel-yellow);
+    margin-right: 6px;
+    animation: blink 800ms steps(1) infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+  .phone-pending {
+    border: 2px dashed var(--pixel-amber);
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .phone-pending-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--pixel-amber);
+    margin-bottom: 8px;
+  }
+  .phone-pending-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .phone-completed {
+    background: var(--pixel-mint);
+    border: 2px dashed var(--pixel-teal);
+    padding: 12px;
+  }
+  .phone-completed-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--pixel-teal);
+    margin-bottom: 8px;
+  }
+  .phone-completed-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+
+  /* Pixel Button */
+  .pixel-btn {
+    display: inline-block;
+    border: 2px dashed var(--pixel-black);
+    padding: 10px 24px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--pixel-black);
+    transition: transform 0.1s;
+  }
+  .pixel-btn:hover {
+    transform: scale(0.96);
+  }
+  .pixel-btn.teal { background: var(--pixel-teal); }
+  .pixel-btn.coral { background: var(--pixel-coral); }
+  .pixel-btn.yellow { background: var(--pixel-yellow); }
+
+  /* Color Palette Display */
+  .palette-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .palette-swatch {
+    width: 48px;
+    height: 48px;
+    border: 2px dashed var(--pixel-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    text-align: center;
+  }
+
+  /* Pain Points */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .pain-grid { grid-template-columns: 1fr; }
+  }
+  .pain-card {
+    border: 2px dashed var(--pixel-red);
+    padding: 16px;
+    background: white;
+  }
+  .pain-icon {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .pain-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .pain-desc {
+    font-size: 13px;
+    color: var(--pixel-gray);
+  }
+
+  /* Solution */
+  .solution-card {
+    border: 2px dashed var(--pixel-teal);
+    padding: 16px;
+    background: var(--pixel-mint);
+  }
+  .solution-icon {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .solution-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .solution-desc {
+    font-size: 13px;
+    color: var(--pixel-gray);
+  }
+
+  /* User Flow */
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin: 24px 0;
+  }
+  .flow-step {
+    background: var(--pixel-lavender);
+    border: 2px dashed var(--pixel-black);
+    padding: 10px 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    text-align: center;
+  }
+  .flow-arrow {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--pixel-black);
+  }
+
+  /* Review Section */
+  .review-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .review-cards { grid-template-columns: 1fr; }
+  }
+  .review-card {
+    border: 2px dashed var(--pixel-black);
+    padding: 20px;
+    text-align: center;
+  }
+  .review-card.weekly { background: var(--pixel-amber); }
+  .review-card.monthly { background: var(--pixel-lavender); }
+  .review-card-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    margin-bottom: 12px;
+  }
+  .review-stat {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 24px;
+    margin: 8px 0;
+  }
+  .review-label {
+    font-size: 12px;
+    color: var(--pixel-gray);
+  }
+
+  /* Footer */
+  .footer {
+    background: var(--pixel-black);
+    color: var(--pixel-cream);
+    text-align: center;
+    padding: 32px 24px;
+    border-top: 4px dashed var(--pixel-yellow);
+  }
+  .footer-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--pixel-yellow);
+    margin-bottom: 12px;
+  }
+  .footer-text {
+    font-size: 14px;
+    color: var(--pixel-gray);
+  }
+
+  /* Pixel divider */
+  .pixel-divider {
+    border: none;
+    border-top: 2px dashed var(--pixel-gray-light);
+    margin: 32px 0;
+  }
+
+  /* Tag line */
+  .tagline {
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--pixel-gray);
+    padding: 24px;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">TRAE AI CREATIVITY CONTEST 2026</div>
+  <h1 class="hero-title">事记本</h1>
+  <p class="hero-subtitle">8-BIT PIXEL TIME TRACKER</p>
+  <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+    <span class="pixel-badge teal">学习工作赛道</span>
+    <span class="pixel-badge coral">Android</span>
+    <span class="pixel-badge lavender">Kotlin</span>
+    <span class="pixel-badge yellow">Jetpack Compose</span>
+  </div>
+</section>
+
+<!-- Concept -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-pink);"></span>
+    <h2 class="section-title">创意概念</h2>
+  </div>
+
+  <div class="pixel-card sky">
+    <p style="font-size: 16px; line-height: 2;">
+      <strong>事记本</strong>是一款以<strong>8-bit像素风</strong>为核心设计语言的个人时间追踪App。它将枯燥的时间记录变成一场复古游戏体验——按下计时按钮就像按下Start键，完成任务就像通关关卡。像素虚线边框、帧式动画、16色复古配色，让每一次操作都有仪式感。
+    </p>
+  </div>
+
+  <div class="tagline">
+    " 把时间管理变成一场游戏 "
+  </div>
+</section>
+
+<!-- Phone Mockup -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-sky);"></span>
+    <h2 class="section-title">界面预览</h2>
+  </div>
+
+  <div class="phone-mockup">
+    <div class="phone-topbar">
+      <span class="phone-topbar-title">事记本</span>
+      <span style="font-size: 12px;">📅 6月16日</span>
+    </div>
+
+    <div class="phone-overview">
+      <div class="phone-overview-number">4h 32m</div>
+      <div class="phone-overview-label">今日专注</div>
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 8px;">
+        <span class="pixel-badge coral">进行中 1</span>
+        <span class="pixel-badge lavender">待办 3</span>
+        <span class="pixel-badge teal">完成 5</span>
+      </div>
+    </div>
+
+    <div class="phone-active">
+      <div>
+        <span class="blink-dot"></span>
+        <span class="phone-active-name">写技术文档</span>
+      </div>
+      <span class="phone-active-time">01:23:45</span>
+    </div>
+
+    <div class="phone-pending">
+      <div class="phone-pending-title">⏳ 待办</div>
+      <div class="phone-pending-item">
+        <span>阅读《设计心理学》</span>
+        <span class="pixel-badge yellow">待开始</span>
+      </div>
+      <div class="phone-pending-item">
+        <span>整理项目笔记</span>
+        <span class="pixel-badge yellow">待开始</span>
+      </div>
+    </div>
+
+    <div class="phone-completed">
+      <div class="phone-completed-title">✓ 已完成</div>
+      <div class="phone-completed-item">
+        <span>晨间冥想</span>
+        <span>20m</span>
+      </div>
+      <div class="phone-completed-item">
+        <span>英语听力</span>
+        <span>45m</span>
+      </div>
+      <div class="phone-completed-item">
+        <span>代码Review</span>
+        <span>1h 12m</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pain Points -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-red);"></span>
+    <h2 class="section-title">痛点分析</h2>
+  </div>
+
+  <div class="pain-grid">
+    <div class="pain-card">
+      <div class="pain-icon">😵</div>
+      <div class="pain-title">界面同质化</div>
+      <div class="pain-desc">主流App千篇一律的圆角卡片，缺乏个性，用久了容易倦怠</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">😤</div>
+      <div class="pain-title">操作繁琐</div>
+      <div class="pain-desc">记录一个事件需要点好几层，设置类别、标签、提醒……步骤太多</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🥱</div>
+      <div class="pain-title">缺乏趣味</div>
+      <div class="pain-desc">记录时间像填表格一样无聊，没有情感反馈，难以坚持</div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🧩</div>
+      <div class="pain-title">时间碎片化</div>
+      <div class="pain-desc">频繁中断导致记录混乱，同类事件被拆成碎片，难以统计</div>
+    </div>
+  </div>
+</section>
+
+<!-- Solutions -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-teal);"></span>
+    <h2 class="section-title">解决方案</h2>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <span class="feature-icon">🎮</span>
+      <div class="feature-name">8-BIT像素风</div>
+      <div class="feature-desc">像素虚线边框、帧式动画、16色复古配色，每次操作都有游戏般的反馈感</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">⚡</span>
+      <div class="feature-name">一键快记</div>
+      <div class="feature-desc">输入事件名即创建，点击即开始计时，操作步骤压缩到最少</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔗</span>
+      <div class="feature-name">智能合并</div>
+      <div class="feature-desc">5分钟内重复的同类事件自动合并，解决时间碎片化问题</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📊</span>
+      <div class="feature-name">周月复盘</div>
+      <div class="feature-desc">可视化时间分布，直观看到时间花在哪里，优化时间分配</div>
+    </div>
+  </div>
+</section>
+
+<!-- User Flow -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-amber);"></span>
+    <h2 class="section-title">使用流程</h2>
+  </div>
+
+  <div class="flow-steps">
+    <div class="flow-step">输入事件名</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="background: var(--pixel-pink);">▶ 开始计时</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="background: var(--pixel-teal);">■ 停止计时</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="background: var(--pixel-mint);">✓ 自动归档</div>
+  </div>
+
+  <div class="pixel-card" style="text-align: center;">
+    <p style="font-size: 14px; color: var(--pixel-gray);">
+      同一时间只允许一个事件进行中，自动停止上一个 → 避免多任务并行的时间统计混乱<br>
+      未完成的待办事件自动迁移到今天 → 不怕遗忘
+    </p>
+  </div>
+</section>
+
+<!-- Design System -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-yellow);"></span>
+    <h2 class="section-title">设计系统</h2>
+  </div>
+
+  <div class="pixel-card">
+    <p style="font-family: 'Press Start 2P', monospace; font-size: 10px; margin-bottom: 16px;">16-COLOR PALETTE</p>
+    <div class="palette-row">
+      <div class="palette-swatch" style="background: #1A1A2E; color: #FFF8E1;">BLK</div>
+      <div class="palette-swatch" style="background: #FFF8E1;">CRM</div>
+      <div class="palette-swatch" style="background: #6BC5F5;">SKY</div>
+      <div class="palette-swatch" style="background: #FF6B9D;">PNK</div>
+      <div class="palette-swatch" style="background: #FF8A6B;">CRL</div>
+      <div class="palette-swatch" style="background: #C4B5E0;">LVD</div>
+      <div class="palette-swatch" style="background: #4DC9B8;">TLQ</div>
+      <div class="palette-swatch" style="background: #FFB347;">AMB</div>
+    </div>
+    <div class="palette-row" style="margin-top: 8px;">
+      <div class="palette-swatch" style="background: #E8F8F0;">MNT</div>
+      <div class="palette-swatch" style="background: #FFD93D;">YLW</div>
+      <div class="palette-swatch" style="background: #9A8E7E; color: white;">GRY</div>
+      <div class="palette-swatch" style="background: #F5EEDF;">GRL</div>
+      <div class="palette-swatch" style="background: #E53935; color: white;">RED</div>
+      <div class="palette-swatch" style="background: #66BB6A;">GRN</div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+    <div class="pixel-card" style="text-align: center;">
+      <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 8px;">TYPOGRAPHY</p>
+      <p style="font-family: 'Press Start 2P', monospace; font-size: 24px;">32px</p>
+      <p style="font-size: 12px; color: var(--pixel-gray);">Press Start 2P / Display</p>
+    </div>
+    <div class="pixel-card" style="text-align: center;">
+      <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 8px;">BORDER</p>
+      <div style="border: 3px dashed var(--pixel-black); padding: 8px; margin: 4px; font-size: 10px;">Primary 3dp</div>
+      <div style="border: 2px dashed var(--pixel-black); padding: 8px; margin: 4px; font-size: 10px;">Secondary 2dp</div>
+      <div style="border: 1px dashed var(--pixel-black); padding: 8px; margin: 4px; font-size: 10px;">Tertiary 1dp</div>
+    </div>
+  </div>
+</section>
+
+<!-- Review -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-lavender);"></span>
+    <h2 class="section-title">数据复盘</h2>
+  </div>
+
+  <div class="review-cards">
+    <div class="review-card weekly">
+      <div class="review-card-title">📅 周复盘</div>
+      <div class="review-stat">28h</div>
+      <div class="review-label">本周总专注</div>
+      <div style="margin-top: 8px;">
+        <span class="pixel-badge" style="background: white;">效率 ↑12%</span>
+      </div>
+    </div>
+    <div class="review-card monthly">
+      <div class="review-card-title">📆 月复盘</div>
+      <div class="review-stat">112h</div>
+      <div class="review-label">本月总专注</div>
+      <div style="margin-top: 8px;">
+        <span class="pixel-badge" style="background: white;">坚持 23天</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-coral);"></span>
+    <h2 class="section-title">技术方案</h2>
+  </div>
+
+  <div class="pixel-card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">LANGUAGE</p>
+        <p>Kotlin 2.0</p>
+      </div>
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">UI FRAMEWORK</p>
+        <p>Jetpack Compose + Material3</p>
+      </div>
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">DATABASE</p>
+        <p>Room (SQLite)</p>
+      </div>
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">ASYNC</p>
+        <p>Kotlin Coroutines + Flow</p>
+      </div>
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">ARCHITECTURE</p>
+        <p>MVVM + Repository</p>
+      </div>
+      <div>
+        <p style="font-family: 'Press Start 2P', monospace; font-size: 8px; margin-bottom: 6px;">MIN SDK</p>
+        <p>Android 8.0 (API 26)</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Value -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-bar" style="background: var(--pixel-green);"></span>
+    <h2 class="section-title">核心价值</h2>
+  </div>
+
+  <div class="pixel-card mint" style="border-color: var(--pixel-teal);">
+    <h3 style="margin-bottom: 12px;">🚀 效率提升</h3>
+    <p style="font-size: 14px; line-height: 2;">
+      一键快记 + 自动计时，将记录操作压缩到最少。智能合并解决时间碎片化。周/月复盘帮助用户直观看到时间分布，优化时间分配策略。
+    </p>
+  </div>
+
+  <div class="pixel-card lavender">
+    <h3 style="margin-bottom: 12px;">❤️ 情感价值</h3>
+    <p style="font-size: 14px; line-height: 2;">
+      8-bit像素风不仅是视觉风格，更是一种交互哲学。像素虚线边框、帧式动画、复古配色，让每次操作都有游戏般的反馈感。计时器跳动像游戏倒计时，任务完成像通关获得成就。让"坚持记录时间"从自律变成自驱。
+    </p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-title">事记本</div>
+  <p class="footer-text">8-Bit Pixel Time Tracker</p>
+  <p class="footer-text" style="margin-top: 16px;">TRAE AI 创造力大赛 · 学习工作赛道 · 2026</p>
+  <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: center;">
+    <span class="pixel-badge" style="background: var(--pixel-teal); color: var(--pixel-black);">Kotlin</span>
+    <span class="pixel-badge" style="background: var(--pixel-yellow); color: var(--pixel-black);">Compose</span>
+    <span class="pixel-badge" style="background: var(--pixel-pink); color: var(--pixel-black);">8-BIT</span>
+  </div>
+</footer>
+
+</body>
+</html>

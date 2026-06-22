@@ -11,106 +11,107 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 // ============================================================
-// Double-line Pixel Border System
+// Pixel-Dashed Border System
 // ============================================================
-// Outer border (main color) + inner border (highlight color)
-// Creates a "retro game UI" feel without shadows
+// Draws alternating colored/transparent blocks around the
+// component perimeter, creating the iconic "pixel outline"
+// look from NES / Game Boy games.
+//
+// Three levels:
+//   Primary   (3dp) — Hero cards (overview, active)
+//   Secondary (2dp) — Content cards (completed, pending)
+//   Tertiary  (1dp) — Inline elements (buttons, badges, inputs)
 // ============================================================
 
 /**
- * Draws a double-line (two-layer) pixel border.
+ * Draws a pixel-dashed border by rendering alternating colored
+ * and transparent segments along the component's perimeter.
  *
- * @param outerColor 外线颜色（主色）
- * @param innerColor 内线颜色（高光色）
- * @param outerWidth 外线宽度
- * @param innerWidth 内线宽度
+ * @param color  Border color
+ * @param width  Border line width
+ * @param dashSize  Length of each colored pixel block
+ * @param gapSize   Length of each transparent gap
  */
-fun Modifier.doublePixelBorder(
-    outerColor: Color,
-    innerColor: Color = Color.White,
-    outerWidth: Dp = 2.dp,
-    innerWidth: Dp = 1.dp,
+fun Modifier.pixelBorder(
+    color: Color,
+    width: Dp = 2.dp,
+    dashSize: Dp = 4.dp,
+    gapSize: Dp = 2.dp,
 ): Modifier = this.drawBehind {
-    val outerPx = outerWidth.toPx()
-    val innerPx = innerWidth.toPx()
+    val w = width.toPx()
+    val dash = dashSize.toPx()
+    val gap = gapSize.toPx()
+    val segment = dash + gap
+    val brush = SolidColor(color)
 
-    // 外层边框 —— 紧贴组件边缘
-    drawRect(
-        brush = SolidColor(outerColor),
-        style = Stroke(width = outerPx)
-    )
+    val totalW = size.width
+    val totalH = size.height
 
-    // 内层边框 —— 向内偏移外线宽度
-    val inset = outerPx
-    drawRect(
-        brush = SolidColor(innerColor),
-        topLeft = Offset(inset, inset),
-        size = Size(
-            width = size.width - inset * 2,
-            height = size.height - inset * 2
-        ),
-        style = Stroke(width = innerPx)
-    )
+    // ── Top edge (left to right) ──
+    var x = 0f
+    while (x < totalW) {
+        val drawLen = minOf(dash, totalW - x)
+        drawLine(
+            brush = brush,
+            start = Offset(x, 0f),
+            end = Offset(x + drawLen, 0f),
+            strokeWidth = w,
+        )
+        x += segment
+    }
+
+    // ── Bottom edge (left to right) ──
+    x = 0f
+    while (x < totalW) {
+        val drawLen = minOf(dash, totalW - x)
+        drawLine(
+            brush = brush,
+            start = Offset(x, totalH),
+            end = Offset(x + drawLen, totalH),
+            strokeWidth = w,
+        )
+        x += segment
+    }
+
+    // ── Left edge (top to bottom) ──
+    var y = 0f
+    while (y < totalH) {
+        val drawLen = minOf(dash, totalH - y)
+        drawLine(
+            brush = brush,
+            start = Offset(0f, y),
+            end = Offset(0f, y + drawLen),
+            strokeWidth = w,
+        )
+        y += segment
+    }
+
+    // ── Right edge (top to bottom) ──
+    y = 0f
+    while (y < totalH) {
+        val drawLen = minOf(dash, totalH - y)
+        drawLine(
+            brush = brush,
+            start = Offset(totalW, y),
+            end = Offset(totalW, y + drawLen),
+            strokeWidth = w,
+        )
+        y += segment
+    }
 }
 
 // ============================================================
-// Three-Level Border Constants
+// Convenience Shortcuts
 // ============================================================
 
-/** Primary level (2dp outer + 1dp inner) — 高突出：概览卡、进行中卡、对话框 */
-object PixelBorderPrimary {
-    val outerWidth = 2.dp
-    val innerWidth = 1.dp
-    val outerColor = DeepTeal
-    val innerColor = Color.White
-}
+/** 3dp border — hero cards (overview, active event) */
+fun Modifier.pixelBorderPrimary(color: Color = PixelBorder): Modifier =
+    this.pixelBorder(color = color, width = 3.dp, dashSize = 4.dp, gapSize = 2.dp)
 
-/** Secondary level (1.5dp outer + 0.5dp inner) — 内容区：列表区、卡片组 */
-object PixelBorderSecondary {
-    val outerWidth = 1.5.dp
-    val innerWidth = 0.5.dp
-    val outerColor = SeaBlue
-    val innerColor = MistBlue
-}
+/** 2dp border — content cards (completed section, pending section) */
+fun Modifier.pixelBorderSecondary(color: Color = PixelBorder): Modifier =
+    this.pixelBorder(color = color, width = 2.dp, dashSize = 3.dp, gapSize = 2.dp)
 
-/** Tertiary level (1dp outer + 0.5dp inner) — 内嵌：按钮、标签、徽章 */
-object PixelBorderTertiary {
-    val outerWidth = 1.dp
-    val innerWidth = 0.5.dp
-    val outerColor = DeepTeal
-    val innerColor = Color.White
-}
-
-// ============================================================
-// Convenience shortcuts
-// ============================================================
-
-fun Modifier.primaryDoubleBorder(
-    outerColor: Color = PixelBorderPrimary.outerColor,
-    innerColor: Color = PixelBorderPrimary.innerColor,
-): Modifier = this.doublePixelBorder(
-    outerColor = outerColor,
-    innerColor = innerColor,
-    outerWidth = PixelBorderPrimary.outerWidth,
-    innerWidth = PixelBorderPrimary.innerWidth,
-)
-
-fun Modifier.secondaryDoubleBorder(
-    outerColor: Color = PixelBorderSecondary.outerColor,
-    innerColor: Color = PixelBorderSecondary.innerColor,
-): Modifier = this.doublePixelBorder(
-    outerColor = outerColor,
-    innerColor = innerColor,
-    outerWidth = PixelBorderSecondary.outerWidth,
-    innerWidth = PixelBorderSecondary.innerWidth,
-)
-
-fun Modifier.tertiaryDoubleBorder(
-    outerColor: Color = PixelBorderTertiary.outerColor,
-    innerColor: Color = PixelBorderTertiary.innerColor,
-): Modifier = this.doublePixelBorder(
-    outerColor = outerColor,
-    innerColor = innerColor,
-    outerWidth = PixelBorderTertiary.outerWidth,
-    innerWidth = PixelBorderTertiary.innerWidth,
-)
+/** 1dp border — inline elements (buttons, badges, inputs) */
+fun Modifier.pixelBorderTertiary(color: Color = PixelBorder): Modifier =
+    this.pixelBorder(color = color, width = 1.dp, dashSize = 2.dp, gapSize = 2.dp)
