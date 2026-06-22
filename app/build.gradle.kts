@@ -44,6 +44,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:${rootProject.extra["coreKtx"]}")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:${rootProject.extra["lifecycle"]}")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:${rootProject.extra["lifecycle"]}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${rootProject.extra["lifecycle"]}")
     implementation("androidx.activity:activity-compose:${rootProject.extra["activityCompose"]}")
 
