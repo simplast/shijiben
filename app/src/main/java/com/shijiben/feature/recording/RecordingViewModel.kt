@@ -90,9 +90,15 @@ class RecordingViewModel @Inject constructor(
         if (title.isEmpty()) return false
         val (y, m, d) = viewingDate
         val start = minutesToTimestamp(y, m, d, _startMinutes.value)
-        val end = minutesToTimestamp(y, m, d, _endMinutes.value)
-        // 若 end <= start，说明跨日，end 设为次日
-        val actualEnd = if (end <= start) end + 24L * 3600 * 1000 else end
+        // 进行中的事件保持无结束时间：编辑（改标题/标签等）不应改变其进行中状态。
+        // 结束时间由"完成"按钮（markCompleted）填入，不由时间滑块填入。
+        val actualEnd: Long? = if (currentStatus == EventStatus.InProgress.value) {
+            null
+        } else {
+            val end = minutesToTimestamp(y, m, d, _endMinutes.value)
+            // 若 end <= start，说明跨日，end 设为次日
+            if (end <= start) end + 24L * 3600 * 1000 else end
+        }
         val eid = editingId
         if (eid != null) {
             val existing = eventRepository.getEventById(eid) ?: return false

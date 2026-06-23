@@ -1,0 +1,124 @@
+package com.shijiben.feature.recording
+
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.google.common.truth.Truth.assertThat
+import com.shijiben.data.local.AppDatabase
+import com.shijiben.data.model.EventStatus
+import com.shijiben.data.repository.EventRepository
+import com.shijiben.data.repository.TagRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.util.Calendar
+import java.util.TimeZone
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
+class RecordingViewModelTest {
+    @get:Rule
+    val mainRule = MainCoroutineRule()
+
+    private lateinit var db: AppDatabase
+    private lateinit var eventRepo: EventRepository
+    private lateinit var tagRepo: TagRepository
+    private lateinit var vm: RecordingViewModel
+
+    @Before
+    fun setup() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        db = Room.inMemoryDatabaseBuilder(ctx, AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        eventRepo = EventRepository(db.eventDao())
+        tagRepo = TagRepository(db.tagDao())
+        vm = RecordingViewModel(eventRepo, tagRepo)
+    }
+
+    @After
+    fun teardown() { db.close() }
+
+    @Test
+    fun save_editingInProgressEvent_preservesNullEndTimeAndStatus() = runTest {
+        // An in-progress event: past start, null end → determineStatus gives InProgress.
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "原标题",
+            startTime = now - 60_000,
+            endTime = null,
+            tagId = null,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        assertThat(event.status).isEqualTo(EventStatus.InProgress.value)
+        assertThat(event.endTime).isNull()
+
+        // Edit it: load into the VM, change only the title, save.
+        vm.initEdit(event)
+        vm.onTitleChange("新标题")
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isTrue()
+
+        // The event must still be in-progress with no end time; only the title changed.
+        val saved = eventRepo.getEventById(id)!!
+        assertThat(saved.title).isEqualTo("新标题")
+        assertThat(saved.status).isEqualTo(EventStatus.InProgress.value)
+        assertThat(saved.endTime).isNull()
+    }
+
+    @Test
+    fun save_editingCompletedEvent_keepsEndTime() = runTest {
+        // A completed event with a real end time.
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "已完成",
+            startTime = now - 7200_000,
+            endTime = now - 3600_000,
+            tagId = null,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        assertThat(event.status).isEqualTo(EventStatus.Completed.value)
+
+        vm.initEdit(event)
+        vm.onTitleChange("改标题")
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isTrue()
+
+        val saved = eventRepo.getEventById(id)!!
+        assertThat(saved.title).isEqualTo("改标题")
+        assertThat(saved.endTime).isNotNull() // completed events keep their end time
+    }
+
+    @Test
+    fun save_newEvent_hasNonNullEndTime() = runTest {
+        // New events are not in-progress (currentStatus defaults to NotStarted),
+        // so they get a real end time from the slider.
+        vm.initNew()
+        vm.onTitleChange("新事件")
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isTrue()
+
+        val events = eventRepo.getAllEvents().first()
+        assertThat(events).hasSize(1)
+        assertThat(events.first().endTime).isNotNull()
+        assertThat(events.first().title).isEqualTo("新事件")
+    }
+}
