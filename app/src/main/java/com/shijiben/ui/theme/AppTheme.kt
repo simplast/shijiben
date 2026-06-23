@@ -7,10 +7,24 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.shijiben.R
+
+// 8-bit 像素字体：Fusion Pixel Font（SIL OFL 1.1 开源协议，可免费商用）
+private val PixelFont = FontFamily(
+    Font(R.font.fusion_pixel_12px_proportional_zh_hans),
+    Font(R.font.fusion_pixel_12px_proportional_latin)
+)
+
+// 等宽像素字体
+private val PixelMonoFont = FontFamily(
+    Font(R.font.fusion_pixel_12px_proportional_zh_hans),
+    Font(R.font.fusion_pixel_12px_proportional_latin)
+)
 
 // 注意：8-bit 风格用直角，所以 Shapes 全部用 0 dp 圆角
 
@@ -24,39 +38,39 @@ private val PixelShapes = Shapes(
 
 private val PixelTypography = Typography(
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = PixelFont,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = PixelFont,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp
     ),
     titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = PixelFont,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = PixelFont,
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = FontFamily.Monospace,  // 等宽数字感
+        fontFamily = PixelMonoFont,
         fontWeight = FontWeight.Bold,
         fontSize = 14.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = PixelMonoFont,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp
     )
 )
 
 private val PixelColorScheme = lightColorScheme(
-    primary = PixelIndigo,
+    primary = Primary,
     onPrimary = PixelBackground,
     secondary = PixelGold,
     onSecondary = PixelText,

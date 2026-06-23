@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,15 +31,19 @@ class TimelineViewModel @Inject constructor(
     private val _viewingDate = MutableStateFlow(today())
     val viewingDate: StateFlow<Triple<Int, Int, Int>> = _viewingDate.asStateFlow()
 
-    // 当天事件列表（响应式）
-    val events: StateFlow<List<EventEntity>> = _viewingDate
+    // 显式刷新触发器：保存事件后由 UI 调用，强制重拉当天事件/随笔流
+    private val _refreshTrigger = MutableStateFlow(0L)
+    val refreshTrigger: StateFlow<Long> = _refreshTrigger.asStateFlow()
+
+    // 当天事件列表（响应式）。date 与 refreshTrigger 任一变化都重新拉取。
+    val events: StateFlow<List<EventEntity>> = combine(_viewingDate, _refreshTrigger) { d, _ -> d }
         .flatMapLatest { (y, m, d) ->
             eventRepository.getEventsByDate(y, m, d)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 当天随笔列表（响应式）
-    val notes: StateFlow<List<NoteEntity>> = _viewingDate
+    val notes: StateFlow<List<NoteEntity>> = combine(_viewingDate, _refreshTrigger) { d, _ -> d }
         .flatMapLatest { (y, m, d) ->
             val (start, end) = dayRange(y, m, d)
             noteRepository.getNotesByDateRange(start, end)
@@ -58,6 +63,15 @@ class TimelineViewModel @Inject constructor(
     fun goToNextDay() { shiftDay(1) }
     fun setDate(year: Int, month: Int, day: Int) {
         _viewingDate.value = Triple(year, month, day)
+    }
+
+    /**
+     * 显式刷新当前查看日期的事件/随笔。保存事件/随笔后由 UI 调用，
+     * 保证冷启动 / 弱订阅场景下也能立即拉到新数据。
+     */
+    fun refresh() {
+        android.util.Log.d("TimelineDebug", "[TimelineViewModel] refresh() called, current viewingDate=${_viewingDate.value}, trigger=${_refreshTrigger.value}")
+        _refreshTrigger.value = _refreshTrigger.value + 1
     }
 
     private fun shiftDay(delta: Int) {

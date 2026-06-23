@@ -66,7 +66,7 @@ fun NotesScreen(
                     Text(
                         text = "还没有随笔，点右上角 + 记下此刻的想法",
                         color = PixelTextSecondary,
-                        fontFamily = FontFamily.SansSerif,
+
                         fontSize = 15.sp
                     )
                 }
@@ -101,7 +101,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
             Text(
                 note.content,
                 color = PixelText,
-                fontFamily = FontFamily.SansSerif,
+
                 fontSize = 14.sp,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -110,7 +110,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
             Text(
                 formatTimestamp(note.timestamp),
                 color = PixelTextSecondary,
-                fontFamily = FontFamily.Monospace,
+
                 fontSize = 11.sp
             )
         }

@@ -15,6 +15,7 @@ class EventRepository @Inject constructor(
 ) {
     fun getEventsByDate(year: Int, month: Int, day: Int): Flow<List<EventEntity>> {
         val (start, end) = dayRange(year, month, day)
+        android.util.Log.d("TimelineDebug", "[EventRepository] getEventsByDate: y=$year m=$month d=$day, start=$start, end=$end")
         return eventDao.getEventsByDate(start, end)
     }
 
@@ -32,15 +33,16 @@ class EventRepository @Inject constructor(
         startTime: Long,
         endTime: Long?,
         tagId: Long?,
-        note: String?
+        note: String?,
+        status: Int? = null
     ): Long {
         val now = System.currentTimeMillis()
-        val status = determineStatus(startTime, endTime, now)
+        val finalStatus = status ?: determineStatus(startTime, endTime, now).value
         val event = EventEntity(
             title = title,
             startTime = startTime,
             endTime = endTime,
-            status = status.value,
+            status = finalStatus,
             tagId = tagId,
             note = note,
             createdAt = now,

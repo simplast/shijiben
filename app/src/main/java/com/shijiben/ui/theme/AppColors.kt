@@ -2,35 +2,94 @@ package com.shijiben.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 8-bit NES 风格高饱和色板
-val PixelRed = Color(0xFFE84A3C)      // 鲜红
-val PixelGreen = Color(0xFF4BC66D)    // 翠绿
-val PixelPurple = Color(0xFF7B5BF5)   // 亮紫
-val PixelPink = Color(0xFFF25CA2)     // 桃红
-val PixelGold = Color(0xFFF2C94C)     // 金黄
-val PixelIndigo = Color(0xFF3B82F6)   // 靛蓝
+// 配色方案：彩虹色 + 黑白灰
+//
+// 彩虹色（高饱和）：蓝、橙、绿、紫、粉、青、红、黄
+// 黑白灰：纯黑、纯白、不同明度的灰色
 
-// 标签可选 12 色（基础 6 色 + 扩展 6 色）
-val TagColorPalette = listOf(
-    PixelRed, PixelGreen, PixelPurple, PixelPink, PixelGold, PixelIndigo,
-    Color(0xFF2A9D8F),  // 青绿
-    Color(0xFFE76F51),  // 橙红
-    Color(0xFF8338EC),  // 深紫
-    Color(0xFF3A86FF),  // 亮蓝
-    Color(0xFFFB5607),  // 亮橙
-    Color(0xFF06A77D),  // 森绿
+// ==================== 彩虹色主色调 ====================
+val Primary = Color(0xFFEF4444)        // 鲜艳红（替代蓝色）
+val PrimaryLight = Color(0xFFFCA5A5)   // 浅红
+val PrimaryDark = Color(0xFFDC2626)    // 深红
+
+val Accent = Color(0xFFF97316)         // 亮橙
+val AccentLight = Color(0xFFFDBA74)    // 浅橙（比之前更鲜艳）
+
+val Secondary = Color(0xFF10B981)      // 翠绿
+val SecondaryLight = Color(0xFF6EE7B7) // 浅绿（比之前更鲜艳）
+
+// ==================== 彩虹辅助色 ====================
+val RainbowOrange = Color(0xFFF97316)
+val RainbowPurple = Color(0xFFA855F7)
+val RainbowCyan = Color(0xFF06B6D4)
+val RainbowPink = Color(0xFFEC4899)
+val RainbowAmber = Color(0xFFF59E0B)
+val RainbowLime = Color(0xFF84CC16)
+
+// ==================== 黑白灰背景 ====================
+val Background = Color(0xFFF8F9FA)     // 极浅灰
+val Surface = Color(0xFFFFFFFF)        // 纯白
+
+// ==================== 黑白灰文字 ====================
+val TextPrimary = Color(0xFF000000)    // 纯黑
+val TextSecondary = Color(0xFF6B7280)  // 中灰
+val TextTertiary = Color(0xFF9CA3AF)   // 浅灰
+val TextOnPrimary = Color(0xFFFFFFFF)  // 白
+val TextOnSurface = Color(0xFF000000)  // 纯黑
+
+// ==================== 黑白灰边框 ====================
+val Border = Color(0xFFE5E7EB)        // 浅灰边框
+val BorderLight = Color(0xFFF3F4F6)   // 极浅灰边框
+
+// ==================== 彩虹状态色 ====================
+val Error = Color(0xFFEF4444)          // 红
+val ErrorLight = Color(0xFFFCA5A5)    // 浅红
+val Success = Color(0xFF10B981)        // 绿
+val Warning = Color(0xFFF59E0B)        // 黄
+
+// ==================== 时间条 ====================
+val TimeBlockPast = PrimaryLight               // 浅红（已过去未记录，统一 to 主色）
+val TimeBlockRecorded = Color(0xFF6EE7B7)     // 浅绿（有记录）
+val TimeBlockFuture = BorderLight             // 极浅灰（未来）
+val TimeBlockNowBorder = Error                // 红色边框（当前小时）
+val TimeBlockNowBackground = Color(0xFFFDE68A) // 暖黄（当前小时背景）
+
+// ==================== 彩虹小时色板（8 色循环，24h × 3 轮） ====================
+val RainbowHourColors = listOf(
+    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+    Color(0xFF6366F1), Color(0xFFA855F7),
 )
 
-// 背景与文字
-val PixelBackground = Color(0xFFF5F0E8)  // 米白
-val PixelSurface = Color(0xFFFFFBF2)     // 略浅表面
-val PixelText = Color(0xFF2A2828)        // 深灰文字
-val PixelTextSecondary = Color(0xFF6B6663)
-val PixelBorder = Color(0xFF2A2828)      // 深灰边框
-val PixelShadow = Color(0xFF2A2828)      // 硬阴影
+// ==================== 彩虹滑块色板（6 色循环，无蓝色） ====================
+val SliderRainbowActive = listOf(
+    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFFA855F7),
+)
+val SliderRainbowInactive = listOf(
+    Color(0xFFFCA5A5), Color(0xFFFDBA74), Color(0xFFFDE68A),
+    Color(0xFFBEF264), Color(0xFF86EFAC), Color(0xFFD8B4FE),
+)
 
-// 时间条专用
-val TimeBlockPast = PixelIndigo          // 已过去未记录 = 蓝色
-val TimeBlockRecorded = PixelGreen       // 有记录 = 绿色
-val TimeBlockFuture = PixelBackground    // 还未到 = 米白
-val TimeBlockNowBorder = PixelRed        // 当前小时红色边框
+// ==================== 标签色板（彩虹全色） ====================
+val TagColors = listOf(
+    Primary, Accent, Secondary,
+    Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFF06B6D4),
+    Color(0xFFF97316), Color(0xFFBE185D), Color(0xFF14B8A6),
+    Color(0xFFF43F5E), Color(0xFFE11D48), Color(0xFFA855F7),
+)
+
+// ==================== 向后兼容别名 ====================
+val PixelRed = Error
+val PixelGreen = Secondary
+val PixelPurple = Color(0xFF8B5CF6)
+val PixelPink = Color(0xFFEC4899)
+val PixelGold = Accent
+val PixelIndigo = Primary
+val PixelBackground = Background
+val PixelSurface = Surface
+val PixelText = TextPrimary
+val PixelTextSecondary = TextSecondary
+val PixelBorder = Border
+val PixelShadow = Color(0xFF2A2828)
+val TagColorPalette = TagColors

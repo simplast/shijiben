@@ -80,7 +80,7 @@ fun TagsScreen(
                     Text(
                         text = "还没有标签，点右上角 + 创建",
                         color = PixelTextSecondary,
-                        fontFamily = FontFamily.SansSerif,
+
                         fontSize = 15.sp
                     )
                 }
@@ -126,7 +126,7 @@ private fun TagRow(tag: TagEntity, onClick: () -> Unit) {
             Text(
                 text = tag.name,
                 color = PixelText,
-                fontFamily = FontFamily.SansSerif,
+
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )

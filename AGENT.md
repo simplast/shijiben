@@ -75,6 +75,18 @@ shijiben/
 2. **轻量存在**：不制造焦虑，时间可视化静静在那
 3. **不是 TODO**：预写事件不是待办，是"我打算做"，没做就顺延，不催不罚
 
+## 构建与安装
+
+修改代码后，通过以下命令构建并安装到已连接的 ADB 设备：
+
+```bash
+# 构建 debug APK
+./gradlew assembleDebug
+
+# 安装到已连接的设备（需先 adb 连接）
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## 分期
 
 - **V1**：时间轴 + 记录 + 标签 + 8-bit 主题 + 随笔基础
