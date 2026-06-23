@@ -20,7 +20,6 @@ object DataModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "shijiben.db")
-            .fallbackToDestructiveMigration()
             .build()
 
     @Provides

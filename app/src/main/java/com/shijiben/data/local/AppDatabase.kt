@@ -12,7 +12,7 @@ class Converters {
 @Database(
     entities = [EventEntity::class, NoteEntity::class, TagEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
