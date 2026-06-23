@@ -186,4 +186,114 @@ class EventRepositoryTest {
         val e = repo.getEventById(id)!!
         assertThat(e.tagId).isNull()
     }
+
+    @Test
+    fun carryOverNotStarted_withNullEndTime_keepsEndNull() = runTest {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        cal.set(Calendar.HOUR_OF_DAY, 9); cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val yesterdayStart = cal.timeInMillis
+
+        val id = dao.insertEvent(EventEntity(
+            title = "预写无结束", startTime = yesterdayStart, endTime = null,
+            status = EventStatus.NotStarted.value,
+            tagId = null, note = null,
+            createdAt = yesterdayStart, updatedAt = yesterdayStart
+        ))
+
+        val count = repo.carryOverNotStarted(todayY, todayM, todayD)
+        assertThat(count).isEqualTo(1)
+
+        val moved = repo.getEventById(id)!!
+        assertThat(moved.endTime).isNull()
+        assertThat(moved.status).isEqualTo(EventStatus.NotStarted.value)
+        val movedCal = Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = moved.startTime }
+        assertThat(movedCal.get(Calendar.HOUR_OF_DAY)).isEqualTo(9)
+    }
+
+    @Test
+    fun carryOverNotStarted_multiplePendingEvents_shiftsAll() = runTest {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        cal.set(Calendar.HOUR_OF_DAY, 10); cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val y1 = cal.timeInMillis
+        cal.set(Calendar.HOUR_OF_DAY, 14)
+        val y2 = cal.timeInMillis
+
+        dao.insertEvent(EventEntity(title = "a", startTime = y1, endTime = y1 + 3600_000,
+            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            createdAt = y1, updatedAt = y1))
+        dao.insertEvent(EventEntity(title = "b", startTime = y2, endTime = y2 + 3600_000,
+            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            createdAt = y2, updatedAt = y2))
+
+        val count = repo.carryOverNotStarted(todayY, todayM, todayD)
+        assertThat(count).isEqualTo(2)
+    }
+
+    @Test
+    fun carryOverNotStarted_eventAlreadyOnTargetDay_isSkipped() = runTest {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.set(Calendar.HOUR_OF_DAY, 11); cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val todayStart = cal.timeInMillis
+
+        val id = dao.insertEvent(EventEntity(
+            title = "今天预写", startTime = todayStart, endTime = todayStart + 3600_000,
+            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            createdAt = todayStart, updatedAt = todayStart
+        ))
+
+        val count = repo.carryOverNotStarted(todayY, todayM, todayD)
+        assertThat(count).isEqualTo(0) // shiftToTargetDay returns null when newStart == e.startTime
+
+        val unchanged = repo.getEventById(id)!!
+        assertThat(unchanged.startTime).isEqualTo(todayStart)
+    }
+
+    @Test
+    fun carryOverNotStarted_preservesDuration() = runTest {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        cal.set(Calendar.HOUR_OF_DAY, 13); cal.set(Calendar.MINUTE, 15)
+        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+        val yStart = cal.timeInMillis
+        val duration = 5400_000L // 90 min
+
+        val id = dao.insertEvent(EventEntity(
+            title = "带时长", startTime = yStart, endTime = yStart + duration,
+            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            createdAt = yStart, updatedAt = yStart
+        ))
+
+        repo.carryOverNotStarted(todayY, todayM, todayD)
+        val moved = repo.getEventById(id)!!
+        assertThat(moved.endTime!! - moved.startTime).isEqualTo(duration)
+    }
+
+    @Test
+    fun determineStatus_startTimeEqualsNow_withNullEnd_isInProgress() = runTest {
+        val now = System.currentTimeMillis()
+        assertThat(repo.determineStatus(now, null, now)).isEqualTo(EventStatus.InProgress)
+    }
+
+    @Test
+    fun determineStatus_startTimeEqualsNow_withEnd_isCompleted() = runTest {
+        val now = System.currentTimeMillis()
+        assertThat(repo.determineStatus(now, now + 1000, now)).isEqualTo(EventStatus.Completed)
+    }
 }
