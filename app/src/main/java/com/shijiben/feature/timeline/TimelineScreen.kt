@@ -141,6 +141,7 @@ fun TimelineScreen(
             ) {
                 DayProgressBar(
                     events = events,
+                    viewingDate = date,
                     nowHour = nowHour,
                     modifier = Modifier.padding(top = 4.dp)
                 )

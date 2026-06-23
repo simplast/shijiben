@@ -23,23 +23,26 @@ import java.util.TimeZone
 @Composable
 fun DayProgressBar(
     events: List<EventEntity>,
+    viewingDate: Triple<Int, Int, Int>,
     nowHour: Int,
     modifier: Modifier = Modifier
 ) {
+    val today = isToday(viewingDate)
+    val past = isPastDay(viewingDate)
     Column(modifier = modifier) {
         // 0-12h 色块
         TimeBlock(
             hasRecord = events.any { hourOfDay(it.startTime) < 12 },
-            isPast = nowHour >= 12,
-            isNow = nowHour in 0..11,
+            isPast = if (today) nowHour >= 12 else past,
+            isNow = today && nowHour in 0..11,
             modifier = Modifier.size(56.dp)
         )
         Spacer(Modifier.height(8.dp))
         // 12-24h 色块
         TimeBlock(
             hasRecord = events.any { hourOfDay(it.startTime) >= 12 },
-            isPast = nowHour >= 12, // 12-24h 中已有部分过去且无记录 → 蓝色；还未到 → 米白
-            isNow = nowHour >= 12,
+            isPast = if (today) nowHour >= 12 else past,
+            isNow = today && nowHour >= 12,
             modifier = Modifier.size(56.dp)
         )
     }
@@ -68,4 +71,31 @@ private fun hourOfDay(timestamp: Long): Int {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     cal.timeInMillis = timestamp
     return cal.get(Calendar.HOUR_OF_DAY)
+}
+
+/** Returns true if the viewed date is today. */
+private fun isToday(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    return date == Triple(
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH) + 1,
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
+}
+
+/**
+ * Returns true if the viewed date is strictly before today (a past day).
+ * Future days and today both return false.
+ */
+private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    val today = Triple(
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH) + 1,
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
+    // Lexicographic compare on (year, month, day).
+    val (ty, tm, td) = today
+    val (y, m, d) = date
+    return y < ty || (y == ty && (m < tm || (m == tm && d < td)))
 }
