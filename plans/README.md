@@ -12,7 +12,7 @@ gate, and update your row when done.
 | 001  | Remove destructive migration, export Room schema | P1 | M | — | DONE |
 | 002  | Characterization tests for status/carry-over core | P1 | M | — | DONE |
 | 003  | DayProgressBar day-aware rendering | P1 | M | — | DONE |
-| 004  | Editing preserves in-progress event state | P1 | M | 002 | TODO |
+| 004  | Editing preserves in-progress event state | P1 | M | 002 | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)
 
