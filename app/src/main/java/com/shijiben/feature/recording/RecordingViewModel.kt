@@ -69,6 +69,15 @@ class RecordingViewModel @Inject constructor(
         _note.value = event.note ?: ""
         _selectedTagId.value = event.tagId
         val cal = Calendar.getInstance(TimeZone.getDefault())
+
+        // 如果没有设置时间（NotStarted 且无 endTime），默认使用当前时间
+        if (event.endTime == null && event.status == EventStatus.NotStarted.value) {
+            val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+            _startMinutes.value = ((nowMin / 15) * 15).coerceIn(0, 1440)
+            _durationMinutes.value = 0
+            return
+        }
+
         cal.timeInMillis = event.startTime
         val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
         _startMinutes.value = start

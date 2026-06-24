@@ -74,6 +74,52 @@ class TimelineViewModel @Inject constructor(
         _refreshTrigger.value = _refreshTrigger.value + 1
     }
 
+    /** 快速添加一条无时间的事件（底部输入框直接确认） */
+    fun quickAddEvent(title: String) {
+        if (title.isBlank()) return
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            eventRepository.createEvent(
+                title = title.trim(),
+                startTime = now,
+                endTime = null,
+                tagId = null,
+                note = null,
+                status = com.shijiben.data.model.EventStatus.NotStarted.value
+            )
+            refresh()
+        }
+    }
+
+    /** 开始事件：设置 startTime 为当前时间，进入进行中状态 */
+    fun markInProgress(eventId: Long) {
+        viewModelScope.launch {
+            val event = eventRepository.getEventById(eventId) ?: return@launch
+            val now = System.currentTimeMillis()
+            eventRepository.updateEvent(event.copy(
+                startTime = now,
+                endTime = null,
+                status = com.shijiben.data.model.EventStatus.InProgress.value,
+                updatedAt = now
+            ))
+            refresh()
+        }
+    }
+
+    /** 停止事件：设置 endTime 为当前时间，标记完成 */
+    fun markCompleted(eventId: Long) {
+        viewModelScope.launch {
+            val event = eventRepository.getEventById(eventId) ?: return@launch
+            val now = System.currentTimeMillis()
+            eventRepository.updateEvent(event.copy(
+                endTime = now,
+                status = com.shijiben.data.model.EventStatus.Completed.value,
+                updatedAt = now
+            ))
+            refresh()
+        }
+    }
+
     private fun shiftDay(delta: Int) {
         val (y, m, d) = _viewingDate.value
         val cal = Calendar.getInstance(TimeZone.getDefault())
