@@ -29,11 +29,11 @@ class RecordingViewModel @Inject constructor(
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
-    private val _startMinutes = MutableStateFlow(0)
+    private val _startMinutes = MutableStateFlow(540) // 9:00 默认
     val startMinutes: StateFlow<Int> = _startMinutes.asStateFlow()
 
-    private val _endMinutes = MutableStateFlow(30)
-    val endMinutes: StateFlow<Int> = _endMinutes.asStateFlow()
+    private val _durationMinutes = MutableStateFlow(10) // 10 分钟默认
+    val durationMinutes: StateFlow<Int> = _durationMinutes.asStateFlow()
 
     private val _selectedTagId = MutableStateFlow<Long?>(null)
     val selectedTagId: StateFlow<Long?> = _selectedTagId.asStateFlow()
@@ -42,17 +42,14 @@ class RecordingViewModel @Inject constructor(
     val note: StateFlow<String> = _note.asStateFlow()
 
     private var editingId: Long? = null
-    private var currentStatus: Int = EventStatus.NotStarted.value
 
     fun onTitleChange(v: String) { _title.value = v }
     fun onNoteChange(v: String) { _note.value = v }
-    fun onTimeChange(start: Int, end: Int) {
-        _startMinutes.value = start
-        _endMinutes.value = end
-    }
+    fun onStartChange(v: Int) { _startMinutes.value = v }
+    fun onDurationChange(v: Int) { _durationMinutes.value = v }
     fun onTagSelected(id: Long?) { _selectedTagId.value = id }
 
-    /** 进入"新建"模式：基于当前时间初始化默认范围（当前时刻 + 30 分钟） */
+    /** 进入"新建"模式：基于当前时间初始化（取整到最近一刻钟） */
     fun initNew() {
         editingId = null
         _title.value = ""
@@ -60,45 +57,55 @@ class RecordingViewModel @Inject constructor(
         _selectedTagId.value = null
         val cal = Calendar.getInstance(TimeZone.getDefault())
         val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-        _startMinutes.value = nowMin.coerceIn(0, 1439)
-        _endMinutes.value = (nowMin + 30).coerceIn(1, 1440)
+        val snapped = ((nowMin / 15) * 15).coerceIn(300, 1440)
+        _startMinutes.value = snapped
+        _durationMinutes.value = 10
     }
 
     /** 进入"编辑"模式：加载已有事件 */
     fun initEdit(event: EventEntity) {
         editingId = event.id
-        currentStatus = event.status
         _title.value = event.title
         _note.value = event.note ?: ""
         _selectedTagId.value = event.tagId
         val cal = Calendar.getInstance(TimeZone.getDefault())
         cal.timeInMillis = event.startTime
-        _startMinutes.value = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(0, 1439)
-        _endMinutes.value = if (event.endTime != null) {
+        val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
+        _startMinutes.value = start
+        _durationMinutes.value = if (event.endTime != null) {
             val cal2 = Calendar.getInstance(TimeZone.getDefault())
             cal2.timeInMillis = event.endTime
-            val em = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
-            if (event.endTime >= event.startTime && em <= _startMinutes.value) 1440 else em
+            val end = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
+            (end - start).coerceIn(0, 480)
         } else {
-            (_startMinutes.value + 30).coerceIn(1, 1440)
+            60
         }
     }
 
-    /** 保存（新建或更新）。返回 true 表示成功。viewingDate 为查看日期 Triple<年, 月, 日> */
+    /**
+     * 保存（新建或更新）。返回 true 表示成功。
+     * 状态自动推算：duration=0→未开始, 结束时间在未来→进行中, 结束时间在过去→已完成
+     */
     suspend fun save(viewingDate: Triple<Int, Int, Int>): Boolean {
         val title = _title.value.trim()
         if (title.isEmpty()) return false
         val (y, m, d) = viewingDate
         val start = minutesToTimestamp(y, m, d, _startMinutes.value)
-        // 进行中的事件保持无结束时间：编辑（改标题/标签等）不应改变其进行中状态。
-        // 结束时间由"完成"按钮（markCompleted）填入，不由时间滑块填入。
-        val actualEnd: Long? = if (currentStatus == EventStatus.InProgress.value) {
-            null
+        val duration = _durationMinutes.value
+        val now = System.currentTimeMillis()
+
+        val actualEnd: Long? = if (duration > 0) {
+            minutesToTimestamp(y, m, d, _startMinutes.value + duration)
         } else {
-            val end = minutesToTimestamp(y, m, d, _endMinutes.value)
-            // 若 end <= start，说明跨日，end 设为次日
-            if (end <= start) end + 24L * 3600 * 1000 else end
+            null
         }
+
+        val status = when {
+            duration == 0 -> EventStatus.NotStarted.value
+            actualEnd != null && now > actualEnd -> EventStatus.Completed.value
+            else -> EventStatus.InProgress.value
+        }
+
         val eid = editingId
         if (eid != null) {
             val existing = eventRepository.getEventById(eid) ?: return false
@@ -107,6 +114,7 @@ class RecordingViewModel @Inject constructor(
                     title = title,
                     startTime = start,
                     endTime = actualEnd,
+                    status = status,
                     tagId = _selectedTagId.value,
                     note = _note.value.ifBlank { null }
                 )
@@ -116,6 +124,7 @@ class RecordingViewModel @Inject constructor(
                 title = title,
                 startTime = start,
                 endTime = actualEnd,
+                status = status,
                 tagId = _selectedTagId.value,
                 note = _note.value.ifBlank { null }
             )
@@ -127,24 +136,6 @@ class RecordingViewModel @Inject constructor(
         val eid = editingId ?: return false
         eventRepository.deleteEventById(eid)
         return true
-    }
-
-    suspend fun markNotStarted() {
-        val eid = editingId ?: return
-        eventRepository.markNotStarted(eid)
-        currentStatus = EventStatus.NotStarted.value
-    }
-
-    suspend fun markInProgress() {
-        val eid = editingId ?: return
-        eventRepository.markInProgress(eid)
-        currentStatus = EventStatus.InProgress.value
-    }
-
-    suspend fun markCompleted() {
-        val eid = editingId ?: return
-        eventRepository.markCompleted(eid)
-        currentStatus = EventStatus.Completed.value
     }
 
     private fun minutesToTimestamp(y: Int, m: Int, d: Int, minutes: Int): Long {

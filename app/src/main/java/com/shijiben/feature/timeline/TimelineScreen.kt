@@ -1,11 +1,11 @@
 package com.shijiben.feature.timeline
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,17 +13,22 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,30 +37,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.shijiben.R
 import com.shijiben.data.local.EventEntity
-import com.shijiben.data.local.NoteEntity
 import com.shijiben.feature.notes.NoteEditorSheet
 import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
-import com.shijiben.ui.theme.PixelBackground
-import com.shijiben.ui.theme.PixelBorder
-import com.shijiben.ui.theme.PixelButton
-import com.shijiben.ui.theme.PixelCard
-import com.shijiben.ui.theme.PixelGold
-import com.shijiben.ui.theme.PixelText
-import com.shijiben.ui.theme.PixelTextSecondary
-import com.shijiben.ui.theme.pixelBorder
+import com.shijiben.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -67,111 +65,102 @@ fun TimelineScreen(
     notesViewModel: NotesViewModel = hiltViewModel()
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
-    val notes by viewModel.notes.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
     val nowHour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY)
 
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
-
     var showNoteSheet by remember { mutableStateOf(false) }
     val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
 
-    // 计算当天的起止时间戳
-    val (y, m, d) = date
-    val dayCal = remember(date) {
-        Calendar.getInstance(TimeZone.getDefault()).apply {
-            set(y, m - 1, d, 0, 0, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-    }
-    val dayStart = dayCal.timeInMillis
-    val dayEnd = dayStart + 24L * 3600 * 1000
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
-            // 顶部日期栏
-            PixelCard(
-                modifier = Modifier.fillMaxWidth(),
-                shadow = false
-            ) {
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+        // 像素山水背景（弱化）
+        Image(
+            painter = painterResource(com.shijiben.R.drawable.rainbow_bg),
+            contentDescription = "像素山水背景",
+            modifier = Modifier.fillMaxSize().alpha(0.2f),
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.TopCenter
+        )
+        Column(modifier = Modifier.fillMaxSize().padding(bottom = 4.dp)) {
+            PixelCard(modifier = Modifier.fillMaxWidth(), shadow = false, backgroundColor = Surface) {
+                // 彩虹像素装饰条
+                Row(modifier = Modifier.fillMaxWidth().height(4.dp)) {
+                    val trimColors = listOf(
+                        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+                        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+                        Color(0xFF6366F1), Color(0xFFA855F7)
+                    )
+                    for (i in 0 until 80) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f).fillMaxHeight()
+                                .background(trimColors[i % 8])
+                        )
+                    }
+                }
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onTagsClick) {
-                            Icon(Icons.Default.Star, contentDescription = "标签")
+                            Icon(Icons.Default.Star, contentDescription = "标签", tint = TextSecondary)
                         }
                         IconButton(onClick = { viewModel.goToPreviousDay() }) {
-                            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天")
+                            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天", tint = TextPrimary)
                         }
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = formatDate(date),
-                            fontFamily = FontFamily.SansSerif,
+                            text = formatDateCompact(date),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = PixelText
-                        )
-                        Text(
-                            text = formatWeekday(date),
-                            fontFamily = FontFamily.SansSerif,
-                            fontSize = 12.sp,
-                            color = PixelTextSecondary
+                            fontSize = 20.sp,
+                            color = TextPrimary
                         )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onNotesClick) {
-                            Icon(Icons.Default.Edit, contentDescription = "随笔")
+                            Icon(Icons.Default.Edit, contentDescription = "随笔", tint = TextSecondary)
                         }
                         IconButton(onClick = { viewModel.goToNextDay() }) {
-                            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "后一天")
+                            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "后一天", tint = TextPrimary)
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            // 主体：左时间条 + 中事件列表 + 右随笔轨道
-            Row(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DayProgressBar(
-                    events = events,
-                    viewingDate = date,
-                    nowHour = nowHour,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-                EventList(
-                    events = events,
-                    onEventClick = { event ->
+            
+            Row(modifier = Modifier.weight(1f).fillMaxWidth().fillMaxHeight()) {
+                Box(modifier = Modifier.width(40.dp).fillMaxHeight().padding(top = 12.dp, start = 12.dp)) {
+                    DayProgressBar(
+                        events = events,
+                        viewingDate = date,
+                        nowHour = nowHour
+                    )
+                }
+                Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 8.dp, top = 12.dp, end = 12.dp)) {
+                    EventList(events = events) { event ->
                         editingEvent = event
                         showSheet = true
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-                NotesRail(
-                    notes = notes,
-                    dayStart = dayStart,
-                    dayEnd = dayEnd,
-                    onNoteClick = { note ->
-                        notesViewModel.startEdit(note)
-                        showNoteSheet = true
                     }
-                )
+                }
             }
-            Spacer(Modifier.height(8.dp))
-            // 底部记一笔按钮
-            PixelButton(
-                text = "记一笔",
-                onClick = {
-                    editingEvent = null
-                    showSheet = true
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp)
+        }
+
+        FloatingActionButton(
+            onClick = { editingEvent = null; showSheet = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp),
+            containerColor = Primary,
+            contentColor = TextOnPrimary,
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "记一笔",
+                tint = TextOnPrimary
             )
         }
 
@@ -180,73 +169,139 @@ fun TimelineScreen(
                 viewingDate = date,
                 editingEvent = editingEvent,
                 onDismiss = { showSheet = false },
-                onSaved = { showSheet = false }
+                onSaved = { viewModel.refresh(); showSheet = false }
             )
         }
 
         if (showNoteSheet) {
             NoteEditorSheet(
                 editing = editingNote,
-                onDismiss = {
-                    showNoteSheet = false
-                    notesViewModel.closeSheet()
-                },
-                onSave = { content -> notesViewModel.save(content) },
-                onDelete = { note -> notesViewModel.delete(note) }
+                onDismiss = { showNoteSheet = false; notesViewModel.closeSheet() },
+                onSave = { content -> val ok = notesViewModel.save(content); if (ok) viewModel.refresh(); ok },
+                onDelete = { note -> notesViewModel.delete(note); viewModel.refresh() }
             )
         }
     }
 }
 
 @Composable
-private fun NotesRail(
-    notes: List<NoteEntity>,
-    dayStart: Long,
-    dayEnd: Long,
-    onNoteClick: (NoteEntity) -> Unit,
-    modifier: Modifier = Modifier
+fun EventList(
+    events: List<EventEntity>,
+    onEventClick: (EventEntity) -> Unit
 ) {
-    val density = LocalDensity.current
-    val railWidth = 20.dp
-    val dotSize = 10.dp
-    val dotSizePx = with(density) { dotSize.roundToPx() }
-    val xOffsetPx = (with(density) { railWidth.roundToPx() } - dotSizePx) / 2
-
-    BoxWithConstraints(
-        modifier = modifier
-            .width(railWidth)
-            .fillMaxHeight()
-            .background(PixelBackground)
-            .pixelBorder()
-    ) {
-        val heightPx = constraints.maxHeight
-        notes.forEach { note ->
-            val fraction = ((note.timestamp - dayStart).toFloat() / (dayEnd - dayStart)).coerceIn(0f, 1f)
-            val yPx = (fraction * heightPx).toInt() - dotSizePx / 2
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(xOffsetPx, yPx) }
-                    .size(dotSize)
-                    .background(PixelGold)
-                    .border(1.dp, PixelBorder)
-                    .clickable { onNoteClick(note) }
-            )
+    Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
+        if (events.isEmpty()) {
+            Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "今天还是空白",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = TextSecondary
+                )
+            }
+        } else {
+            for (event in events) {
+                EventCard(event = event, onClick = { onEventClick(event) })
+            }
         }
     }
 }
 
-private fun formatDate(date: Triple<Int, Int, Int>): String {
-    val (y, m, d) = date
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    cal.set(y, m - 1, d, 0, 0, 0)
-    return SimpleDateFormat("MM月dd日", Locale.getDefault()).format(cal.time)
+@Composable
+fun EventCard(event: EventEntity, onClick: () -> Unit) {
+    Surface(
+        color = Surface,
+        shape = RoundedCornerShape(0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(bottom = 6.dp),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 标题
+            Text(
+                text = event.title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = when (event.status) {
+                    2 -> Success
+                    0 -> TextTertiary
+                    else -> TextPrimary
+                },
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            // 时间范围 + 耗时 badge
+            if (event.endTime != null) {
+                Text(
+                    text = "${formatTime(event.startTime)}-${formatTime(event.endTime)}",
+                    fontSize = 12.sp,
+                    color = when (event.status) {
+                        2 -> Secondary
+                        0 -> TextTertiary
+                        else -> TextSecondary
+                    }
+                )
+                Spacer(Modifier.width(6.dp))
+                val durationText = formatDurationShort(event.startTime, event.endTime)
+                Box(
+                    modifier = Modifier
+                        .background(Accent, RoundedCornerShape(0.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = durationText,
+                        fontSize = 10.sp,
+                        color = TextOnPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
 }
 
-private fun formatWeekday(date: Triple<Int, Int, Int>): String {
-    val (y, m, d) = date
+private fun formatTime(ts: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(java.util.Date(ts))
+
+private fun formatDurationShort(start: Long, end: Long): String {
+    val minutes = (end - start) / 1000 / 60
+    return if (minutes < 60) {
+        "${minutes}min"
+    } else {
+        "%.1fhours".format(minutes / 60.0)
+    }
+}
+
+private fun formatDate(date: Triple<Int, Int, Int>): String {
     val cal = Calendar.getInstance(TimeZone.getDefault())
-    cal.set(y, m - 1, d, 0, 0, 0)
-    val w = cal.get(Calendar.DAY_OF_WEEK)
-    val names = arrayOf("周日","周一","周二","周三","周四","周五","周六")
-    return names[w - 1]
+    cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
+    return SimpleDateFormat("MM月dd日", Locale.getDefault()).format(cal.time)
+}
+private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
+    val weekdayNames = arrayOf("日", "一", "二", "三", "四", "五", "六")
+    val weekday = weekdayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
+    return "${date.second}/${date.third}/$weekday"
+}
+private fun hourOfDay(timestamp: Long): Int {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    cal.timeInMillis = timestamp
+    return cal.get(Calendar.HOUR_OF_DAY)
+}
+private fun isToday(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+}
+private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    val today = Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+    return date.first < today.first || (date.first == today.first && (date.second < today.second || (date.second == today.second && date.third < today.third)))
 }
