@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.ui.theme.*
@@ -119,11 +120,15 @@ private fun StartTimeBar(value: Int, onValueChange: (Int) -> Unit) {
     val windowStart = (value - WINDOW_HALF).coerceAtLeast(ABS_MIN)
     val windowEnd = (value + WINDOW_HALF).coerceAtMost(ABS_MAX)
 
-    val labels = remember(windowStart, windowEnd) {
+    val labelItems = remember(windowStart, windowEnd) {
         val hStart = windowStart / 60
         val hEnd = windowEnd / 60
+        val span = (windowEnd - windowStart).coerceAtLeast(1)
         buildList {
-            for (h in hStart..hEnd) add(if (h == 0) "0点" else "${h}点")
+            for (h in hStart..hEnd) {
+                val frac = (h * 60 - windowStart).toFloat() / span
+                add((if (h == 0) "0点" else "${h}点") to frac)
+            }
         }
     }
 
@@ -135,7 +140,7 @@ private fun StartTimeBar(value: Int, onValueChange: (Int) -> Unit) {
             onValueChange = { onValueChange(it.coerceIn(ABS_MIN, ABS_MAX)) },
             cursorAtCenter = true
         )
-        BarLabels(labels)
+        BarLabels(labelItems)
     }
 }
 
@@ -149,6 +154,9 @@ private fun DurationBar(
 ) {
     val effectiveMax = maxMinutes.coerceIn(1, DUR_HARD_CEILING)
     val labels = remember(effectiveMax) { buildDurationLabels(effectiveMax) }
+    val labelItems = labels.mapIndexed { i, lbl ->
+        lbl to (if (labels.size <= 1) 0f else i.toFloat() / (labels.size - 1))
+    }
     Column {
         PixelTrackWithCursor(
             value = value.coerceIn(0, effectiveMax),
@@ -156,7 +164,7 @@ private fun DurationBar(
             valueMax = effectiveMax,
             onValueChange = { onValueChange(it.coerceIn(0, effectiveMax)) }
         )
-        BarLabels(labels)
+        BarLabels(labelItems)
     }
 }
 
@@ -307,20 +315,25 @@ private fun PixelTrackWithCursor(
 // ==================== 标签行 ====================
 
 @Composable
-private fun BarLabels(labels: List<String>) {
-    Row(
+private fun BarLabels(items: List<Pair<String, Float>>) {
+    // items: (label text, fraction 0..1 of the track width where it should sit)
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 2.dp, end = 2.dp, top = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(top = 2.dp)
     ) {
-        for (lbl in labels) {
+        val widthPx = with(LocalDensity.current) { maxWidth.toPx() }
+        for ((text, fraction) in items) {
+            val x = fraction.coerceIn(0f, 1f) * widthPx
             Text(
-                text = lbl,
+                text = text,
                 fontSize = 9.sp,
                 color = TextTertiary,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.offset {
+                    IntOffset(x = x.toInt(), y = 0)
+                }
             )
         }
     }
