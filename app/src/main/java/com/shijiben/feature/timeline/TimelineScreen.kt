@@ -41,6 +41,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +69,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.delay
 
 @Composable
 fun TimelineScreen(
@@ -79,6 +81,12 @@ fun TimelineScreen(
     val events by viewModel.events.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
     val nowHour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY)
+    val now by produceState(initialValue = System.currentTimeMillis()) {
+        while (true) {
+            delay(60_000L)
+            value = System.currentTimeMillis()
+        }
+    }
 
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
@@ -178,7 +186,8 @@ fun TimelineScreen(
                         },
                         onStartEvent = { event -> viewModel.markInProgress(event.id) },
                         onStopEvent = { event -> viewModel.markCompleted(event.id) },
-                        onEventLongClick = { event -> pendingDelete = event }
+                        onEventLongClick = { event -> pendingDelete = event },
+                        now = now
                     )
                 }
             }
@@ -277,7 +286,8 @@ fun EventList(
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
-    onEventLongClick: (EventEntity) -> Unit
+    onEventLongClick: (EventEntity) -> Unit,
+    now: Long
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
         if (events.isEmpty()) {
@@ -296,7 +306,8 @@ fun EventList(
                     onClick = { onEventClick(event) },
                     onStart = { onStartEvent(event) },
                     onStop = { onStopEvent(event) },
-                    onLongClick = { onEventLongClick(event) }
+                    onLongClick = { onEventLongClick(event) },
+                    now = now
                 )
             }
         }
@@ -310,7 +321,8 @@ fun EventCard(
     onClick: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit,
+    now: Long
 ) {
     Surface(
         color = Surface,
@@ -376,30 +388,51 @@ fun EventCard(
             Spacer(Modifier.width(8.dp))
 
             // 时间范围 + 耗时 badge
-            if (event.endTime != null) {
-                Text(
-                    text = "${formatTime(event.startTime)}-${formatTime(event.endTime)}",
-                    fontSize = 12.sp,
-                    color = when (event.status) {
-                        2 -> Secondary
-                        0 -> TextTertiary
-                        else -> TextSecondary
-                    }
-                )
-                Spacer(Modifier.width(6.dp))
-                val durationText = formatDurationShort(event.startTime, event.endTime)
-                Box(
-                    modifier = Modifier
-                        .background(Accent, RoundedCornerShape(0.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
+            when (event.status) {
+                1 -> {
+                    // 进行中：显示开始时间 + 运行中时长 badge
                     Text(
-                        text = durationText,
-                        fontSize = 10.sp,
-                        color = TextOnPrimary,
-                        fontWeight = FontWeight.Bold
+                        text = "自 ${formatTime(event.startTime)}",
+                        fontSize = 12.sp,
+                        color = TextSecondary
                     )
+                    Spacer(Modifier.width(6.dp))
+                    val elapsed = formatDurationShort(event.startTime, now)
+                    Box(
+                        modifier = Modifier
+                            .background(Primary, RoundedCornerShape(0.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = elapsed,
+                            fontSize = 10.sp,
+                            color = TextOnPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+                2 -> {
+                    // 已完成：原时间范围 + 耗时 badge（保持不变）
+                    Text(
+                        text = "${formatTime(event.startTime)}-${formatTime(event.endTime!!)}",
+                        fontSize = 12.sp,
+                        color = Secondary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(Accent, RoundedCornerShape(0.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = formatDurationShort(event.startTime, event.endTime!!),
+                            fontSize = 10.sp,
+                            color = TextOnPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                // status 0 (not_started): no time block (unchanged — endTime is null, no duration)
             }
         }
     }
