@@ -16,7 +16,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 005  | [Show start time and elapsed duration for in-progress events](005-in-progress-event-time-display.md) | P2 | S | — (see overlap note) | TODO |
 | 006  | [Align RecordingSheet button labels with the rest of the app (取消/保存)](006-recording-sheet-button-labels.md) | P2 | S | — | DONE |
 | 007  | [DayProgressBar hour labels + live "now" marker](007-day-progressbar-labels-live-now.md) | P2 | M | — (see overlap note) | TODO |
-| 008  | [Add delete confirmation dialog for tags and notes](008-delete-confirmation-dialog.md) | P2 | S | — | TODO |
+| 008  | [Add delete confirmation dialog for tags and notes](008-delete-confirmation-dialog.md) | P2 | S | — | DONE |
 | 009  | [Align slider labels with their true tick positions](009-slider-label-alignment.md) | P3 | S | — (land after 002) | TODO |
 | 010  | [Remove dead `EventList.kt` file](010-remove-dead-eventlist-file.md) | P3 | S | — (land after 001 & 005) | TODO |
 

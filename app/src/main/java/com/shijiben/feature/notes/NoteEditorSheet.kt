@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.data.local.NoteEntity
+import com.shijiben.ui.theme.Error
 import com.shijiben.ui.theme.PixelButton
 import com.shijiben.ui.theme.PixelOutlinedButton
 import com.shijiben.ui.theme.PixelSurface
@@ -44,6 +47,7 @@ fun NoteEditorSheet(
     onDelete: suspend (NoteEntity) -> Unit
 ) {
     var content by remember(editing?.id) { mutableStateOf(editing?.content ?: "") }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
@@ -84,12 +88,7 @@ fun NoteEditorSheet(
                 if (editing != null) {
                     PixelOutlinedButton(
                         text = "删除",
-                        onClick = {
-                            scope.launch {
-                                onDelete(editing)
-                                onDismiss()
-                            }
-                        },
+                        onClick = { showDeleteConfirm = true },
                         modifier = Modifier.weight(1f).height(48.dp)
                     )
                 }
@@ -107,6 +106,25 @@ fun NoteEditorSheet(
                         }
                     },
                     modifier = Modifier.weight(1f).height(48.dp)
+                )
+            }
+            if (showDeleteConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteConfirm = false },
+                    title = { Text("删除这条随笔？") },
+                    text = { Text("删除后无法恢复。") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDeleteConfirm = false
+                            scope.launch {
+                                onDelete(editing!!)
+                                onDismiss()
+                            }
+                        }) { Text("删除", color = Error) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteConfirm = false }) { Text("取消") }
+                    }
                 )
             }
             Spacer(Modifier.height(8.dp))
