@@ -120,6 +120,14 @@ class TimelineViewModel @Inject constructor(
         }
     }
 
+    /** 删除事件（列表长按触发） */
+    fun deleteEvent(eventId: Long) {
+        viewModelScope.launch {
+            eventRepository.deleteEventById(eventId)
+            refresh()
+        }
+    }
+
     private fun shiftDay(delta: Int) {
         val (y, m, d) = _viewingDate.value
         val cal = Calendar.getInstance(TimeZone.getDefault())

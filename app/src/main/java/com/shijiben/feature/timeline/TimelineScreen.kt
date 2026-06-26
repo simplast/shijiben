@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,11 +31,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +83,7 @@ fun TimelineScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
     var showNoteSheet by remember { mutableStateOf(false) }
+    var pendingDelete by remember { mutableStateOf<EventEntity?>(null) }
     var inputText by remember { mutableStateOf("") }
     val inputFocusRequester = remember { FocusRequester() }
     val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
@@ -172,7 +177,8 @@ fun TimelineScreen(
                             showSheet = true
                         },
                         onStartEvent = { event -> viewModel.markInProgress(event.id) },
-                        onStopEvent = { event -> viewModel.markCompleted(event.id) }
+                        onStopEvent = { event -> viewModel.markCompleted(event.id) },
+                        onEventLongClick = { event -> pendingDelete = event }
                     )
                 }
             }
@@ -245,6 +251,23 @@ fun TimelineScreen(
                 onDelete = { note -> notesViewModel.delete(note); viewModel.refresh() }
             )
         }
+
+        pendingDelete?.let { target ->
+            AlertDialog(
+                onDismissRequest = { pendingDelete = null },
+                title = { Text("删除这条记录？", color = TextPrimary) },
+                text = { Text("「${target.title}」将被永久删除，无法恢复。", color = TextSecondary) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteEvent(target.id)
+                        pendingDelete = null
+                    }) { Text("删除", color = Error) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDelete = null }) { Text("取消", color = TextSecondary) }
+                }
+            )
+        }
     }
 }
 
@@ -253,7 +276,8 @@ fun EventList(
     events: List<EventEntity>,
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
-    onStopEvent: (EventEntity) -> Unit
+    onStopEvent: (EventEntity) -> Unit,
+    onEventLongClick: (EventEntity) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
         if (events.isEmpty()) {
@@ -271,26 +295,32 @@ fun EventList(
                     event = event,
                     onClick = { onEventClick(event) },
                     onStart = { onStartEvent(event) },
-                    onStop = { onStopEvent(event) }
+                    onStop = { onStopEvent(event) },
+                    onLongClick = { onEventLongClick(event) }
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EventCard(
     event: EventEntity,
     onClick: () -> Unit,
     onStart: () -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Surface(
         color = Surface,
         shape = RoundedCornerShape(0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(bottom = 6.dp),
         shadowElevation = 2.dp
     ) {
