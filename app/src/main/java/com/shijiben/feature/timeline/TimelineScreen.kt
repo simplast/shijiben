@@ -121,13 +121,28 @@ fun TimelineScreen(
                             Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天", tint = TextPrimary)
                         }
                     }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val onToday = isToday(date)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.then(
+                            if (onToday) Modifier
+                            else Modifier.clickable { viewModel.goToToday() }
+                        )
+                    ) {
                         Text(
                             text = formatDateCompact(date),
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            color = TextPrimary
+                            color = if (onToday) TextPrimary else Accent
                         )
+                        if (!onToday) {
+                            Text(
+                                text = "回今天",
+                                fontSize = 10.sp,
+                                color = TextTertiary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onNotesClick) {
