@@ -121,4 +121,37 @@ class RecordingViewModelTest {
         assertThat(events.first().endTime).isNotNull()
         assertThat(events.first().title).isEqualTo("新事件")
     }
+
+    @Test
+    fun initEdit_fiveHourEvent_setsDurationAndMaxTo300() = runTest {
+        // A completed 5h event (09:00 → 14:00): slider must represent the true
+        // duration, so both durationMinutes and durationMax equal 300 (no 3h cap).
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(Calendar.HOUR_OF_DAY, 9)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val startTime = cal.timeInMillis
+        cal.set(Calendar.HOUR_OF_DAY, 14)
+        val endTime = cal.timeInMillis
+
+        val id = eventRepo.createEvent(
+            title = "5小时事件",
+            startTime = startTime,
+            endTime = endTime,
+            tagId = null,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+
+        vm.initEdit(event)
+        assertThat(vm.durationMinutes.value).isEqualTo(300)
+        assertThat(vm.durationMax.value).isEqualTo(300)
+    }
+
+    @Test
+    fun initNew_setsDurationMaxTo180() = runTest {
+        vm.initNew()
+        assertThat(vm.durationMax.value).isEqualTo(180)
+    }
 }

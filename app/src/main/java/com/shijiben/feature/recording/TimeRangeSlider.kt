@@ -30,7 +30,8 @@ private const val ABS_MAX = 1440     // 24:00
 private const val WINDOW_HALF = 180  // ±3h 半宽
 
 // ==================== 持续时间参数 ====================
-private const val DUR_MAX = 180      // 3 小时
+private const val DUR_MAX_DEFAULT = 180      // 3 小时（新建事件默认上限）
+private const val DUR_HARD_CEILING = 480     // 8 小时硬上限（防止极端值）
 
 // 方块大小
 private val BLOCK_DP = 8.dp
@@ -50,7 +51,8 @@ fun TimeRangeSlider(
     durationMinutes: Int,
     onStartChange: (Int) -> Unit,
     onDurationChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    durationMaxMinutes: Int = DUR_MAX_DEFAULT   // 默认 180（新建场景）
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
 
@@ -103,7 +105,8 @@ fun TimeRangeSlider(
 
         DurationBar(
             value = durationMinutes,
-            onValueChange = onDurationChange
+            onValueChange = onDurationChange,
+            maxMinutes = durationMaxMinutes
         )
     }
 }
@@ -139,16 +142,30 @@ private fun StartTimeBar(value: Int, onValueChange: (Int) -> Unit) {
 // ==================== 持续时间（0-3h） ====================
 
 @Composable
-private fun DurationBar(value: Int, onValueChange: (Int) -> Unit) {
-    val labels = listOf("0", "30分", "1h", "1h30", "2h", "2h30", "3h")
+private fun DurationBar(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    maxMinutes: Int
+) {
+    val effectiveMax = maxMinutes.coerceIn(1, DUR_HARD_CEILING)
+    val labels = remember(effectiveMax) { buildDurationLabels(effectiveMax) }
     Column {
         PixelTrackWithCursor(
-            value = value.coerceIn(0, DUR_MAX),
+            value = value.coerceIn(0, effectiveMax),
             valueMin = 0,
-            valueMax = DUR_MAX,
-            onValueChange = { onValueChange(it.coerceIn(0, DUR_MAX)) }
+            valueMax = effectiveMax,
+            onValueChange = { onValueChange(it.coerceIn(0, effectiveMax)) }
         )
         BarLabels(labels)
+    }
+}
+
+/** 生成 0..max 的整点小时标签（每 60 分钟一个，含两端）。 */
+private fun buildDurationLabels(maxMinutes: Int): List<String> {
+    val hours = maxMinutes / 60
+    return buildList {
+        add("0")
+        for (h in 1..hours) add("${h}h")
     }
 }
 

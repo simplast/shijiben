@@ -47,6 +47,7 @@ fun RecordingSheet(
     val title by viewModel.title.collectAsStateWithLifecycle()
     val startMin by viewModel.startMinutes.collectAsStateWithLifecycle()
     val durationMin by viewModel.durationMinutes.collectAsStateWithLifecycle()
+    val durationMax by viewModel.durationMax.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
@@ -79,7 +80,8 @@ fun RecordingSheet(
                 durationMinutes = durationMin,
                 onStartChange = viewModel::onStartChange,
                 onDurationChange = viewModel::onDurationChange,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                durationMaxMinutes = durationMax
             )
 
             // 操作按钮

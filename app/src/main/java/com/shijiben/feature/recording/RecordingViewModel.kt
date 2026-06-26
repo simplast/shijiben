@@ -17,6 +17,9 @@ import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
 
+private const val NEW_EVENT_DURATION_MAX = 180   // 与 TimeRangeSlider 默认一致
+private const val DURATION_HARD_CEILING = 480
+
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
     private val eventRepository: EventRepository,
@@ -34,6 +37,9 @@ class RecordingViewModel @Inject constructor(
 
     private val _durationMinutes = MutableStateFlow(10) // 10 分钟默认
     val durationMinutes: StateFlow<Int> = _durationMinutes.asStateFlow()
+
+    private val _durationMax = MutableStateFlow(NEW_EVENT_DURATION_MAX)
+    val durationMax: StateFlow<Int> = _durationMax.asStateFlow()
 
     private val _selectedTagId = MutableStateFlow<Long?>(null)
     val selectedTagId: StateFlow<Long?> = _selectedTagId.asStateFlow()
@@ -60,6 +66,7 @@ class RecordingViewModel @Inject constructor(
         val snapped = ((nowMin / 15) * 15).coerceIn(300, 1440)
         _startMinutes.value = snapped
         _durationMinutes.value = 10
+        _durationMax.value = NEW_EVENT_DURATION_MAX
     }
 
     /** 进入"编辑"模式：加载已有事件 */
@@ -81,14 +88,18 @@ class RecordingViewModel @Inject constructor(
         cal.timeInMillis = event.startTime
         val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
         _startMinutes.value = start
-        _durationMinutes.value = if (event.endTime != null) {
+        val rawDuration = if (event.endTime != null) {
             val cal2 = Calendar.getInstance(TimeZone.getDefault())
             cal2.timeInMillis = event.endTime
             val end = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
-            (end - start).coerceIn(0, 480)
+            (end - start).coerceAtLeast(0)
         } else {
             60
         }
+        _durationMinutes.value = rawDuration.coerceIn(0, DURATION_HARD_CEILING)
+        // 编辑时上限 = max(默认 3h, 实际时长向上取整到整点)，保证滑块能表示当前值
+        _durationMax.value = maxOf(NEW_EVENT_DURATION_MAX, ((rawDuration + 59) / 60) * 60)
+            .coerceAtMost(DURATION_HARD_CEILING)
     }
 
     /**
