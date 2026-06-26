@@ -11,7 +11,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 |------|-------|----------|--------|------------|--------|
 | 001  | [Add event delete affordance via long-press on EventCard](001-event-delete-affordance.md) | P1 | S | — | TODO |
 | 002  | [Fix duration slider cap inconsistency (3h UI vs 8h ViewModel)](002-duration-slider-cap-consistency.md) | P1 | M | — | TODO |
-| 003  | [Fix bottom quick-add input placeholder semantics](003-bottom-input-semantics.md) | P1 | S | — | TODO |
+| 003  | [Fix bottom quick-add input placeholder semantics](003-bottom-input-semantics.md) | P1 | S | — | DONE |
 | 004  | [Add "Today" shortcut and not-on-today indicator to the date bar](004-today-shortcut-indicator.md) | P1 | S | — | DONE |
 | 005  | [Show start time and elapsed duration for in-progress events](005-in-progress-event-time-display.md) | P2 | S | — (see overlap note) | TODO |
 | 006  | [Align RecordingSheet button labels with the rest of the app (取消/保存)](006-recording-sheet-button-labels.md) | P2 | S | — | TODO |

@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -189,7 +190,21 @@ fun TimelineScreen(
                 value = inputText,
                 onValueChange = { inputText = it },
                 placeholder = {
-                    Text("记一笔...", color = TextTertiary, fontWeight = FontWeight.Medium)
+                    Text("记一件事（无时间）...", color = TextTertiary, fontWeight = FontWeight.Medium)
+                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        if (inputText.isNotBlank()) {
+                            viewModel.quickAddEvent(inputText.trim())
+                            inputText = ""
+                        }
+                    }) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "添加",
+                            tint = Primary
+                        )
+                    }
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(0.dp),
