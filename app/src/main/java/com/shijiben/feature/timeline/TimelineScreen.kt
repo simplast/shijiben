@@ -174,7 +174,7 @@ fun TimelineScreen(
                     DayProgressBar(
                         events = events,
                         viewingDate = date,
-                        nowHour = nowHour
+                        now = now
                     )
                 }
                 Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 8.dp, top = 12.dp, end = 12.dp)) {

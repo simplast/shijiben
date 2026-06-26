@@ -5,15 +5,23 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.shijiben.data.local.EventEntity
 import com.shijiben.ui.theme.BorderLight
 import com.shijiben.ui.theme.RainbowHourColors
+import com.shijiben.ui.theme.TextTertiary
 import com.shijiben.ui.theme.TimeBlockNowBorder
 import java.util.Calendar
 import java.util.TimeZone
@@ -22,11 +30,13 @@ import java.util.TimeZone
 fun DayProgressBar(
     events: List<EventEntity>,
     viewingDate: Triple<Int, Int, Int>,
-    nowHour: Int,
+    now: Long,
     modifier: Modifier = Modifier
 ) {
     val today = isToday(viewingDate)
     val past = isPastDay(viewingDate)
+    val nowCal = remember(now) { Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = now } }
+    val nowHour = nowCal.get(Calendar.HOUR_OF_DAY)
     val coveredHours = events.flatMap { e ->
         val startHour = hourOfDay(e.startTime)
         val endHour = e.endTime?.let { hourOfDay(it) } ?: startHour
@@ -47,12 +57,26 @@ fun DayProgressBar(
                 isPast -> baseColor.copy(alpha = 0.3f)
                 else -> BorderLight
             }
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .background(bgColor)
-                    .then(if (isNow) Modifier.border(2.dp, TimeBlockNowBorder) else Modifier)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // 稀疏小时标签：仅 0/6/12/18 显示
+                if (hour % 6 == 0) {
+                    Text(
+                        text = "%02d".format(hour),
+                        fontSize = 8.sp,
+                        color = TextTertiary,
+                        modifier = Modifier.width(16.dp),
+                        maxLines = 1
+                    )
+                } else {
+                    Spacer(Modifier.width(16.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .background(bgColor)
+                        .then(if (isNow) Modifier.border(2.dp, TimeBlockNowBorder) else Modifier)
+                )
+            }
         }
     }
 }
