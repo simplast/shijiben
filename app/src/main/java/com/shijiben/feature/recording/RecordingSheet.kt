@@ -6,7 +6,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -88,19 +87,13 @@ fun RecordingSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TextButton(
+                PixelOutlinedButton(
+                    text = "取消",
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f).height(48.dp)
-                ) {
-                    Text(
-                        text = "No",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        color = TextSecondary
-                    )
-                }
+                )
                 PixelButton(
-                    text = "Yes",
+                    text = "保存",
                     onClick = {
                         scope.launch {
                             val ok = viewModel.save(viewingDate)
