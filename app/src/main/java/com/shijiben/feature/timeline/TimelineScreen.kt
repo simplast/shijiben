@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,7 +72,6 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun TimelineScreen(
-    onTagsClick: () -> Unit = {},
     onNotesClick: () -> Unit = {},
     viewModel: TimelineViewModel = hiltViewModel(),
     notesViewModel: NotesViewModel = hiltViewModel()
@@ -128,9 +126,6 @@ fun TimelineScreen(
                     horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onTagsClick) {
-                            Icon(Icons.Default.Star, contentDescription = "标签", tint = TextSecondary)
-                        }
                         IconButton(onClick = { viewModel.goToPreviousDay() }) {
                             Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天", tint = TextPrimary)
                         }

@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.local.EventDao
+import com.shijiben.data.local.MIGRATION_1_2
 import com.shijiben.data.local.NoteDao
-import com.shijiben.data.local.TagDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +20,7 @@ object DataModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "shijiben.db")
+            .addMigrations(MIGRATION_1_2)
             .build()
 
     @Provides
@@ -27,7 +28,4 @@ object DataModule {
 
     @Provides
     fun provideNoteDao(db: AppDatabase): NoteDao = db.noteDao()
-
-    @Provides
-    fun provideTagDao(db: AppDatabase): TagDao = db.tagDao()
 }

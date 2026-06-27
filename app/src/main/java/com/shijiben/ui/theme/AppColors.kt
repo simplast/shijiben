@@ -71,14 +71,6 @@ val SliderRainbowInactive = listOf(
     Color(0xFFBEF264), Color(0xFF86EFAC), Color(0xFFD8B4FE),
 )
 
-// ==================== 标签色板（彩虹全色） ====================
-val TagColors = listOf(
-    Primary, Accent, Secondary,
-    Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFF06B6D4),
-    Color(0xFFF97316), Color(0xFFBE185D), Color(0xFF14B8A6),
-    Color(0xFFF43F5E), Color(0xFFE11D48), Color(0xFFA855F7),
-)
-
 // ==================== 向后兼容别名 ====================
 val PixelRed = Error
 val PixelGreen = Secondary
@@ -92,4 +84,3 @@ val PixelText = TextPrimary
 val PixelTextSecondary = TextSecondary
 val PixelBorder = Border
 val PixelShadow = Color(0xFF2A2828)
-val TagColorPalette = TagColors

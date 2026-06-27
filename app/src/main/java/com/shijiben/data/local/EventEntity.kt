@@ -18,7 +18,6 @@ data class EventEntity(
     val startTime: Long,
     val endTime: Long?,
     val status: Int = 0,
-    val tagId: Long?,
     val note: String?,
     val createdAt: Long,
     val updatedAt: Long

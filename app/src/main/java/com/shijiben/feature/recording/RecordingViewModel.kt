@@ -3,16 +3,12 @@ package com.shijiben.feature.recording
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shijiben.data.local.EventEntity
-import com.shijiben.data.local.TagEntity
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
-import com.shijiben.data.repository.TagRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
@@ -22,12 +18,8 @@ private const val DURATION_HARD_CEILING = 480
 
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
-    private val eventRepository: EventRepository,
-    private val tagRepository: TagRepository
+    private val eventRepository: EventRepository
 ) : ViewModel() {
-
-    val tags: StateFlow<List<TagEntity>> = tagRepository.getAllTags()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
@@ -41,9 +33,6 @@ class RecordingViewModel @Inject constructor(
     private val _durationMax = MutableStateFlow(NEW_EVENT_DURATION_MAX)
     val durationMax: StateFlow<Int> = _durationMax.asStateFlow()
 
-    private val _selectedTagId = MutableStateFlow<Long?>(null)
-    val selectedTagId: StateFlow<Long?> = _selectedTagId.asStateFlow()
-
     private val _note = MutableStateFlow("")
     val note: StateFlow<String> = _note.asStateFlow()
 
@@ -53,14 +42,12 @@ class RecordingViewModel @Inject constructor(
     fun onNoteChange(v: String) { _note.value = v }
     fun onStartChange(v: Int) { _startMinutes.value = v }
     fun onDurationChange(v: Int) { _durationMinutes.value = v }
-    fun onTagSelected(id: Long?) { _selectedTagId.value = id }
 
     /** 进入"新建"模式：基于当前时间初始化（取整到最近一刻钟） */
     fun initNew() {
         editingId = null
         _title.value = ""
         _note.value = ""
-        _selectedTagId.value = null
         val cal = Calendar.getInstance(TimeZone.getDefault())
         val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
         val snapped = ((nowMin / 15) * 15).coerceIn(300, 1440)
@@ -74,7 +61,6 @@ class RecordingViewModel @Inject constructor(
         editingId = event.id
         _title.value = event.title
         _note.value = event.note ?: ""
-        _selectedTagId.value = event.tagId
         val cal = Calendar.getInstance(TimeZone.getDefault())
 
         // 如果没有设置时间（NotStarted 且无 endTime），默认使用当前时间
@@ -135,7 +121,6 @@ class RecordingViewModel @Inject constructor(
                     startTime = start,
                     endTime = actualEnd,
                     status = status,
-                    tagId = _selectedTagId.value,
                     note = _note.value.ifBlank { null }
                 )
             )
@@ -145,7 +130,6 @@ class RecordingViewModel @Inject constructor(
                 startTime = start,
                 endTime = actualEnd,
                 status = status,
-                tagId = _selectedTagId.value,
                 note = _note.value.ifBlank { null }
             )
         }

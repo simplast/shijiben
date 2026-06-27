@@ -47,7 +47,6 @@ class EventRepositoryTest {
             title = "未来事件",
             startTime = now + 60_000,
             endTime = now + 120_000,
-            tagId = null,
             note = null
         )
         val event = repo.getEventById(id)!!
@@ -61,7 +60,6 @@ class EventRepositoryTest {
             title = "补录事件",
             startTime = now - 3_600_000,
             endTime = now - 1_800_000,
-            tagId = null,
             note = null
         )
         val event = repo.getEventById(id)!!
@@ -75,7 +73,6 @@ class EventRepositoryTest {
             title = "进行中",
             startTime = now - 1_800_000,
             endTime = null,
-            tagId = null,
             note = null
         )
         val event = repo.getEventById(id)!!
@@ -105,7 +102,7 @@ class EventRepositoryTest {
             startTime = yesterdayStart,
             endTime = yesterdayEnd,
             status = EventStatus.NotStarted.value,
-            tagId = null, note = null,
+            note = null,
             createdAt = yesterdayStart, updatedAt = yesterdayStart
         ))
 
@@ -144,7 +141,7 @@ class EventRepositoryTest {
             startTime = yesterdayStart,
             endTime = yesterdayStart + 3600_000,
             status = EventStatus.Completed.value,
-            tagId = null, note = null,
+            note = null,
             createdAt = yesterdayStart, updatedAt = yesterdayStart
         ))
 
@@ -179,15 +176,6 @@ class EventRepositoryTest {
     }
 
     @Test
-    fun clearTagReference_setsEventTagIdNull() = runTest {
-        val now = System.currentTimeMillis()
-        val id = repo.createEvent("test", now - 1000, now - 500, tagId = 99L, note = null)
-        repo.clearTagReference(99L)
-        val e = repo.getEventById(id)!!
-        assertThat(e.tagId).isNull()
-    }
-
-    @Test
     fun carryOverNotStarted_withNullEndTime_keepsEndNull() = runTest {
         val cal = Calendar.getInstance(TimeZone.getDefault())
         val todayY = cal.get(Calendar.YEAR)
@@ -201,7 +189,7 @@ class EventRepositoryTest {
         val id = dao.insertEvent(EventEntity(
             title = "预写无结束", startTime = yesterdayStart, endTime = null,
             status = EventStatus.NotStarted.value,
-            tagId = null, note = null,
+            note = null,
             createdAt = yesterdayStart, updatedAt = yesterdayStart
         ))
 
@@ -229,10 +217,10 @@ class EventRepositoryTest {
         val y2 = cal.timeInMillis
 
         dao.insertEvent(EventEntity(title = "a", startTime = y1, endTime = y1 + 3600_000,
-            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            status = EventStatus.NotStarted.value, note = null,
             createdAt = y1, updatedAt = y1))
         dao.insertEvent(EventEntity(title = "b", startTime = y2, endTime = y2 + 3600_000,
-            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            status = EventStatus.NotStarted.value, note = null,
             createdAt = y2, updatedAt = y2))
 
         val count = repo.carryOverNotStarted(todayY, todayM, todayD)
@@ -251,7 +239,7 @@ class EventRepositoryTest {
 
         val id = dao.insertEvent(EventEntity(
             title = "今天预写", startTime = todayStart, endTime = todayStart + 3600_000,
-            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            status = EventStatus.NotStarted.value, note = null,
             createdAt = todayStart, updatedAt = todayStart
         ))
 
@@ -276,7 +264,7 @@ class EventRepositoryTest {
 
         val id = dao.insertEvent(EventEntity(
             title = "带时长", startTime = yStart, endTime = yStart + duration,
-            status = EventStatus.NotStarted.value, tagId = null, note = null,
+            status = EventStatus.NotStarted.value, note = null,
             createdAt = yStart, updatedAt = yStart
         ))
 

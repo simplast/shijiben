@@ -56,7 +56,6 @@ class TimelineViewModelTest {
             title = "新事件",
             startTime = now - 60_000,
             endTime = now + 60_000,
-            tagId = null,
             note = null
         )
 

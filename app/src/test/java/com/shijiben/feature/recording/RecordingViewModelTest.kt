@@ -7,7 +7,6 @@ import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
-import com.shijiben.data.repository.TagRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -30,7 +29,6 @@ class RecordingViewModelTest {
 
     private lateinit var db: AppDatabase
     private lateinit var eventRepo: EventRepository
-    private lateinit var tagRepo: TagRepository
     private lateinit var vm: RecordingViewModel
 
     @Before
@@ -39,8 +37,7 @@ class RecordingViewModelTest {
         db = Room.inMemoryDatabaseBuilder(ctx, AppDatabase::class.java)
             .allowMainThreadQueries().build()
         eventRepo = EventRepository(db.eventDao())
-        tagRepo = TagRepository(db.tagDao())
-        vm = RecordingViewModel(eventRepo, tagRepo)
+        vm = RecordingViewModel(eventRepo)
     }
 
     @After
@@ -54,7 +51,6 @@ class RecordingViewModelTest {
             title = "原标题",
             startTime = now - 60_000,
             endTime = null,
-            tagId = null,
             note = null
         )
         val event = eventRepo.getEventById(id)!!
@@ -85,7 +81,6 @@ class RecordingViewModelTest {
             title = "已完成",
             startTime = now - 7200_000,
             endTime = now - 3600_000,
-            tagId = null,
             note = null
         )
         val event = eventRepo.getEventById(id)!!
@@ -139,7 +134,6 @@ class RecordingViewModelTest {
             title = "5小时事件",
             startTime = startTime,
             endTime = endTime,
-            tagId = null,
             note = null
         )
         val event = eventRepo.getEventById(id)!!

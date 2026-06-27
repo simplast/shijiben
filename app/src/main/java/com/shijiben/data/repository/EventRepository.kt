@@ -32,7 +32,6 @@ class EventRepository @Inject constructor(
         title: String,
         startTime: Long,
         endTime: Long?,
-        tagId: Long?,
         note: String?,
         status: Int? = null
     ): Long {
@@ -43,7 +42,6 @@ class EventRepository @Inject constructor(
             startTime = startTime,
             endTime = endTime,
             status = finalStatus,
-            tagId = tagId,
             note = note,
             createdAt = now,
             updatedAt = now
@@ -58,8 +56,6 @@ class EventRepository @Inject constructor(
     suspend fun deleteEvent(event: EventEntity) = eventDao.deleteEvent(event)
 
     suspend fun deleteEventById(id: Long) = eventDao.deleteEventById(id)
-
-    suspend fun clearTagReference(tagId: Long) = eventDao.clearTagReference(tagId)
 
     /** 手动把事件标记为已完成（停止计时） */
     suspend fun markCompleted(eventId: Long) {

@@ -37,9 +37,6 @@ interface EventDao {
     @Query("DELETE FROM events WHERE id = :id")
     suspend fun deleteEventById(id: Long)
 
-    @Query("UPDATE events SET tagId = NULL WHERE tagId = :tagId")
-    suspend fun clearTagReference(tagId: Long)
-
     @Query("UPDATE events SET startTime = :newStart, endTime = :newEnd, updatedAt = :now WHERE id = :id")
     suspend fun updateEventTime(id: Long, newStart: Long, newEnd: Long?, now: Long)
 }

@@ -83,7 +83,6 @@ class TimelineViewModel @Inject constructor(
                 title = title.trim(),
                 startTime = now,
                 endTime = null,
-                tagId = null,
                 note = null,
                 status = com.shijiben.data.model.EventStatus.NotStarted.value
             )
