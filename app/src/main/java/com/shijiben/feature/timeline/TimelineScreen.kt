@@ -61,6 +61,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +69,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.R
 import com.shijiben.data.local.EventEntity
+import com.shijiben.data.local.NoteEntity
 import com.shijiben.feature.notes.NoteEditorSheet
 import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
@@ -79,6 +81,16 @@ import java.util.TimeZone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private sealed interface TimelineItem {
+    val sortKey: Long
+    data class EventItem(val event: EventEntity) : TimelineItem {
+        override val sortKey: Long get() = event.startTime
+    }
+    data class NoteItem(val note: NoteEntity) : TimelineItem {
+        override val sortKey: Long get() = note.timestamp
+    }
+}
+
 @Composable
 fun TimelineScreen(
     onNotesClick: () -> Unit = {},
@@ -86,6 +98,7 @@ fun TimelineScreen(
     notesViewModel: NotesViewModel = hiltViewModel()
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
+    val notes by viewModel.notes.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
     val nowHour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY)
     val now by produceState(initialValue = System.currentTimeMillis()) {
@@ -176,6 +189,7 @@ fun TimelineScreen(
                 Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 8.dp, top = 12.dp, end = 12.dp)) {
                     EventList(
                         events = events,
+                        notes = notes,
                         onEventClick = { event ->
                             editingEvent = event
                             showSheet = true
@@ -183,6 +197,7 @@ fun TimelineScreen(
                         onStartEvent = { event -> viewModel.markInProgress(event.id) },
                         onStopEvent = { event -> viewModel.markCompleted(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
+                        onNoteClick = onNotesClick,
                         now = now
                     )
                 }
@@ -283,14 +298,20 @@ fun TimelineScreen(
 @Composable
 fun EventList(
     events: List<EventEntity>,
+    notes: List<NoteEntity>,
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
     onEventLongClick: (EventEntity) -> Unit,
+    onNoteClick: () -> Unit,
     now: Long
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
-        if (events.isEmpty()) {
+        val items = remember(events, notes) {
+            (events.map { TimelineItem.EventItem(it) } + notes.map { TimelineItem.NoteItem(it) })
+                .sortedBy { it.sortKey }
+        }
+        if (items.isEmpty()) {
             Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "今天还是空白",
@@ -300,15 +321,21 @@ fun EventList(
                 )
             }
         } else {
-            for (event in events) {
-                EventCard(
-                    event = event,
-                    onClick = { onEventClick(event) },
-                    onStart = { onStartEvent(event) },
-                    onStop = { onStopEvent(event) },
-                    onLongClick = { onEventLongClick(event) },
-                    now = now
-                )
+            items.forEach { item ->
+                when (item) {
+                    is TimelineItem.EventItem -> EventCard(
+                        event = item.event,
+                        onClick = { onEventClick(item.event) },
+                        onStart = { onStartEvent(item.event) },
+                        onStop = { onStopEvent(item.event) },
+                        onLongClick = { onEventLongClick(item.event) },
+                        now = now
+                    )
+                    is TimelineItem.NoteItem -> NoteRow(
+                        note = item.note,
+                        onClick = onNoteClick
+                    )
+                }
             }
         }
     }
@@ -434,6 +461,58 @@ fun EventCard(
                 }
                 // status 0 (not_started): no time block (unchanged — endTime is null, no duration)
             }
+        }
+    }
+}
+
+@Composable
+private fun NoteRow(
+    note: NoteEntity,
+    onClick: () -> Unit
+) {
+    Surface(
+        color = Surface,
+        shape = RoundedCornerShape(0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(bottom = 6.dp),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 橙色 ✎ 图标盒（2dp 黑边，8-bit 风），与 BottomEntryBar 的随笔色身份一致
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .border(2.dp, Color.Black)
+                    .background(Accent),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "随笔",
+                    tint = Color.White,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = formatTime(note.timestamp),
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = note.content,
+                fontSize = 13.sp,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

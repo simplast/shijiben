@@ -24,7 +24,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 011  | [Fix `RecordingViewModel.initEdit` data corruption + un-skip the two red tests](011-fix-recording-initEdit-data-corruption.md) | P1 | M | — | DONE |
 | 012  | [Remove debug `Log.d` calls from production code](012-remove-debug-log-calls.md) | P2 | S | — | DONE |
 | 013  | [Update AGENT.md, design spec, and product brief to reflect the tag removal](013-update-docs-after-tag-removal.md) | P2 | S | — | DONE |
-| 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | TODO |
+| 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
 
