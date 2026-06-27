@@ -70,7 +70,6 @@ class TimelineViewModel @Inject constructor(
      * 保证冷启动 / 弱订阅场景下也能立即拉到新数据。
      */
     fun refresh() {
-        android.util.Log.d("TimelineDebug", "[TimelineViewModel] refresh() called, current viewingDate=${_viewingDate.value}, trigger=${_refreshTrigger.value}")
         _refreshTrigger.value = _refreshTrigger.value + 1
     }
 

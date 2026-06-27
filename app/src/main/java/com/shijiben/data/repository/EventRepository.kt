@@ -15,7 +15,6 @@ class EventRepository @Inject constructor(
 ) {
     fun getEventsByDate(year: Int, month: Int, day: Int): Flow<List<EventEntity>> {
         val (start, end) = dayRange(year, month, day)
-        android.util.Log.d("TimelineDebug", "[EventRepository] getEventsByDate: y=$year m=$month d=$day, start=$start, end=$end")
         return eventDao.getEventsByDate(start, end)
     }
 
