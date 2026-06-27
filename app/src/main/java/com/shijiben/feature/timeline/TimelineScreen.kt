@@ -16,17 +16,20 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -35,15 +38,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,11 +55,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -71,6 +77,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun TimelineScreen(
@@ -93,8 +100,10 @@ fun TimelineScreen(
     var showNoteSheet by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<EventEntity?>(null) }
-    var inputText by remember { mutableStateOf("") }
-    val inputFocusRequester = remember { FocusRequester() }
+    var activeDrawer by remember { mutableStateOf<DrawerType?>(null) }
+    var eventDraft by remember { mutableStateOf("") }
+    var noteDraft by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
     val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
@@ -180,53 +189,46 @@ fun TimelineScreen(
             }
         }
 
-        // 底部像素风格输入框
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(Surface)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = {
-                    Text("记一件事（无时间）...", color = TextTertiary, fontWeight = FontWeight.Medium)
-                },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        if (inputText.isNotBlank()) {
-                            viewModel.quickAddEvent(inputText.trim())
-                            inputText = ""
+        // Part B：底部双 block 统一入口（常态）或抽屉（展开态）
+        if (activeDrawer == null) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                BottomEntryBar(
+                    onCalendarClick = { showDatePicker = true },
+                    onEventTriggerClick = { activeDrawer = DrawerType.EVENT },
+                    onNoteTriggerClick = { activeDrawer = DrawerType.NOTE },
+                    onNotesClick = onNotesClick
+                )
+            }
+        } else {
+            EntryDrawer(
+                drawerType = activeDrawer!!,
+                eventDraft = eventDraft,
+                noteDraft = noteDraft,
+                onEventDraftChange = { eventDraft = it },
+                onNoteDraftChange = { noteDraft = it },
+                onSubmit = { text ->
+                    when (activeDrawer) {
+                        DrawerType.EVENT -> {
+                            if (text.isNotBlank()) {
+                                viewModel.quickAddEvent(text.trim())
+                                eventDraft = ""
+                            }
                         }
-                    }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "添加",
-                            tint = Primary
-                        )
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(0.dp),
-                textStyle = TextStyle(
-                    fontSize = 15.sp,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (inputText.isNotBlank()) {
-                            viewModel.quickAddEvent(inputText.trim())
-                            inputText = ""
+                        DrawerType.NOTE -> {
+                            if (text.isNotBlank()) {
+                                scope.launch {
+                                    if (notesViewModel.save(text.trim())) {
+                                        noteDraft = ""
+                                        viewModel.refresh()
+                                    }
+                                }
+                            }
                         }
+                        null -> {}
                     }
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(inputFocusRequester)
+                    activeDrawer = null
+                },
+                onDismiss = { activeDrawer = null }
             )
         }
 
@@ -515,4 +517,234 @@ private fun dateToUtcMillis(date: Triple<Int, Int, Int>): Long {
     cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
     cal.set(Calendar.MILLISECOND, 0)
     return cal.timeInMillis
+}
+
+// ===== Part B：底部双 block 入口 + 抽屉 =====
+
+private enum class DrawerType { EVENT, NOTE }
+
+/** 8 色循环彩虹条（与顶部彩虹条同色），height 通常 3.dp。 */
+@Composable
+private fun RainbowTrim(height: Dp) {
+    val trimColors = listOf(
+        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+        Color(0xFF6366F1), Color(0xFFA855F7)
+    )
+    Row(modifier = Modifier.fillMaxWidth().height(height)) {
+        for (i in 0 until 80) {
+            Box(
+                modifier = Modifier
+                    .weight(1f).fillMaxHeight()
+                    .background(trimColors[i % 8])
+            )
+        }
+    }
+}
+
+/** B1：底部双 block 栏（常态入口，不是打字处）。 */
+@Composable
+private fun BottomEntryBar(
+    onCalendarClick: () -> Unit,
+    onEventTriggerClick: () -> Unit,
+    onNoteTriggerClick: () -> Unit,
+    onNotesClick: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().background(Surface)) {
+        RainbowTrim(3.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // 左 block：📅 + 记事输入框触发器
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .border(2.dp, Color.Black)
+                        .background(Primary)
+                        .clickable(onClick = onCalendarClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = "选择日期",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .weight(1f)
+                        .border(2.dp, Color.Black)
+                        .background(Surface)
+                        .clickable(onClick = onEventTriggerClick),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "在做什么？",
+                        color = TextTertiary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+            }
+            // 中间 2dp 黑色竖分隔线
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .background(Color.Black)
+            )
+            // 右 block：随笔输入框触发器 + ✎
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .weight(1f)
+                        .border(2.dp, Color.Black)
+                        .background(Surface)
+                        .clickable(onClick = onNoteTriggerClick),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "写点什么...",
+                        color = TextTertiary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .border(2.dp, Color.Black)
+                        .background(Accent)
+                        .clickable(onClick = onNotesClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "随笔列表",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** B2：抽屉 overlay（遮罩 + 底部抽屉本体）。无提交按钮、无 ✕，靠 IME Done 提交、点遮罩关闭。 */
+@Composable
+private fun EntryDrawer(
+    drawerType: DrawerType,
+    eventDraft: String,
+    noteDraft: String,
+    onEventDraftChange: (String) -> Unit,
+    onNoteDraftChange: (String) -> Unit,
+    onSubmit: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(drawerType) {
+        focusRequester.requestFocus()
+    }
+    val isEvent = drawerType == DrawerType.EVENT
+    val currentDraft = if (isEvent) eventDraft else noteDraft
+    val onDraftChange = if (isEvent) onEventDraftChange else onNoteDraftChange
+    val placeholder = if (isEvent) "写一件事..." else "写点什么..."
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 遮罩：点击关闭，不清草稿
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+                .clickable(onClick = onDismiss)
+        )
+        // 抽屉本体
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Surface)
+        ) {
+            // 顶部 2dp 黑色顶边 + 3dp 彩虹条
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+            RainbowTrim(3.dp)
+            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                // 标签徽章
+                Box(
+                    modifier = Modifier
+                        .border(2.dp, Color.Black)
+                        .background(if (isEvent) Primary else Accent)
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = if (isEvent) "记事" else "随笔",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                // 多行输入框：2dp 黑边、白底、min-height 96dp、IME Done 提交
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 96.dp)
+                        .border(2.dp, Color.Black)
+                        .background(Surface)
+                        .padding(8.dp)
+                ) {
+                    BasicTextField(
+                        value = currentDraft,
+                        onValueChange = onDraftChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        textStyle = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        ),
+                        cursorBrush = SolidColor(Color.Black),
+                        singleLine = false,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(
+                            onDone = { onSubmit(currentDraft) }
+                        ),
+                        decorationBox = { innerTextField ->
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                if (currentDraft.isEmpty()) {
+                                    Text(
+                                        text = placeholder,
+                                        color = TextTertiary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
