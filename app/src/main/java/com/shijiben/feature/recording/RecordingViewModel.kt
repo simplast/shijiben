@@ -37,6 +37,7 @@ class RecordingViewModel @Inject constructor(
     val note: StateFlow<String> = _note.asStateFlow()
 
     private var editingId: Long? = null
+    private var originalStatus: Int? = null   // preserved across initEdit so save() can keep in-progress events null-ended
 
     fun onTitleChange(v: String) { _title.value = v }
     fun onNoteChange(v: String) { _note.value = v }
@@ -46,6 +47,7 @@ class RecordingViewModel @Inject constructor(
     /** 进入"新建"模式：基于当前时间初始化（取整到最近一刻钟） */
     fun initNew() {
         editingId = null
+        originalStatus = null
         _title.value = ""
         _note.value = ""
         val cal = Calendar.getInstance(TimeZone.getDefault())
@@ -59,15 +61,26 @@ class RecordingViewModel @Inject constructor(
     /** 进入"编辑"模式：加载已有事件 */
     fun initEdit(event: EventEntity) {
         editingId = event.id
+        originalStatus = event.status
         _title.value = event.title
         _note.value = event.note ?: ""
         val cal = Calendar.getInstance(TimeZone.getDefault())
 
-        // 如果没有设置时间（NotStarted 且无 endTime），默认使用当前时间
+        // 没有设置时间（NotStarted 且无 endTime）：默认使用当前时间
         if (event.endTime == null && event.status == EventStatus.NotStarted.value) {
             val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
             _startMinutes.value = ((nowMin / 15) * 15).coerceIn(0, 1440)
             _durationMinutes.value = 0
+            _durationMax.value = NEW_EVENT_DURATION_MAX
+            return
+        }
+        // 进行中（InProgress 且 endTime=null）：保持无结束时间，保留原始 startTime
+        if (event.endTime == null && event.status == EventStatus.InProgress.value) {
+            cal.timeInMillis = event.startTime
+            val startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(0, 1440)
+            _startMinutes.value = startMin
+            _durationMinutes.value = 0
+            _durationMax.value = NEW_EVENT_DURATION_MAX
             return
         }
 
@@ -75,12 +88,10 @@ class RecordingViewModel @Inject constructor(
         val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
         _startMinutes.value = start
         val rawDuration = if (event.endTime != null) {
-            val cal2 = Calendar.getInstance(TimeZone.getDefault())
-            cal2.timeInMillis = event.endTime
-            val end = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
-            (end - start).coerceAtLeast(0)
+            // 用绝对时间差计算，避免跨午夜时 end < start 的分钟差为负
+            ((event.endTime - event.startTime) / 60_000L).toInt().coerceAtLeast(0)
         } else {
-            60
+            60   // defensive; unreachable after Step 2 (both null-endTime branches return early)
         }
         _durationMinutes.value = rawDuration.coerceIn(0, DURATION_HARD_CEILING)
         // 编辑时上限 = max(默认 3h, 实际时长向上取整到整点)，保证滑块能表示当前值
@@ -107,7 +118,7 @@ class RecordingViewModel @Inject constructor(
         }
 
         val status = when {
-            duration == 0 -> EventStatus.NotStarted.value
+            duration == 0 -> originalStatus ?: EventStatus.NotStarted.value
             actualEnd != null && now > actualEnd -> EventStatus.Completed.value
             else -> EventStatus.InProgress.value
         }

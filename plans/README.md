@@ -21,7 +21,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 008  | [Add delete confirmation dialog for tags and notes](008-delete-confirmation-dialog.md) | P2 | S | — | DONE |
 | 009  | [Align slider labels with their true tick positions](009-slider-label-alignment.md) | P3 | S | — (land after 002) | DONE |
 | 010  | [Remove dead `EventList.kt` file](010-remove-dead-eventlist-file.md) | P3 | S | — (land after 001 & 005) | DONE |
-| 011  | [Fix `RecordingViewModel.initEdit` data corruption + un-skip the two red tests](011-fix-recording-initEdit-data-corruption.md) | P1 | M | — | TODO |
+| 011  | [Fix `RecordingViewModel.initEdit` data corruption + un-skip the two red tests](011-fix-recording-initEdit-data-corruption.md) | P1 | M | — | DONE |
 | 012  | [Remove debug `Log.d` calls from production code](012-remove-debug-log-calls.md) | P2 | S | — | TODO |
 | 013  | [Update AGENT.md, design spec, and product brief to reflect the tag removal](013-update-docs-after-tag-removal.md) | P2 | S | — | TODO |
 | 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | TODO |
@@ -53,8 +53,5 @@ This front-loads the no-overlap, lowest-risk wins (003, 006, 008), handles the `
 ## Verification baseline
 
 - The repo has **no Compose UI tests** and **no lint config**; verification is build + existing unit tests (ViewModel/repository tests under `app/src/test/`).
-- All plans gate on `./gradlew :app:compileDebugKotlin` + `./gradlew :app:testDebugUnitTest` + `./gradlew assembleDebug` exiting 0.
-- **Two pre-existing baseline test failures excluded from the gate** (both in `RecordingViewModelTest`, both unrelated to any plan in this batch — confirmed via `git stash` to be present on the pre-007 state):
-  1. `save_editingInProgressEvent_preservesNullEndTimeAndStatus` — always-failing bug in `RecordingViewModel.initEdit`: editing an in-progress event (`endTime=null`, `status=InProgress`) falls through to a `duration=60` fallback, so `save()` writes a non-null `endTime`, converting the in-progress event into a scheduled one.
-  2. `save_editingCompletedEvent_keepsEndTime` — time-of-day flaky bug: `initEdit` coerces `start` to `[300, 1440]` but not `end`, so when the test event spans midnight (current time between 00:00 and ~05:00), `end < start`, `rawDuration` clamps to 0, `save()` writes `endTime=null`. Passes during daytime.
+- All plans gate on `./gradlew :app:compileDebugKotlin` + `./gradlew :app:testDebugUnitTest` + `./gradlew assembleDebug` exiting 0. (Plans 011+ un-skip the previously-excluded tests; they are now part of the gate.)
 - Device verification (visual/interaction checks) is called out in each plan's Done criteria where relevant — these cannot be automated in this repo.
