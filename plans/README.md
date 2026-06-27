@@ -17,7 +17,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 004  | [Add "Today" shortcut and not-on-today indicator to the date bar](004-today-shortcut-indicator.md) | P1 | S | — | DONE |
 | 005  | [Show start time and elapsed duration for in-progress events](005-in-progress-event-time-display.md) | P2 | S | — (see overlap note) | DONE |
 | 006  | [Align RecordingSheet button labels with the rest of the app (取消/保存)](006-recording-sheet-button-labels.md) | P2 | S | — | DONE |
-| 007  | [DayProgressBar hour labels + live "now" marker](007-day-progressbar-labels-live-now.md) | P2 | M | — (see overlap note) | DONE |
+| 007  | [DayProgressBar hour labels + live "now" marker](007-day-progressbar-labels-live-now.md) | P2 | M | — (see overlap note) | DONE† |
 | 008  | [Add delete confirmation dialog for tags and notes](008-delete-confirmation-dialog.md) | P2 | S | — | DONE |
 | 009  | [Align slider labels with their true tick positions](009-slider-label-alignment.md) | P3 | S | — (land after 002) | DONE |
 | 010  | [Remove dead `EventList.kt` file](010-remove-dead-eventlist-file.md) | P3 | S | — (land after 001 & 005) | DONE |
@@ -27,6 +27,8 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
+
+† Plan 007's hour labels were reverted on 2026-06-28 by the homepage composition rebalance (the slimmed 20dp rail no longer fits text; the live "now" marker is retained). See [2026-06-28-homepage-composition-rebalance-design.md](../docs/superpowers/specs/2026-06-28-homepage-composition-rebalance-design.md) §3.
 
 ## Dependency & ordering notes
 

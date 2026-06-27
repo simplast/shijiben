@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,7 +61,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -129,64 +127,67 @@ fun TimelineScreen(
             alignment = Alignment.TopCenter
         )
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 6.dp)) {
-            PixelCard(modifier = Modifier.fillMaxWidth(), shadow = false, backgroundColor = Surface) {
-                // 彩虹像素装饰条（加厚至 8dp，8 色循环铺满整宽）
-                Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
-                    val trimColors = listOf(
-                        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-                        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-                        Color(0xFF6366F1), Color(0xFFA855F7)
+            // 顶部 8dp 彩虹条（品牌标识，全 app 唯一保留处）
+            Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
+                val trimColors = listOf(
+                    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+                    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+                    Color(0xFF6366F1), Color(0xFFA855F7)
+                )
+                for (i in 0 until 80) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f).fillMaxHeight()
+                            .background(trimColors[i % 8])
                     )
-                    for (i in 0 until 80) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f).fillMaxHeight()
-                                .background(trimColors[i % 8])
-                        )
-                    }
                 }
-                // 居中日期徽章：2dp 黑边白底 + 3dp 硬阴影（8-bit 风）
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val onToday = isToday(date)
+            }
+            // 顶栏一条带：左日期徽章 + 右概览统计
+            Row(
+                modifier = Modifier.fillMaxWidth().background(Surface),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                     Box(modifier = Modifier.clickable { showDatePicker = true }) {
-                        // 硬阴影：与徽章同尺寸、向右下偏移 3dp 的纯黑底盒（无圆角）
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .offset(x = 3.dp, y = 3.dp)
-                                .background(Color.Black)
-                        )
-                        // 徽章本体：白底 2dp 黑边
+                        // 徽章本体：2dp 黑边白底（去硬阴影，避免顶栏过重）
                         Box(
                             modifier = Modifier
                                 .border(2.dp, Color.Black)
                                 .background(Surface)
-                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = formatDateCompact(date),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = if (onToday) TextPrimary else Accent
+                                fontSize = 13.sp,
+                                color = if (isToday(date)) TextPrimary else Accent
                             )
                         }
                     }
                 }
+                Text(
+                    text = if (events.isEmpty() && notes.isEmpty()) "还没有记录"
+                           else "${events.size} 件事 · ${notes.size} 条随笔",
+                    fontSize = 11.sp,
+                    color = TextTertiary,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
             }
+            // 2dp 黑色底分隔线
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
             
             Row(modifier = Modifier.weight(1f).fillMaxWidth().fillMaxHeight()) {
-                Box(modifier = Modifier.width(40.dp).fillMaxHeight().padding(top = 12.dp, start = 12.dp)) {
+                Box(modifier = Modifier.width(20.dp).fillMaxHeight().padding(top = 12.dp, start = 4.dp)) {
                     DayProgressBar(
                         events = events,
                         viewingDate = date,
                         now = now
                     )
                 }
-                Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 8.dp, top = 12.dp, end = 12.dp)) {
+                Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 12.dp, top = 12.dp, end = 12.dp)) {
                     EventList(
                         events = events,
                         notes = notes,
@@ -360,7 +361,7 @@ fun EventCard(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(bottom = 6.dp),
+            .padding(bottom = 8.dp),
         shadowElevation = 2.dp
     ) {
         Row(
@@ -476,7 +477,7 @@ private fun NoteRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(bottom = 6.dp),
+            .padding(bottom = 8.dp),
         shadowElevation = 2.dp
     ) {
         Row(
@@ -602,25 +603,6 @@ private fun dateToUtcMillis(date: Triple<Int, Int, Int>): Long {
 
 private enum class DrawerType { EVENT, NOTE }
 
-/** 8 色循环彩虹条（与顶部彩虹条同色），height 通常 3.dp。 */
-@Composable
-private fun RainbowTrim(height: Dp) {
-    val trimColors = listOf(
-        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-        Color(0xFF6366F1), Color(0xFFA855F7)
-    )
-    Row(modifier = Modifier.fillMaxWidth().height(height)) {
-        for (i in 0 until 80) {
-            Box(
-                modifier = Modifier
-                    .weight(1f).fillMaxHeight()
-                    .background(trimColors[i % 8])
-            )
-        }
-    }
-}
-
 /** B1：底部双 block 栏（常态入口，不是打字处）。 */
 @Composable
 private fun BottomEntryBar(
@@ -630,12 +612,13 @@ private fun BottomEntryBar(
     onNotesClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(Surface)) {
-        RainbowTrim(3.dp)
+        // 2dp 黑色顶边（替代原彩虹条）
+        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .height(34.dp)
+                .padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -647,7 +630,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(26.dp)
                         .border(2.dp, Color.Black)
                         .background(Primary)
                         .clickable(onClick = onCalendarClick),
@@ -657,12 +640,12 @@ private fun BottomEntryBar(
                         Icons.Default.DateRange,
                         contentDescription = "选择日期",
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .height(36.dp)
+                        .height(26.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -673,7 +656,7 @@ private fun BottomEntryBar(
                         text = "在做什么？",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
@@ -693,7 +676,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .height(36.dp)
+                        .height(26.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -704,13 +687,13 @@ private fun BottomEntryBar(
                         text = "写点什么...",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(26.dp)
                         .border(2.dp, Color.Black)
                         .background(Accent)
                         .clickable(onClick = onNotesClick),
@@ -720,7 +703,7 @@ private fun BottomEntryBar(
                         Icons.Default.Edit,
                         contentDescription = "随笔列表",
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -763,9 +746,8 @@ private fun EntryDrawer(
                 .fillMaxWidth()
                 .background(Surface)
         ) {
-            // 顶部 2dp 黑色顶边 + 3dp 彩虹条
+            // 顶部 2dp 黑色顶边（去彩虹条）
             Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
-            RainbowTrim(3.dp)
             Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                 // 标签徽章
                 Box(
