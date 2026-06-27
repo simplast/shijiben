@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,11 +27,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -89,6 +91,7 @@ fun TimelineScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
     var showNoteSheet by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<EventEntity?>(null) }
     var inputText by remember { mutableStateOf("") }
     val inputFocusRequester = remember { FocusRequester() }
@@ -105,8 +108,8 @@ fun TimelineScreen(
         )
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 6.dp)) {
             PixelCard(modifier = Modifier.fillMaxWidth(), shadow = false, backgroundColor = Surface) {
-                // 彩虹像素装饰条
-                Row(modifier = Modifier.fillMaxWidth().height(4.dp)) {
+                // 彩虹像素装饰条（加厚至 8dp，8 色循环铺满整宽）
+                Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
                     val trimColors = listOf(
                         Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
                         Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
@@ -120,45 +123,34 @@ fun TimelineScreen(
                         )
                     }
                 }
-                Row(
+                // 居中日期徽章：2dp 黑边白底 + 3dp 硬阴影（8-bit 风）
+                Box(
                     modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { viewModel.goToPreviousDay() }) {
-                            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "前一天", tint = TextPrimary)
-                        }
-                    }
                     val onToday = isToday(date)
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.then(
-                            if (onToday) Modifier
-                            else Modifier.clickable { viewModel.goToToday() }
+                    Box(modifier = Modifier.clickable { showDatePicker = true }) {
+                        // 硬阴影：与徽章同尺寸、向右下偏移 3dp 的纯黑底盒（无圆角）
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .offset(x = 3.dp, y = 3.dp)
+                                .background(Color.Black)
                         )
-                    ) {
-                        Text(
-                            text = formatDateCompact(date),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = if (onToday) TextPrimary else Accent
-                        )
-                        if (!onToday) {
+                        // 徽章本体：白底 2dp 黑边
+                        Box(
+                            modifier = Modifier
+                                .border(2.dp, Color.Black)
+                                .background(Surface)
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = "回今天",
-                                fontSize = 10.sp,
-                                color = TextTertiary,
-                                fontWeight = FontWeight.Medium
+                                text = formatDateCompact(date),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = if (onToday) TextPrimary else Accent
                             )
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onNotesClick) {
-                            Icon(Icons.Default.Edit, contentDescription = "随笔", tint = TextSecondary)
-                        }
-                        IconButton(onClick = { viewModel.goToNextDay() }) {
-                            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "后一天", tint = TextPrimary)
                         }
                     }
                 }
@@ -253,6 +245,17 @@ fun TimelineScreen(
                 onDismiss = { showNoteSheet = false; notesViewModel.closeSheet() },
                 onSave = { content -> val ok = notesViewModel.save(content); if (ok) viewModel.refresh(); ok },
                 onDelete = { note -> notesViewModel.delete(note); viewModel.refresh() }
+            )
+        }
+
+        if (showDatePicker) {
+            DateSelectorDialog(
+                initialDate = date,
+                onConfirm = { (y, m, d) ->
+                    viewModel.setDate(y, m, d)
+                    showDatePicker = false
+                },
+                onDismiss = { showDatePicker = false }
             )
         }
 
@@ -469,4 +472,47 @@ private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     val today = Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
     return date.first < today.first || (date.first == today.first && (date.second < today.second || (date.second == today.second && date.third < today.third)))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateSelectorDialog(
+    initialDate: Triple<Int, Int, Int>,
+    onConfirm: (Triple<Int, Int, Int>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Material3 DatePicker 以 UTC 0 点毫秒表示选中日期
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = dateToUtcMillis(initialDate)
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                state.selectedDateMillis?.let { millis ->
+                    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                    cal.timeInMillis = millis
+                    onConfirm(
+                        Triple(
+                            cal.get(Calendar.YEAR),
+                            cal.get(Calendar.MONTH) + 1,
+                            cal.get(Calendar.DAY_OF_MONTH)
+                        )
+                    )
+                }
+            }) { Text("确定") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    ) {
+        DatePicker(state = state)
+    }
+}
+
+private fun dateToUtcMillis(date: Triple<Int, Int, Int>): Long {
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
 }
