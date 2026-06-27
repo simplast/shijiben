@@ -1,6 +1,7 @@
 # AGENT.md — 事记本（ShiJiBen）项目上下文
 
 > 本文档供 AI agent 阅读，提供项目约定和关键上下文。
+> 2026-06-27 更新：标签（Tag）功能已移除，DB v1→v2 迁移见 [docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md](docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md) Part C。
 
 ## 项目概述
 
@@ -22,22 +23,22 @@
 ```
 shijiben/
   docs/            # 文档：设计 spec、计划
-  design/          # 设计思考、HTML mockup
   app/
     src/main/java/com/shijiben/
-      core/        # 主题、8-bit 调色板、共享组件
-        theme/     # 色板、字体、像素风格
-        ui/        # 共享 UI 组件
-      data/        # Room 数据库、Entity、DAO、Repository
-        local/     # Entity、DAO、Database
-        repository/# Repository 实现
-      features/
-        timeline/  # 时间轴主视图
-        recording/ # 记录功能
-        tags/      # 标签管理
-        heatmap/   # 热力图（v2）
-        time_viz/  # 时间可视化（v2）
-    src/main/res/  # Android 资源
+      data/
+        local/     # Entity、DAO、Database（EventEntity, NoteEntity, EventDao, NoteDao, AppDatabase）
+        model/     # EventStatus
+        repository/# EventRepository, NoteRepository
+        DataModule.kt   # Hilt 提供方法
+      feature/
+        notes/     # 随笔列表与编辑（NotesScreen, NoteEditorSheet, NotesViewModel）
+        recording/ # 记录弹窗（RecordingSheet, RecordingViewModel, TimeRangeSlider）
+        timeline/  # 时间轴主视图（TimelineScreen, TimelineViewModel, DayProgressBar）
+      navigation/  # AppNavHost
+      ui/theme/    # 8-bit 色板、字体、像素组件（AppColors, AppTheme, PixelComponents）
+      MainActivity.kt
+      ShiJiBenApplication.kt
+    src/main/res/
     build.gradle.kts
     AndroidManifest.xml
   build.gradle.kts
@@ -46,11 +47,10 @@ shijiben/
 
 ## 数据模型
 
-三张核心表，详见 [docs/2026-06-22-shijiben-design.md](docs/2026-06-22-shijiben-design.md)：
+两张核心表，详见 [docs/2026-06-22-shijiben-design.md](docs/2026-06-22-shijiben-design.md)：
 
-- **Event**：事件，有 start_time/end_time/status/tag_id
+- **Event**：事件，有 start_time/end_time/status/note（可选）
 - **Note**：随笔，有 timestamp/content
-- **Tag**：标签，有 name/color/sort_order
 
 ### 事件状态流转
 
@@ -66,7 +66,7 @@ shijiben/
 - **开发预览**：日常在 Android Studio 模拟器或真机上运行
 - **状态管理**：使用 ViewModel + Flow，避免在 UI 层直接访问数据库
 - **数据访问**：通过 Repository 层，不直接写 SQL
-- **8-bit 美学**：所有视觉元素集中在 `core/theme`，色板使用活泼高饱和 NES 风格
+- **8-bit 美学**：所有视觉元素集中在 `ui/theme`，色板使用活泼高饱和 NES 风格
 - **命名**：文件用 PascalCase（Kotlin 惯例），包名/资源用 snake_case
 
 ## 设计哲学（重要）

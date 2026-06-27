@@ -2,6 +2,7 @@
 
 > 日期：2026-06-22（持续更新）
 > 状态：V1 原型稳定
+> 2026-06-27 更新：标签功能已整体移除（用户决策），DB v1→v2 迁移见 [docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md](superpowers/specs/2026-06-27-top-bottom-redesign-design.md) Part C。本文档下方仍保留历史标签描述，仅供回溯。
 
 ## 一、产品定位
 
@@ -41,14 +42,12 @@ shijiben/
   docs/            # 文档：设计 spec、需求记录
   app/
     src/main/java/com/shijiben/
-      core/        # 主题、8-bit 调色板、共享组件
       data/        # Room 数据库、Entity、DAO、Repository
       features/
         timeline/  # 时间轴主视图
         recording/ # 记录功能
-        tags/      # 标签管理
-        heatmap/   # 热力图（v2）
-        time_viz/  # 时间可视化（v2）
+        heatmap/   # 热力图（V2 未建）
+        time_viz/  # 时间可视化（V2 未建）
     src/main/res/  # Android 资源
     build.gradle.kts
     AndroidManifest.xml
@@ -73,7 +72,6 @@ shijiben/
 | startTime | Long | 开始时间戳（毫秒） |
 | endTime | Long? | 结束时间戳，null = 无时长(未开始) |
 | status | Int | 自动推算：`0=not_started` / `1=in_progress` / `2=completed` |
-| tagId | Long? FK | 关联标签 |
 | note | String? | 内联备注（可选） |
 | createdAt | Long | |
 | updatedAt | Long | |
@@ -85,17 +83,6 @@ shijiben/
 | id | Long PK | 自增 |
 | content | String | 文字内容 |
 | timestamp | Long | 记录时刻 |
-| createdAt | Long | |
-| updatedAt | Long | |
-
-### Tag（标签）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Long PK | 自增 |
-| name | String | 标签名 |
-| color | Int | 8-bit ARGB 色值 |
-| sortOrder | Int | 排序 |
 | createdAt | Long | |
 | updatedAt | Long | |
 
@@ -154,12 +141,7 @@ shijiben/
 - duration > 0, 现在 < start + duration → `in_progress`（进行中）
 - duration > 0, 现在 > start + duration → `completed`（已完成）
 
-## 六、标签系统
-
-- **首次打开**：空标签起步，用户自行创建
-- **标签管理**：用户可增删改标签，为每个标签选择 8-bit 色板中的颜色
-- **作用**：分类与着色。在时间轴上通过颜色一眼区分事件类型
-- **不做**：不做时长汇总统计（v1），不做层级标签
+## 六、标签系统（已移除，见顶部 2026-06-27 更新）
 
 ## 七、回看与可视化（V2）
 
@@ -189,7 +171,7 @@ shijiben/
 - [x] 记录功能：右下角悬浮加号按钮 + 时间范围滑块弹窗（6 色彩虹方块 + 固定光标）
 - [x] 事件状态自动推算（非手动设置）
 - [x] 自动顺延
-- [x] 标签管理（空起步，增删改着色）
+- [~] ~~标签管理~~（已于 2026-06-27 移除）
 - [x] 8-bit 彩虹/黑白主题
 - [x] Fusion Pixel 像素字体
 
