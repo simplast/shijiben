@@ -16,3 +16,6 @@ local.properties
 
 # Kotlin
 /.kotlin
+
+# Brainstorming mockups
+.superpowers/
