@@ -1,6 +1,6 @@
 # Better state
 current_category: ui
-cycle_count: 2
+cycle_count: 3
 last_run: 2026-06-29
 
 ## Category status
@@ -10,7 +10,7 @@ last_run: 2026-06-29
 | security | TODO | 0 | — |
 | performance | TODO | 0 | — |
 | ux | TODO | 0 | — |
-| ui | RUNNING | 2 | "disabled 颜色硬编码绕过令牌" |
+| ui | RUNNING | 3 | "NotesScreen 缺失 RainbowTrim" |
 | architecture | TODO | 0 | — |
 | tests | TODO | 0 | — |
 | dx | TODO | 0 | — |

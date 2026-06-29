@@ -1,5 +1,6 @@
 package com.shijiben.feature.notes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +31,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.data.local.NoteEntity
+import com.shijiben.ui.theme.Background
 import com.shijiben.ui.theme.PixelCard
+import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.PixelText
 import com.shijiben.ui.theme.PixelTextSecondary
 
@@ -43,8 +46,10 @@ fun NotesScreen(
     val sheetOpen by viewModel.sheetOpen.collectAsStateWithLifecycle()
     val editing by viewModel.editing.collectAsStateWithLifecycle()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            RainbowTrim()
+            Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
             PixelCard(modifier = Modifier.fillMaxWidth(), shadow = false) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -80,6 +85,7 @@ fun NotesScreen(
                     }
                 }
             }
+        }
         }
         if (sheetOpen) {
             NoteEditorSheet(

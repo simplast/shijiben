@@ -9,3 +9,8 @@
 - status: DONE (cycle 2)
 - evidence: AppColors.kt:43; PixelComponents.kt:53,87,95; HeatmapScreen.kt:161,169,204,211; HeatmapYearScreen.kt:174,182,201,208
 - impact: M
+
+## F003 — NotesScreen 缺失 RainbowTrim 品牌条
+- status: DONE (cycle 3)
+- evidence: NotesScreen.kt:49,51；对比 SearchScreen.kt:76-79
+- impact: M
