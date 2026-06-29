@@ -1,16 +1,16 @@
 # Better state
-current_category: ui
+current_category: correctness
 cycle_count: 5
 last_run: 2026-06-29
 
 ## Category status
 | Category | Status | Cycles | Last finding |
 |----------|--------|--------|-------------|
-| correctness | TODO | 0 | — |
+| correctness | RUNNING | 0 | — |
 | security | TODO | 0 | — |
 | performance | TODO | 0 | — |
 | ux | TODO | 0 | — |
-| ui | RUNNING | 5 | "NotesScreen 标题栏结构与 5 屏标准结构漂移" |
+| ui | EXHAUSTED | 5 | "NotesScreen 标题栏结构与 5 屏标准结构漂移" |
 | architecture | TODO | 0 | — |
 | tests | TODO | 0 | — |
 | dx | TODO | 0 | — |
