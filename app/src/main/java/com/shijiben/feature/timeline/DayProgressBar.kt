@@ -31,11 +31,13 @@ fun DayProgressBar(
     val past = isPastDay(viewingDate)
     val nowCal = remember(now) { Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = now } }
     val nowHour = nowCal.get(Calendar.HOUR_OF_DAY)
-    val coveredHours = events.flatMap { e ->
-        val startHour = hourOfDay(e.startTime)
-        val endHour = e.endTime?.let { hourOfDay(it) } ?: startHour
-        (startHour..endHour).toList()
-    }.toSet()
+    val coveredHours = remember(events) {
+        events.flatMap { e ->
+            val startHour = hourOfDay(e.startTime)
+            val endHour = e.endTime?.let { hourOfDay(it) } ?: startHour
+            (startHour..endHour).toList()
+        }.toSet()
+    }
 
     Column(
         modifier = modifier.fillMaxHeight(),
