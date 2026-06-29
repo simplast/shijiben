@@ -103,7 +103,8 @@ fun RecordingSheet(
                         }
                     },
                     modifier = Modifier.weight(1f).height(48.dp),
-                    backgroundColor = Primary
+                    backgroundColor = Primary,
+                    enabled = title.isNotBlank()
                 )
             }
             Spacer(Modifier.height(8.dp))
