@@ -194,7 +194,12 @@ fun SearchScreen(
                 ) {
                     items(
                         items = state.items,
-                        key = { it.sortKey.toString() + it.javaClass.simpleName }
+                        key = { item ->
+                            when (item) {
+                                is SearchViewModel.SearchItem.EventItem -> "event_${item.event.id}"
+                                is SearchViewModel.SearchItem.NoteItem -> "note_${item.note.id}"
+                            }
+                        }
                     ) { item ->
                         when (item) {
                             is SearchViewModel.SearchItem.EventItem -> EventCard(
