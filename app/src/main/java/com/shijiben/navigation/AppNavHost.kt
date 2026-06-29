@@ -27,6 +27,7 @@ object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
+    const val PRIVACY = "privacy"
 }
 
 @Composable
@@ -86,11 +87,18 @@ fun AppNavHost() {
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onAboutClick = { navController.navigate(Routes.ABOUT) }
+                onAboutClick = { navController.navigate(Routes.ABOUT) },
+                onPrivacyClick = { navController.navigate(Routes.PRIVACY) }
             )
         }
         composable(Routes.ABOUT) {
             AboutScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.PRIVACY) {
+            AboutScreen(
+                onBack = { navController.popBackStack() },
+                scrollToPrivacy = true
+            )
         }
     }
 }

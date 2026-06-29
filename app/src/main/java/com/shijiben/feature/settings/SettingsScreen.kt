@@ -62,6 +62,7 @@ import com.shijiben.ui.theme.Disabled
 fun SettingsScreen(
     onBack: () -> Unit,
     onAboutClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
     viewModel: ExportViewModel = hiltViewModel(),
     importViewModel: ImportViewModel = hiltViewModel()
 ) {
@@ -165,7 +166,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SettingsRow(title = "关于事记本", onClick = onAboutClick)
-                SettingsRow(title = "隐私政策", onClick = onAboutClick)
+                SettingsRow(title = "隐私政策", onClick = onPrivacyClick)
                 SettingsRow(
                     title = "数据导出",
                     enabled = state !is ExportViewModel.ExportState.Exporting &&

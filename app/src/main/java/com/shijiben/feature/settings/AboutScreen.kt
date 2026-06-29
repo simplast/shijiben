@@ -21,6 +21,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +43,8 @@ import com.shijiben.ui.theme.TextTertiary
  */
 @Composable
 fun AboutScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    scrollToPrivacy: Boolean = false
 ) {
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -69,10 +72,19 @@ fun AboutScreen(
             // 2dp 黑色分隔线
             Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
 
+            // 隐私政策是本页最后一个区块；从「隐私政策」入口进入时直接滚到底部，
+            // 即可让隐私区块进入视口（比 onGloballyPositioned 取偏移更稳健）。
+            val scrollState = rememberScrollState()
+            LaunchedEffect(scrollToPrivacy) {
+                if (scrollToPrivacy) {
+                    withFrameNanos {}
+                    scrollState.animateScrollTo(scrollState.maxValue)
+                }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
