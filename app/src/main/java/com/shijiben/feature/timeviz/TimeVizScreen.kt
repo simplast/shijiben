@@ -48,6 +48,7 @@ import com.shijiben.ui.theme.Primary
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
 import com.shijiben.ui.theme.TextSecondary
+import com.shijiben.ui.theme.PixelOutlinedButton
 import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.TextTertiary
 import java.util.Calendar
@@ -132,7 +133,7 @@ fun TimeVizScreen(
                             color = TextPrimary
                         )
                         Spacer(Modifier.height(8.dp))
-                        PixelOutlinedButtonLocal(
+                        PixelOutlinedButton(
                             text = "设置生日",
                             onClick = { showDatePicker = true }
                         )
@@ -161,7 +162,7 @@ fun TimeVizScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            PixelOutlinedButtonLocal(
+                            PixelOutlinedButton(
                                 text = "修改生日",
                                 onClick = { showDatePicker = true }
                             )
@@ -259,32 +260,6 @@ private fun StepperBox(
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
-    }
-}
-
-/** 与 PixelOutlinedButton 同风格，本地实现避免改 PixelComponents.kt。 */
-@Composable
-private fun PixelOutlinedButtonLocal(
-    text: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        color = Color.Transparent,
-        shape = RoundedCornerShape(0.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, Primary),
-        modifier = Modifier.clickable(onClick = onClick)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Text(
-                text = text,
-                color = Primary,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp
-            )
-        }
     }
 }
 

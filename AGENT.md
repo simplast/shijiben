@@ -204,4 +204,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
 
 ## Recent changes (better cycles)
-None yet.
+- ui: 移除 TimeVizScreen 的 PixelOutlinedButtonLocal 本地副本，改用共享 PixelOutlinedButton 统一按钮风格
