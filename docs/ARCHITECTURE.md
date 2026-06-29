@@ -68,6 +68,7 @@
 - `feature/timeviz/`：`TimeVizScreen` / `TimeVizViewModel` / `TimeVizCalculator`（object，纯函数）/ `TimeVizPrefs` / `TimeVizModule.kt`。
 - `navigation/AppNavHost.kt`：`Routes` object + `AppNavHost` composable。
 - `ui/theme/`：`AppColors` / `AppTheme` / `PixelComponents`。
+- `ui/debug/`：`DebugOverlay`（`@Composable`，仅 `BuildConfig.DEBUG` 包裹 app 内容叠加悬浮按钮）+ `DebugLog`（`object`，内存 ring buffer 200 条 + 未捕获异常持久化到 `debug-last-crash.txt`，release 空操作）。
 - `MainActivity.kt`（`@AndroidEntryPoint`）/ `ShiJiBenApplication.kt`（`@HiltAndroidApp`）。
 
 ## 3. 数据流
