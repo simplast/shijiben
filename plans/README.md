@@ -28,7 +28,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | DONE |
 | 015  | [Remove dead `showNoteSheet`/`NoteEditorSheet` block from TimelineScreen](015-remove-dead-note-sheet-in-timeline.md) | P2 | S | — | DONE |
 | 016  | [Make "隐私政策" open the About page scrolled to the privacy section](016-privacy-route-scrolls-to-section.md) | P2 | S | — | TODO |
-| 017  | [Use Chinese units in `formatDurationShort` (timeline duration badges)](017-duration-badge-chinese-units.md) | P2 | S | — (disjoint from 015 in same file) | TODO |
+| 017  | [Use Chinese units in `formatDurationShort` (timeline duration badges)](017-duration-badge-chinese-units.md) | P2 | S | — (disjoint from 015 in same file) | DONE |
 | 018  | [Memoize `coveredHours` in `DayProgressBar`](018-remember-coveredhours-dayprogressbar.md) | P3 | S | — | TODO |
 | 019  | [Consolidate `RainbowTrim` into `PixelComponents.kt`](019-consolidate-rainbowtrim.md) | P3 | M | — (land after 015/016/017) | TODO |
 

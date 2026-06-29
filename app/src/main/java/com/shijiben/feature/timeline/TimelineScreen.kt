@@ -599,9 +599,10 @@ private fun formatTime(ts: Long): String = SimpleDateFormat("HH:mm", Locale.getD
 private fun formatDurationShort(start: Long, end: Long): String {
     val minutes = (end - start) / 1000 / 60
     return if (minutes < 60) {
-        "${minutes}min"
+        "${minutes}分钟"
     } else {
-        "%.1fhours".format(minutes / 60.0)
+        val hours = minutes / 60.0
+        if (hours % 1.0 == 0.0) "${hours.toInt()}小时" else "%.1f小时".format(hours)
     }
 }
 
