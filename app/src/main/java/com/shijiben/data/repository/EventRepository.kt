@@ -131,8 +131,6 @@ class EventRepository @Inject constructor(
         val newStart = cal.timeInMillis
         if (newStart == e.startTime) return null // 已在目标日，无需顺延
         val newEnd: Long? = if (e.endTime != null) {
-            val cal2 = Calendar.getInstance(TimeZone.getDefault())
-            cal2.timeInMillis = e.endTime
             val dur = e.endTime - e.startTime
             newStart + dur
         } else null

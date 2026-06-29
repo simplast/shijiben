@@ -204,6 +204,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
 
 ## Recent changes (better cycles)
+- architecture: 移除 EventRepository.shiftToTargetDay 的死代码 cal2（创建并赋值 e.endTime 但从未读取，推测为「保留钟点」改「保留时长」后的残留）——零行为变化
 - security: DataImportManager.parseEvents 新增 status 信任边界校验——非法值（非 0/1/2）抛 IllegalArgumentException 拒绝导入，防止恶意文件污染事件状态机 + 新增回归测试
 - tests: 为 EventRepository.shiftToTargetDay 新增 5 个直接单测（hour:minute 保留 / 跨月边界 / null endTime / 已到目标日 / 时长保留），此前仅通过慢速 DB 集成测试间接覆盖
 - correctness: RecordingViewModel.save() 修复非法状态——编辑 Completed 事件并把 duration 调到 0 时，降级为 InProgress（避免保存 Completed+endTime=null，违反 EventRepository 不变式）+ 新增回归测试
