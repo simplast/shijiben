@@ -43,11 +43,14 @@ shijiben/
   app/
     src/main/java/com/shijiben/
       data/        # Room 数据库、Entity、DAO、Repository
-      features/
+      feature/
         timeline/  # 时间轴主视图
         recording/ # 记录功能
-        heatmap/   # 热力图（V2 未建）
-        time_viz/  # 时间可视化（V2 未建）
+        heatmap/   # 热力图月视图 + 年视图（已实现）
+        notes/     # 随笔列表 / 编辑（已实现）
+        search/    # 搜索（已实现）
+        timeviz/   # 时间可视化（已实现）
+        settings/  # 设置 + 关于/隐私政策（已实现）
     src/main/res/  # Android 资源
     build.gradle.kts
     AndroidManifest.xml
@@ -58,7 +61,7 @@ shijiben/
 ### 设计原则
 
 - 数据模型简单，不过度抽象。Event 和 Note 是独立表，不强行合并。
-- 8-bit 美学集中在 `core/theme`，不散落各处。
+- 8-bit 美学集中在 `ui/theme`，不散落各处。
 - 本地优先：所有数据在设备上，不依赖任何网络。
 
 ## 三、数据模型
@@ -112,7 +115,7 @@ shijiben/
 - **右侧事件列表**：**单行紧凑卡片**，标题（左）+ 时间范围 + 耗时 badge（右）
 - **背景**：像素山水图（alpha 0.2 弱化），裁剪铺满
 - **顶部日期栏**：下方有 4dp 彩虹像素装饰条
-- **右下角悬浮加号按钮**：统一记录入口
+- **底部双 block 入口（记事 + 随笔）**：统一记录入口，详见 [2026-06-28-homepage-composition-rebalance-design.md](superpowers/specs/2026-06-28-homepage-composition-rebalance-design.md)
 
 ### 8-bit 美学
 
@@ -125,7 +128,7 @@ shijiben/
 
 ## 五、记录流程
 
-所有记录通过右下角悬浮加号按钮进入。
+所有记录通过底部双 block 入口（记事 + 随笔）进入，详见 [2026-06-28-homepage-composition-rebalance-design.md](superpowers/specs/2026-06-28-homepage-composition-rebalance-design.md)。
 
 ### 新增事件弹窗
 
@@ -143,7 +146,7 @@ shijiben/
 
 ## 六、标签系统（已移除，见顶部 2026-06-27 更新）
 
-## 七、回看与可视化（V2）
+## 七、回看与可视化（V2）✅ 已实现（2026-06-28）
 
 ### GitHub 式热力图
 
@@ -175,17 +178,20 @@ shijiben/
 - [x] 8-bit 彩虹/黑白主题
 - [x] Fusion Pixel 像素字体
 
-### V2：回看与凝视
+### V2：回看与凝视 ✅
 
-- GitHub 式热力图（覆盖比例填充）
-- 今天/今年/一生剩余时间可视化
-- 随笔功能完整化（列表、编辑、删除）
+- [x] GitHub 式热力图（覆盖比例填充）
+- [x] 今天/今年/一生剩余时间可视化
+- [x] 随笔功能完整化（列表、编辑、删除）
 
-### V3：打磨
+### V3：打磨（部分已落地）
 
-- 搜索
-- 数据导出/备份
-- 其他根据使用反馈迭代
+- [x] 设置页（已落地骨架）
+- [x] 数据导出/备份
+- [x] 数据导入
+- [x] 年视图（热力图年视图）
+- [x] 搜索
+- [ ] 其他根据使用反馈迭代
 
 ## 九、待定/开放问题
 

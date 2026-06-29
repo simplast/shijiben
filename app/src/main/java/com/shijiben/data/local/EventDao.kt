@@ -13,6 +13,9 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE startTime >= :startOfDay AND startTime < :endOfDay ORDER BY startTime ASC")
     fun getEventsByDate(startOfDay: Long, endOfDay: Long): Flow<List<EventEntity>>
 
+    @Query("SELECT * FROM events WHERE startTime >= :startOfMonth AND startTime < :endOfMonth ORDER BY startTime ASC")
+    fun getEventsByMonth(startOfMonth: Long, endOfMonth: Long): Flow<List<EventEntity>>
+
     @Query("SELECT * FROM events WHERE status = :status AND startTime < :date ORDER BY startTime ASC")
     suspend fun getEventsByStatusBeforeDate(status: Int, date: Long): List<EventEntity>
 

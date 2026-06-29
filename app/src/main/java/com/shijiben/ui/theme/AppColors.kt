@@ -40,6 +40,7 @@ val TextOnSurface = Color(0xFF000000)  // 纯黑
 // ==================== 黑白灰边框 ====================
 val Border = Color(0xFFE5E7EB)        // 浅灰边框
 val BorderLight = Color(0xFFF3F4F6)   // 极浅灰边框
+val Disabled = Color(0xFFCBD5E1)      // slate-300，disabled 统一色（与历史硬编码一致）
 
 // ==================== 彩虹状态色 ====================
 val Error = Color(0xFFEF4444)          // 红
@@ -70,6 +71,13 @@ val SliderRainbowInactive = listOf(
     Color(0xFFFCA5A5), Color(0xFFFDBA74), Color(0xFFFDE68A),
     Color(0xFFBEF264), Color(0xFF86EFAC), Color(0xFFD8B4FE),
 )
+
+// ==================== 热力图色阶（5 档绿色，由浅到深） ====================
+val HeatmapLevel0 = Surface            // 0xFFFFFFFF 纯白（空白，复用 Surface）
+val HeatmapLevel1 = Color(0xFFA7F3D0)  // emerald 200（浅绿）
+val HeatmapLevel2 = Color(0xFF34D399)  // emerald 400（中绿）
+val HeatmapLevel3 = Secondary          // 0xFF10B981 emerald 500（翠绿，复用身份色）
+val HeatmapLevel4 = Color(0xFF047857)  // emerald 700（深绿）
 
 // ==================== 向后兼容别名 ====================
 val PixelRed = Error

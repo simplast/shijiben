@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
+import com.shijiben.data.local.NoteEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -74,5 +75,28 @@ class NoteRepositoryTest {
         val id = repo.createNote("temp", System.currentTimeMillis())
         repo.deleteNoteById(id)
         assertThat(repo.getNoteById(id)).isNull()
+    }
+
+    @Test
+    fun upsertAll_insertsAllNotes() = runTest {
+        val n1 = NoteEntity(id = 10, content = "随笔一", timestamp = 1000L,
+            createdAt = 2000L, updatedAt = 3000L)
+        val n2 = NoteEntity(id = 11, content = "随笔二", timestamp = 4000L,
+            createdAt = 5000L, updatedAt = 6000L)
+        repo.upsertAll(listOf(n1, n2))
+        assertThat(repo.getAllNotes().first()).hasSize(2)
+        assertThat(repo.getNoteById(10)).isNotNull()
+        assertThat(repo.getNoteById(11)).isNotNull()
+    }
+
+    @Test
+    fun upsertAll_replacesOnIdConflict() = runTest {
+        db.noteDao().insertNote(NoteEntity(id = 10, content = "原", timestamp = 1000L,
+            createdAt = 2000L, updatedAt = 3000L))
+        val n10prime = NoteEntity(id = 10, content = "新", timestamp = 4000L,
+            createdAt = 5000L, updatedAt = 6000L)
+        repo.upsertAll(listOf(n10prime))
+        assertThat(repo.getAllNotes().first()).hasSize(1)
+        assertThat(repo.getNoteById(10)!!.content).isEqualTo("新")
     }
 }

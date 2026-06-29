@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 米白底，复用 launcher 背景资产 -->
+    <item android:drawable="@drawable/ic_launcher_background" />
+    <!-- 居中像素图标：深灰方块 + 金对角线，与 launcher 图标一致 -->
+    <item
+        android:drawable="@drawable/ic_launcher_foreground"
+        android:gravity="center" />
+</layer-list>

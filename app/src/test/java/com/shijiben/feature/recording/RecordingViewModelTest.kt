@@ -148,4 +148,93 @@ class RecordingViewModelTest {
         vm.initNew()
         assertThat(vm.durationMax.value).isEqualTo(180)
     }
+
+    @Test
+    fun save_blankTitle_returnsFalse() = runTest {
+        vm.initNew()
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isFalse()
+        assertThat(eventRepo.getAllEvents().first()).isEmpty()
+
+        vm.onTitleChange("   ")
+        val ok2 = vm.save(today)
+        assertThat(ok2).isFalse()
+        assertThat(eventRepo.getAllEvents().first()).isEmpty()
+    }
+
+    @Test
+    fun save_editingDeletedEvent_returnsFalse() = runTest {
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "原标题",
+            startTime = now - 60_000,
+            endTime = null,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        vm.initEdit(event)
+        eventRepo.deleteEventById(id)
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isFalse()
+    }
+
+    @Test
+    fun delete_withoutEditingId_returnsFalse() = runTest {
+        val ok = vm.delete()
+        assertThat(ok).isFalse()
+    }
+
+    @Test
+    fun delete_afterInitEdit_removesEventAndReturnsTrue() = runTest {
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "待删",
+            startTime = now,
+            endTime = null,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        vm.initEdit(event)
+        val ok = vm.delete()
+        assertThat(ok).isTrue()
+        assertThat(eventRepo.getEventById(id)).isNull()
+    }
+
+    @Test
+    fun initEdit_notStartedEventWithNullEndTime_usesCurrentTimeAndZeroDuration() = runTest {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(Calendar.HOUR_OF_DAY, 2)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val fixedStart = cal.timeInMillis
+        val id = eventRepo.createEvent(
+            title = "待办",
+            startTime = fixedStart,
+            endTime = null,
+            note = null,
+            status = EventStatus.NotStarted.value
+        )
+        val event = eventRepo.getEventById(id)!!
+
+        val cal1 = Calendar.getInstance(TimeZone.getDefault())
+        val nowMin1 = cal1.get(Calendar.HOUR_OF_DAY) * 60 + cal1.get(Calendar.MINUTE)
+        vm.initEdit(event)
+        val cal2 = Calendar.getInstance(TimeZone.getDefault())
+        val nowMin2 = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
+        val possibleSnaps = setOf(
+            ((nowMin1 / 15) * 15).coerceIn(0, 1440),
+            ((nowMin2 / 15) * 15).coerceIn(0, 1440)
+        )
+
+        assertThat(vm.durationMinutes.value).isEqualTo(0)
+        assertThat(vm.durationMax.value).isEqualTo(180)
+        assertThat(possibleSnaps.contains(vm.startMinutes.value)).isTrue()
+    }
 }

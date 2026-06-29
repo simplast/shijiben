@@ -3,7 +3,7 @@
 Two batches of plans from the `improve` skill:
 
 - **Batch 1 (2026-06-26, commit `d74ab99`)** — UI / interaction optimization, Compose UI only. Plans 001-010, all DONE.
-- **Batch 2 (2026-06-27, commit `9da5c72`)** — post-redesign cleanup: a data-corruption bug fix, a security/log cleanup, doc reconciliation after the tag removal, and a stated-but-undelivered V1 feature (note markers on the timeline). Plans 011-014, all TODO.
+- **Batch 2 (2026-06-27, commit `9da5c72`)** — post-redesign cleanup: a data-corruption bug fix, a security/log cleanup, doc reconciliation after the tag removal, and a stated-but-undelivered V1 feature (note markers on the timeline). Plans 011-014, all DONE.
 
 Each executor: read the plan fully before starting, run its drift check, honor its STOP conditions, and update your row when done. Verification gates are shared across plans: `./gradlew :app:compileDebugKotlin` (typecheck) · `./gradlew :app:testDebugUnitTest` (unit tests) · `./gradlew assembleDebug` (build).
 

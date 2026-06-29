@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -10,6 +12,28 @@ android {
     namespace = "com.shijiben"
     compileSdk = 34
 
+    // 读取本地 keystore.properties；文件缺失则 release 不签名
+    // （保证 debug 构建与全新 clone 不破；release APK 仍可构建但未签名）
+    val keystoreProperties = Properties().apply {
+        val file = rootProject.file("keystore.properties")
+        if (file.exists()) {
+            file.inputStream().use { load(it) }
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            // 仅当 keystore.properties 存在且四字段齐全时才赋值；
+            // 否则四字段保持 null，signingConfig 引用也不会让构建失败
+            if (keystoreProperties.containsKey("storeFile")) {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.shijiben"
         minSdk = 26
@@ -20,12 +44,23 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            // 仅当 keystore.properties 存在且含 storeFile 时才挂签名配置；
+            // 否则 release 走 AGP 默认行为（产出 unsigned APK，构建成功）
+            if (keystoreProperties.containsKey("storeFile")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -57,6 +92,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:${rootProject.extra["lifecycle"]}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${rootProject.extra["lifecycle"]}")
     implementation("androidx.activity:activity-compose:${rootProject.extra["activityCompose"]}")
+    implementation("androidx.core:core-splashscreen:${rootProject.extra["splashscreen"]}")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -80,7 +116,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("androidx.test:core:1.6.1")
-    testImplementation("androidx.room:room-testing:2.6.1")
+    testImplementation("androidx.room:room-testing:${rootProject.extra["room"]}")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.google.truth:truth:1.4.4")
 }

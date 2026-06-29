@@ -284,4 +284,82 @@ class EventRepositoryTest {
         val now = System.currentTimeMillis()
         assertThat(repo.determineStatus(now, now + 1000, now)).isEqualTo(EventStatus.Completed)
     }
+
+    @Test
+    fun markNotStarted_validEventId_setsStatusToNotStarted() = runTest {
+        val now = System.currentTimeMillis()
+        // startTime 过去 + endTime null → determineStatus 返回 InProgress
+        val id = repo.createEvent("test", now - 1000, null, null, null)
+        repo.markNotStarted(id)
+        val e = repo.getEventById(id)!!
+        assertThat(e.status).isEqualTo(EventStatus.NotStarted.value)
+    }
+
+    @Test
+    fun markNotStarted_nonExistentId_isNoOp() = runTest {
+        repo.markNotStarted(9999L)
+        assertThat(repo.getAllEvents().first()).isEmpty()
+    }
+
+    @Test
+    fun markCompleted_nonExistentId_isNoOp() = runTest {
+        repo.markCompleted(9999L)
+        assertThat(repo.getAllEvents().first()).isEmpty()
+    }
+
+    @Test
+    fun markInProgress_nonExistentId_isNoOp() = runTest {
+        repo.markInProgress(9999L)
+        assertThat(repo.getAllEvents().first()).isEmpty()
+    }
+
+    @Test
+    fun deleteEventById_validId_removesEvent() = runTest {
+        val now = System.currentTimeMillis()
+        val id = repo.createEvent("test", now - 1000, now - 500, null, null)
+        repo.deleteEventById(id)
+        assertThat(repo.getEventById(id)).isNull()
+        assertThat(repo.getAllEvents().first()).isEmpty()
+    }
+
+    @Test
+    fun updateEvent_persistsModifiedFields() = runTest {
+        val now = System.currentTimeMillis()
+        val id = repo.createEvent("原标题", now - 1000, now - 500, null, null)
+        val original = repo.getEventById(id)!!
+        repo.updateEvent(original.copy(title = "新标题", note = "新备注"))
+        val updated = repo.getEventById(id)!!
+        assertThat(updated.title).isEqualTo("新标题")
+        assertThat(updated.note).isEqualTo("新备注")
+        assertThat(updated.startTime).isEqualTo(original.startTime)
+        assertThat(updated.endTime).isEqualTo(original.endTime)
+        assertThat(updated.status).isEqualTo(original.status)
+    }
+
+    @Test
+    fun upsertAll_insertsAllEvents() = runTest {
+        val e1 = EventEntity(id = 1, title = "a", startTime = 1000L, endTime = 2000L,
+            status = EventStatus.Completed.value, note = null, createdAt = 3000L, updatedAt = 4000L)
+        val e2 = EventEntity(id = 2, title = "b", startTime = 5000L, endTime = null,
+            status = EventStatus.InProgress.value, note = "n", createdAt = 6000L, updatedAt = 7000L)
+        val e3 = EventEntity(id = 3, title = "c", startTime = 8000L, endTime = 9000L,
+            status = EventStatus.NotStarted.value, note = null, createdAt = 10000L, updatedAt = 11000L)
+        repo.upsertAll(listOf(e1, e2, e3))
+        assertThat(repo.getAllEvents().first()).hasSize(3)
+        assertThat(repo.getEventById(1)).isNotNull()
+        assertThat(repo.getEventById(2)).isNotNull()
+        assertThat(repo.getEventById(3)).isNotNull()
+    }
+
+    @Test
+    fun upsertAll_replacesOnIdConflict() = runTest {
+        val e1 = EventEntity(id = 1, title = "原", startTime = 1000L, endTime = 2000L,
+            status = EventStatus.Completed.value, note = null, createdAt = 3000L, updatedAt = 4000L)
+        dao.insertEvent(e1)
+        val e1prime = EventEntity(id = 1, title = "新", startTime = 5000L, endTime = null,
+            status = EventStatus.InProgress.value, note = "updated", createdAt = 6000L, updatedAt = 7000L)
+        repo.upsertAll(listOf(e1prime))
+        assertThat(repo.getAllEvents().first()).hasSize(1)
+        assertThat(repo.getEventById(1)!!.title).isEqualTo("新")
+    }
 }

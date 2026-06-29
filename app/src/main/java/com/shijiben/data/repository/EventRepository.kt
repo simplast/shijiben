@@ -2,8 +2,16 @@ package com.shijiben.data.repository
 
 import com.shijiben.data.local.EventDao
 import com.shijiben.data.local.EventEntity
+import com.shijiben.data.model.DailyActivity
 import com.shijiben.data.model.EventStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.Year
+import java.time.YearMonth
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
@@ -46,6 +54,11 @@ class EventRepository @Inject constructor(
             updatedAt = now
         )
         return eventDao.insertEvent(event)
+    }
+
+    /** 导入用：按原 ID 批量 upsert（Dao OnConflictStrategy.REPLACE 覆盖同 ID）。保留原 id，幂等可重复导入。 */
+    suspend fun upsertAll(events: List<EventEntity>) {
+        for (e in events) eventDao.insertEvent(e)
     }
 
     suspend fun updateEvent(event: EventEntity) {
@@ -91,7 +104,7 @@ class EventRepository @Inject constructor(
         var count = 0
         for (e in pending) {
             // 把 startTime/endTime 平移到 targetDay 的相同时刻
-            val shifted = shiftToTargetDay(e, targetYear, targetMonth, targetDay, now)
+            val shifted = shiftToTargetDay(e, targetYear, targetMonth, targetDay)
             if (shifted != null) {
                 eventDao.updateEventTime(
                     id = e.id,
@@ -107,8 +120,7 @@ class EventRepository @Inject constructor(
 
     internal fun shiftToTargetDay(
         e: EventEntity,
-        year: Int, month: Int, day: Int,
-        now: Long
+        year: Int, month: Int, day: Int
     ): Pair<Long, Long?>? {
         val cal = Calendar.getInstance(TimeZone.getDefault())
         cal.timeInMillis = e.startTime
@@ -164,4 +176,111 @@ class EventRepository @Inject constructor(
             cal.get(Calendar.DAY_OF_MONTH)
         )
     }
+
+    // ==================== 热力图月视图聚合 ====================
+
+    fun getDailyActivityForMonth(yearMonth: YearMonth): Flow<List<DailyActivity>> =
+        eventDao.getEventsByMonth(monthStartEpoch(yearMonth), monthEndEpoch(yearMonth))
+            .map { events -> aggregateMonth(events, yearMonth) }
+
+    private fun monthStartEpoch(ym: YearMonth): Long =
+        ym.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    private fun monthEndEpoch(ym: YearMonth): Long =
+        ym.plusMonths(1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    // ==================== 热力图年视图聚合 ====================
+
+    fun getDailyActivityForYear(year: Year): Flow<List<DailyActivity>> =
+        eventDao.getEventsByMonth(yearStartEpoch(year), yearEndEpoch(year))
+            .map { events -> aggregateYear(events, year) }
+
+    private fun yearStartEpoch(year: Year): Long =
+        year.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    private fun yearEndEpoch(year: Year): Long =
+        year.plusYears(1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+}
+
+/**
+ * 月度聚合：按事件开始日归属，跨日事件时长截断到当天 24:00，进行中事件 clamp 到当天范围。
+ * internal 供单测访问；now 与 zone 提供测试注入点。
+ */
+internal fun aggregateMonth(
+    events: List<EventEntity>,
+    yearMonth: YearMonth,
+    now: Long = System.currentTimeMillis(),
+    zone: ZoneId = ZoneId.systemDefault()
+): List<DailyActivity> {
+    val byDay = mutableMapOf<LocalDate, Pair<Int, Long>>() // date -> (count, durationMs)
+    for (e in events) {
+        val eventStart = Instant.ofEpochMilli(e.startTime).atZone(zone)
+        val startDay = eventStart.toLocalDate()
+        // 仅归属开始日；不在选定月的事件（理论上 DAO 已过滤）跳过
+        if (YearMonth.from(startDay) != yearMonth) continue
+        // not_started(0) 计入 count 但不计入时长
+        val (cnt, dur) = byDay[startDay] ?: (0 to 0L)
+        val newCnt = cnt + 1
+        val newDur = if (e.status == EventStatus.NotStarted.value) dur
+        else dur + effectiveDurationMs(e, startDay, now, zone)
+        byDay[startDay] = newCnt to newDur
+    }
+    return byDay.entries.map { (d, pair) ->
+        DailyActivity(date = d, eventCount = pair.first, durationMs = pair.second)
+    }.sortedBy { it.date }
+}
+
+/**
+ * 年度聚合：按事件开始日归属，跨日事件时长截断到当天 24:00，进行中事件 clamp 到当天范围。
+ * 与 [aggregateMonth] 逻辑平行，仅范围不同（年 vs 月）。复用 [effectiveDurationMs]。
+ * internal 供单测访问；now 与 zone 提供测试注入点。
+ *
+ * 设计决策：独立实现而非抽 helper 泛化 aggregateMonth，保持 aggregateMonth 零改动零回归。
+ * 返回值只包含有事件的天（与 aggregateMonth 一致），无事件的天由 buildGrid 通过
+ * activities.associateBy + ?: 0 处理（复用既有逻辑）。
+ */
+internal fun aggregateYear(
+    events: List<EventEntity>,
+    year: Year,
+    now: Long = System.currentTimeMillis(),
+    zone: ZoneId = ZoneId.systemDefault()
+): List<DailyActivity> {
+    val byDay = mutableMapOf<LocalDate, Pair<Int, Long>>() // date -> (count, durationMs)
+    for (e in events) {
+        val eventStart = Instant.ofEpochMilli(e.startTime).atZone(zone)
+        val startDay = eventStart.toLocalDate()
+        // 仅归属开始日；不在选定年的事件（理论上 DAO 已过滤）跳过
+        if (Year.from(startDay) != year) continue
+        // not_started(0) 计入 count 但不计入时长
+        val (cnt, dur) = byDay[startDay] ?: (0 to 0L)
+        val newCnt = cnt + 1
+        val newDur = if (e.status == EventStatus.NotStarted.value) dur
+        else dur + effectiveDurationMs(e, startDay, now, zone)
+        byDay[startDay] = newCnt to newDur
+    }
+    return byDay.entries.map { (d, pair) ->
+        DailyActivity(date = d, eventCount = pair.first, durationMs = pair.second)
+    }.sortedBy { it.date }
+}
+
+/**
+ * 单事件在指定 day 的有效时长（毫秒）。
+ * - 跨日事件：截断到当天 24:00（dayEnd）。
+ * - 进行中事件（endTime null）：用 now，并 clamp 到 dayEnd。
+ * - 归属规则：仅当 eventStart.toLocalDate() == day 才返回非 0。
+ */
+internal fun effectiveDurationMs(
+    event: EventEntity,
+    day: LocalDate,
+    now: Long,
+    zone: ZoneId = ZoneId.systemDefault()
+): Long {
+    val eventStart = Instant.ofEpochMilli(event.startTime).atZone(zone)
+    if (eventStart.toLocalDate() != day) return 0L
+    val rawEnd = event.endTime ?: now
+    val eventEnd = Instant.ofEpochMilli(rawEnd).atZone(zone)
+    val dayEnd = day.plusDays(1).atStartOfDay(zone) // 当天 24:00 = 次日 00:00
+    val effectiveEnd = if (eventEnd.isBefore(dayEnd)) eventEnd else dayEnd
+    val ms = Duration.between(eventStart, effectiveEnd).toMillis()
+    return ms.coerceAtLeast(0L)
 }

@@ -28,6 +28,11 @@ class NoteRepository @Inject constructor(
         return noteDao.insertNote(note)
     }
 
+    /** 导入用：按原 ID 批量 upsert（Dao OnConflictStrategy.REPLACE 覆盖同 ID）。保留原 id，幂等可重复导入。 */
+    suspend fun upsertAll(notes: List<NoteEntity>) {
+        for (n in notes) noteDao.insertNote(n)
+    }
+
     suspend fun updateNote(note: NoteEntity) {
         noteDao.updateNote(note.copy(updatedAt = System.currentTimeMillis()))
     }

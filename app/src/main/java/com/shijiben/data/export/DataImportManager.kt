@@ -1,0 +1,143 @@
+package com.shijiben.data.export
+
+import com.shijiben.data.local.EventEntity
+import com.shijiben.data.local.NoteEntity
+import com.shijiben.data.repository.EventRepository
+import com.shijiben.data.repository.NoteRepository
+import com.shijiben.feature.timeviz.TimeVizPrefs
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.InputStream
+
+/**
+ * 数据导入：把 v1 JSON 反向解析为本地快照并落库。与 DataExportManager 构成备份/恢复对。
+ *
+ * - 纯本地、不联网。
+ * - 只读 JSON，写 Entity/Dao/Repository/TimeVizPrefs；不改 DB schema。
+ * - 仅用 Android 内置 org.json，不引入新依赖。
+ * - schemaVersion 校验：只支持 v1（= DataExportManager.SCHEMA_VERSION）；不匹配抛异常。
+ */
+object DataImportManager {
+
+    /** 解析后的可选 TimeViz 偏好。null 表示 JSON 中缺失，导入时跳过不改现有。 */
+    data class ImportedTimeVizPrefs(
+        val birthdayMillis: Long,
+        val lifespanYears: Int
+    )
+
+    /** parseJsonString 的纯数据产物。 */
+    data class ImportResult(
+        val schemaVersion: Int,
+        val events: List<EventEntity>,
+        val notes: List<NoteEntity>,
+        val timeVizPrefs: ImportedTimeVizPrefs?
+    )
+
+    /** applyImport 的计数结果。 */
+    data class ImportCounts(
+        val eventsImported: Int,
+        val notesImported: Int,
+        val prefsUpdated: Boolean
+    )
+
+    /**
+     * 纯函数：把 JSON 字符串解析为 ImportResult。无 Android 依赖（仅 org.json）。
+     *
+     * - 损坏 / 非 JSON / 空字符串 → 抛 JSONException（由 VM catch → Error）。
+     * - schemaVersion 缺失或不等于 SCHEMA_VERSION → 抛 IllegalArgumentException。
+     * - events / notes 数组缺失 → 视为空列表。
+     * - timeVizPrefs 缺失 → null（导入跳过，不改现有）。
+     * - endTime / note 字段：JSON null 或 key 缺失 → 实体 null（isNull 同时覆盖两种）。
+     * - 其余必填字段（id/title/startTime/status/createdAt/updatedAt；content/timestamp）
+     *   缺失 → 抛 JSONException（非标准文件 → Error，保证数据完整性）。
+     */
+    fun parseJsonString(json: String): ImportResult {
+        val root = JSONObject(json)                       // 损坏/空 → JSONException
+        val version = root.optInt("schemaVersion", -1)
+        if (version != DataExportManager.SCHEMA_VERSION) {
+            throw IllegalArgumentException("schemaVersion 不支持: $version")
+        }
+        val events = parseEvents(root.optJSONArray("events"))
+        val notes = parseNotes(root.optJSONArray("notes"))
+        val prefs = parsePrefs(root.optJSONObject("timeVizPrefs"))
+        return ImportResult(version, events, notes, prefs)
+    }
+
+    private fun parseEvents(arr: JSONArray?): List<EventEntity> {
+        if (arr == null) return emptyList()
+        val out = ArrayList<EventEntity>(arr.length())
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            out.add(
+                EventEntity(
+                    id = o.getLong("id"),
+                    title = o.getString("title"),
+                    startTime = o.getLong("startTime"),
+                    endTime = if (o.isNull("endTime")) null else o.getLong("endTime"),
+                    status = o.getInt("status"),
+                    note = if (o.isNull("note")) null else o.getString("note"),
+                    createdAt = o.getLong("createdAt"),
+                    updatedAt = o.getLong("updatedAt")
+                )
+            )
+        }
+        return out
+    }
+
+    private fun parseNotes(arr: JSONArray?): List<NoteEntity> {
+        if (arr == null) return emptyList()
+        val out = ArrayList<NoteEntity>(arr.length())
+        for (i in 0 until arr.length()) {
+            val o = arr.getJSONObject(i)
+            out.add(
+                NoteEntity(
+                    id = o.getLong("id"),
+                    content = o.getString("content"),
+                    timestamp = o.getLong("timestamp"),
+                    createdAt = o.getLong("createdAt"),
+                    updatedAt = o.getLong("updatedAt")
+                )
+            )
+        }
+        return out
+    }
+
+    private fun parsePrefs(o: JSONObject?): ImportedTimeVizPrefs? {
+        if (o == null) return null
+        return ImportedTimeVizPrefs(
+            birthdayMillis = o.getLong("birthdayMillis"),
+            lifespanYears = o.getInt("lifespanYears")
+        )
+    }
+
+    /**
+     * 薄 IO：把 ImportResult 落库。
+     * - events/notes 用 Repository.upsertAll（保留原 ID，冲突 REPLACE 覆盖，幂等可重复导入）。
+     * - timeVizPrefs 非空时覆盖现有生日/寿命（与导出对称）；null 时跳过不改。
+     * 返回导入计数。
+     */
+    suspend fun applyImport(
+        result: ImportResult,
+        eventRepository: EventRepository,
+        noteRepository: NoteRepository,
+        timeVizPrefs: TimeVizPrefs
+    ): ImportCounts {
+        eventRepository.upsertAll(result.events)
+        noteRepository.upsertAll(result.notes)
+        var prefsUpdated = false
+        result.timeVizPrefs?.let {
+            timeVizPrefs.setBirthdayMillis(it.birthdayMillis)
+            timeVizPrefs.setLifespanYears(it.lifespanYears)
+            prefsUpdated = true
+        }
+        return ImportCounts(
+            eventsImported = result.events.size,
+            notesImported = result.notes.size,
+            prefsUpdated = prefsUpdated
+        )
+    }
+
+    /** 薄 IO 包装：UTF-8 读取流并关闭。失败抛异常由 VM catch。 */
+    fun readFromStream(input: InputStream): String =
+        input.use { it.readBytes().toString(Charsets.UTF_8) }
+}

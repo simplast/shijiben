@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -71,6 +73,7 @@ import com.shijiben.data.local.NoteEntity
 import com.shijiben.feature.notes.NoteEditorSheet
 import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
+import com.shijiben.feature.timeviz.TimeVizCalculator
 import com.shijiben.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -91,10 +94,24 @@ private sealed interface TimelineItem {
 
 @Composable
 fun TimelineScreen(
-    onNotesClick: () -> Unit = {},
+    onNotesClick: () -> Unit,
+    onTimeVizClick: () -> Unit,
+    onHeatmapClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    targetDate: Triple<Int, Int, Int>? = null,
+    onDateApplied: () -> Unit = {},
     viewModel: TimelineViewModel = hiltViewModel(),
     notesViewModel: NotesViewModel = hiltViewModel()
 ) {
+    // 接收热力图回看跳转日期：targetDate 变化即设为首页查看日，然后清空避免重复
+    LaunchedEffect(targetDate) {
+        targetDate?.let { (y, m, d) ->
+            viewModel.setDate(y, m, d)
+            onDateApplied()
+        }
+    }
+
     val events by viewModel.events.collectAsStateWithLifecycle()
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
@@ -148,32 +165,103 @@ fun TimelineScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-                    Box(modifier = Modifier.clickable { showDatePicker = true }) {
-                        // 徽章本体：2dp 黑边白底（去硬阴影，避免顶栏过重）
-                        Box(
-                            modifier = Modifier
-                                .border(2.dp, Color.Black)
-                                .background(Surface)
-                                .padding(horizontal = 12.dp, vertical = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = formatDateCompact(date),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = if (isToday(date)) TextPrimary else Accent
-                            )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                        Box(modifier = Modifier.clickable { showDatePicker = true }) {
+                            // 徽章本体：2dp 黑边白底（去硬阴影，避免顶栏过重）
+                            Box(
+                                modifier = Modifier
+                                    .border(2.dp, Color.Black)
+                                    .background(Surface)
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = formatDateCompact(date),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (isToday(date)) TextPrimary else Accent
+                                )
+                            }
                         }
                     }
+                    // 热力图回看入口：26dp 像素方块，2×2 小绿块矩阵
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .border(2.dp, Color.Black)
+                            .background(Surface)
+                            .clickable { onHeatmapClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Box(Modifier.size(8.dp).background(HeatmapLevel1))
+                                Box(Modifier.size(8.dp).background(HeatmapLevel3))
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Box(Modifier.size(8.dp).background(HeatmapLevel3))
+                                Box(Modifier.size(8.dp).background(HeatmapLevel1))
+                            }
+                        }
+                    }
+                    // 搜索入口：26dp 放大镜像素方块，2dp 黑边白底，与热力图/设置方块同风格
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(26.dp)
+                            .border(2.dp, Color.Black)
+                            .background(Surface)
+                            .clickable { onSearchClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "搜索",
+                            tint = Color.Black,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                    // 设置入口：26dp 像素方块齿轮，2dp 黑边白底，与热力图方块同风格
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(26.dp)
+                            .border(2.dp, Color.Black)
+                            .background(Surface)
+                            .clickable { onSettingsClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "设置",
+                            tint = Color.Black,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
+                val hasRecords = events.isNotEmpty() || notes.isNotEmpty()
+                val baseStats = if (hasRecords) {
+                    "${events.size} 件事 · ${notes.size} 条随笔"
+                } else "还没有记录"
+                val statsText = if (isToday(date)) {
+                    if (hasRecords) {
+                        "今天还有 ${TimeVizCalculator.todayRemaining(now)} · $baseStats"
+                    } else {
+                        "今天还有 ${TimeVizCalculator.todayRemaining(now)}"
+                    }
+                } else baseStats
                 Text(
-                    text = if (events.isEmpty() && notes.isEmpty()) "还没有记录"
-                           else "${events.size} 件事 · ${notes.size} 条随笔",
+                    text = statsText,
                     fontSize = 11.sp,
                     color = TextTertiary,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(end = 12.dp)
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onTimeVizClick() }
+                        .padding(end = 12.dp, start = 8.dp)
                 )
             }
             // 2dp 黑色底分隔线
@@ -467,7 +555,7 @@ fun EventCard(
 }
 
 @Composable
-private fun NoteRow(
+fun NoteRow(
     note: NoteEntity,
     onClick: () -> Unit
 ) {
@@ -529,11 +617,6 @@ private fun formatDurationShort(start: Long, end: Long): String {
     }
 }
 
-private fun formatDate(date: Triple<Int, Int, Int>): String {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
-    return SimpleDateFormat("MM月dd日", Locale.getDefault()).format(cal.time)
-}
 private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     cal.set(date.first, date.second - 1, date.third, 0, 0, 0)
@@ -541,19 +624,9 @@ private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
     val weekday = weekdayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
     return "${date.second}/${date.third}/$weekday"
 }
-private fun hourOfDay(timestamp: Long): Int {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    cal.timeInMillis = timestamp
-    return cal.get(Calendar.HOUR_OF_DAY)
-}
 private fun isToday(date: Triple<Int, Int, Int>): Boolean {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
-}
-private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    val today = Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
-    return date.first < today.first || (date.first == today.first && (date.second < today.second || (date.second == today.second && date.third < today.third)))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
