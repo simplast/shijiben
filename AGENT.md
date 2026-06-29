@@ -204,6 +204,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
 
 ## Recent changes (better cycles)
+- ui: NotesScreen 标题栏重构为 Row + SurfaceColor + 2dp 黑色分隔线，与其他 5 屏标准结构一致（移除 PixelCard 包裹 + 加 tint=TextPrimary + 加 Color/Surface/TextPrimary imports）
 - ui: NotesScreen 标题字号统一为 16sp Bold，与其他 5 屏一致（移除 titleLarge 22sp + MaterialTheme import）
 - ui: NotesScreen 补齐 RainbowTrim 品牌条 + Background，与其他 7 屏一致
 - ui: disabled 颜色硬编码改用 Disabled/DisabledText 令牌，统一 4 文件 11 处

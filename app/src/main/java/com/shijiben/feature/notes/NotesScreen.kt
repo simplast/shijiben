@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +37,8 @@ import com.shijiben.ui.theme.PixelCard
 import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.PixelText
 import com.shijiben.ui.theme.PixelTextSecondary
+import com.shijiben.ui.theme.Surface as SurfaceColor
+import com.shijiben.ui.theme.TextPrimary
 
 @Composable
 fun NotesScreen(
@@ -49,43 +52,49 @@ fun NotesScreen(
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             RainbowTrim()
-            Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
-            PixelCard(modifier = Modifier.fillMaxWidth(), shadow = false) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "返回")
-                    }
-                    Text("随笔", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PixelText)
-                    IconButton(onClick = { viewModel.startCreate() }) {
-                        Icon(Icons.Default.Add, contentDescription = "新增")
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            if (notes.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "还没有随笔，点右上角 + 记下此刻的想法",
-                        color = PixelTextSecondary,
-
-                        fontSize = 15.sp
+            // 顶栏：左返回 + 标题 + 右新增（对齐其他 5 屏标准结构：Row + SurfaceColor 背景 + 2dp 黑色分隔线）
+            Row(
+                modifier = Modifier.fillMaxWidth().background(SurfaceColor),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "返回",
+                        tint = TextPrimary
                     )
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(notes, key = { it.id }) { note ->
-                        NoteRow(note = note, onClick = { viewModel.startEdit(note) })
+                Text("随笔", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = { viewModel.startCreate() }) {
+                    Icon(Icons.Default.Add, contentDescription = "新增")
+                }
+            }
+            // 2dp 黑色分隔线
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+            // 内容区
+            Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+                Spacer(Modifier.height(8.dp))
+                if (notes.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "还没有随笔，点右上角 + 记下此刻的想法",
+                            color = PixelTextSecondary,
+
+                            fontSize = 15.sp
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(notes, key = { it.id }) { note ->
+                            NoteRow(note = note, onClick = { viewModel.startEdit(note) })
+                        }
                     }
                 }
             }
-        }
         }
         if (sheetOpen) {
             NoteEditorSheet(
