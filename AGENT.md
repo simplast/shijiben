@@ -202,3 +202,6 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-flaky-rootfix-and-docs-design.md](docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md) — flaky test 根治（路由 Room executor）+ 文档打磨
 - [2026-06-28-heatmap-year-view-design.md](docs/superpowers/specs/2026-06-28-heatmap-year-view-design.md) — 热力图年视图（12 月迷你月历拼贴）
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
+
+## Recent changes (better cycles)
+None yet.
