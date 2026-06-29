@@ -1,6 +1,6 @@
 # Better state
 current_category: ui
-cycle_count: 3
+cycle_count: 4
 last_run: 2026-06-29
 
 ## Category status
@@ -10,7 +10,7 @@ last_run: 2026-06-29
 | security | TODO | 0 | — |
 | performance | TODO | 0 | — |
 | ux | TODO | 0 | — |
-| ui | RUNNING | 3 | "NotesScreen 缺失 RainbowTrim" |
+| ui | RUNNING | 4 | "NotesScreen 标题字号与其他 5 屏不一致" |
 | architecture | TODO | 0 | — |
 | tests | TODO | 0 | — |
 | dx | TODO | 0 | — |

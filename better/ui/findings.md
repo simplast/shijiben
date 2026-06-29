@@ -14,3 +14,8 @@
 - status: DONE (cycle 3)
 - evidence: NotesScreen.kt:49,51；对比 SearchScreen.kt:76-79
 - impact: M
+
+## F004 — NotesScreen 标题字号（22sp）与其他 5 屏（16sp）不一致
+- status: DONE (cycle 4)
+- evidence: NotesScreen.kt:62 (MaterialTheme.typography.titleLarge)；AppTheme.kt:50-54 (titleLarge=22sp)；对比 HeatmapScreen.kt:76-81 / SettingsScreen.kt:151-156 / AboutScreen.kt:66-71 / TimeVizScreen.kt:91-96 / SearchScreen.kt:92-97
+- impact: M

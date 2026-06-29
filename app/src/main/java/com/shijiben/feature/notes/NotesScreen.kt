@@ -18,13 +18,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +59,7 @@ fun NotesScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "返回")
                     }
-                    Text("随笔", style = MaterialTheme.typography.titleLarge, color = PixelText)
+                    Text("随笔", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PixelText)
                     IconButton(onClick = { viewModel.startCreate() }) {
                         Icon(Icons.Default.Add, contentDescription = "新增")
                     }
