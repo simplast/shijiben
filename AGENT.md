@@ -205,6 +205,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
 
 ## Recent changes (better cycles)
+- feat: 时间去向聚合——HeatmapScreen 重构为 3 tab 容器（月/年/去向），新增 TimeAllocationCalculator（纯函数按标题聚合 completed 事件时长）+ TimeAllocationViewModel + TimeAllocationTab（范围选择器+水平条形图列表），废弃 HeatmapYearScreen 独立路由
 - docs: AGENT.md 项目结构树 + ARCHITECTURE.md §2 包路径列表补充 `ui/debug/` 模块（DebugOverlay + DebugLog）——此前 MainActivity/Application 实际使用但文档未记录，AI agent/开发者不知道有 app 内调试控制台
 - dx: 测试依赖版本管理统一——5 处 testImplementation 硬编码版本（junit/robolectric/androidx.test:core/coroutines-test/truth）改用 rootProject.extra 引用，新增 4 个 extra key，coroutines-test 复用既有 coroutines key——零行为变化，消除主/测试版本不同步风险
 - ux: RecordingSheet 保存按钮加 enabled=title.isNotBlank()——title 为空时按钮禁用并显示 Disabled 灰色，提供即时视觉反馈（此前按钮始终可点但 save() 静默失败无反馈）

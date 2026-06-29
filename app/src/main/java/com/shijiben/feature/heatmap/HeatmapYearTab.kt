@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.shijiben.ui.theme.Background
 import com.shijiben.ui.theme.Disabled
 import com.shijiben.ui.theme.DisabledText
 import com.shijiben.ui.theme.HeatmapLevel0
@@ -46,87 +43,56 @@ import com.shijiben.ui.theme.HeatmapLevel4
 import com.shijiben.ui.theme.Primary
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
-import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.TextTertiary
 import java.time.Year
 
 @Composable
-fun HeatmapYearScreen(
-    onBack: () -> Unit,
+fun HeatmapYearTab(
+    onDateClick: (Triple<Int, Int, Int>) -> Unit,
     viewModel: HeatmapYearViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    Box(modifier = Modifier.fillMaxWidth().background(Background)) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // 顶部 8dp 彩虹条
-            RainbowTrim()
-            // 顶栏：左返回 + 标题「年度回看」
-            Row(
-                modifier = Modifier.fillMaxWidth().background(SurfaceColor),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "返回",
-                        tint = TextPrimary
-                    )
-                }
-                Text(
-                    text = "年度回看",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = TextPrimary
-                )
-            }
-            // 2dp 黑色分隔线
-            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        YearSwitcher(
+            year = state.year,
+            canGoNext = state.canGoNext,
+            isCurrentYear = state.isCurrentYear,
+            onPrevious = viewModel::previousYear,
+            onNext = viewModel::nextYear,
+            onGoCurrent = viewModel::goToCurrentYear
+        )
+        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
 
-            // 年份切换栏：‹ + 年 + › + 今年
-            YearSwitcher(
-                year = state.year,
-                canGoNext = state.canGoNext,
-                isCurrentYear = state.isCurrentYear,
-                onPrevious = viewModel::previousYear,
-                onNext = viewModel::nextYear,
-                onGoCurrent = viewModel::goToCurrentYear
-            )
-            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
-
-            // 主体（可滚动，防小屏挤压）：12 月 mini 月历拼贴 + Legend
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(8.dp)
-            ) {
-                // 4 行 × 3 列
-                for (rowIdx in 0 until 4) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        for (colIdx in 0 until 3) {
-                            val monthIndex = rowIdx * 3 + colIdx
-                            val monthGrid = state.months.getOrNull(monthIndex)
-                            Box(modifier = Modifier.weight(1f)) {
-                                if (monthGrid != null) {
-                                    MiniMonth(monthGrid = monthGrid)
-                                }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(8.dp)
+        ) {
+            for (rowIdx in 0 until 4) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    for (colIdx in 0 until 3) {
+                        val monthIndex = rowIdx * 3 + colIdx
+                        val monthGrid = state.months.getOrNull(monthIndex)
+                        Box(modifier = Modifier.weight(1f)) {
+                            if (monthGrid != null) {
+                                MiniMonth(monthGrid = monthGrid)
                             }
                         }
                     }
-                    if (rowIdx < 3) Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(12.dp))
-                Legend()
-                Spacer(Modifier.height(8.dp))
+                if (rowIdx < 3) Spacer(Modifier.height(8.dp))
             }
+            Spacer(Modifier.height(12.dp))
+            Legend()
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
-
 
 @Composable
 private fun YearSwitcher(
@@ -144,7 +110,6 @@ private fun YearSwitcher(
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ‹ 总可点
         PixelArrowBox(
             onClick = onPrevious,
             enabled = true,
@@ -160,7 +125,6 @@ private fun YearSwitcher(
             modifier = Modifier.weight(1f)
         )
         Spacer(Modifier.width(8.dp))
-        // › 仅 canGoNext=true 可点
         PixelArrowBox(
             onClick = onNext,
             enabled = canGoNext,
@@ -168,13 +132,9 @@ private fun YearSwitcher(
             contentDescription = "下一年"
         )
         Spacer(Modifier.width(8.dp))
-        // 今年按钮：与 MonthSwitcher 的"本月"按钮同范式
         Box(
             modifier = Modifier
-                .border(
-                    2.dp,
-                    if (isCurrentYear) Disabled else Primary
-                )
+                .border(2.dp, if (isCurrentYear) Disabled else Primary)
                 .background(Color.Transparent)
                 .clickable(enabled = !isCurrentYear, onClick = onGoCurrent)
                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -219,7 +179,6 @@ private fun MiniMonth(monthGrid: HeatmapCalculator.MonthGrid) {
         modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 月份标题："1月".."12月"
         Text(
             text = monthGrid.monthLabel,
             fontSize = 10.sp,
@@ -227,7 +186,6 @@ private fun MiniMonth(monthGrid: HeatmapCalculator.MonthGrid) {
             color = TextPrimary
         )
         Spacer(Modifier.height(2.dp))
-        // 6×7 mini 网格
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
             for (row in monthGrid.cells) {
                 Row(
@@ -247,7 +205,6 @@ private fun MiniMonth(monthGrid: HeatmapCalculator.MonthGrid) {
 
 @Composable
 private fun MiniCell(cell: HeatmapCalculator.Cell) {
-    // 补位方块：透明，不渲染
     if (!cell.isInMonth) return
     val levelColor = when (cell.level) {
         0 -> HeatmapLevel0
@@ -257,21 +214,18 @@ private fun MiniCell(cell: HeatmapCalculator.Cell) {
         else -> HeatmapLevel4
     }
     val borderColor = when {
-        cell.isToday -> Primary       // 今天红边框（与 DayCell 一致）
-        else -> Color.Black           // 其余黑边框
+        cell.isToday -> Primary
+        else -> Color.Black
     }
     Box(
         modifier = Modifier
-            .aspectRatio(1f)          // 正方形，宽由父 weight 决定
-            .border(1.dp, borderColor) // 1dp（格子小，2dp 过粗）
+            .aspectRatio(1f)
+            .border(1.dp, borderColor)
             .background(levelColor)
             .let { base ->
-                // 未来日半透明（与 DayCell 一致，弱化未来）
                 if (cell.isFuture) base.alpha(0.5f) else base
             }
     )
-    // 不显示日期数字（格子约 14dp 放不下 9sp 数字）
-    // 不可点击（年视图核心是总览）
 }
 
 @Composable

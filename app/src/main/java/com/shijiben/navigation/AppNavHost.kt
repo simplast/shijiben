@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.shijiben.feature.heatmap.HeatmapScreen
-import com.shijiben.feature.heatmap.HeatmapYearScreen
 import com.shijiben.feature.notes.NotesScreen
 import com.shijiben.feature.search.SearchScreen
 import com.shijiben.feature.settings.AboutScreen
@@ -23,7 +22,6 @@ object Routes {
     const val NOTES = "notes"
     const val TIMEVIZ = "timeviz"
     const val HEATMAP = "heatmap"
-    const val HEATMAP_YEAR = "heatmap_year"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
@@ -75,13 +73,7 @@ fun AppNavHost() {
                     navController.getBackStackEntry(Routes.TIMELINE)
                         .savedStateHandle["heatmap_target_date"] = Triple(y, m, d)
                     navController.popBackStack()
-                },
-                onYearClick = { navController.navigate(Routes.HEATMAP_YEAR) }
-            )
-        }
-        composable(Routes.HEATMAP_YEAR) {
-            HeatmapYearScreen(
-                onBack = { navController.popBackStack() }
+                }
             )
         }
         composable(Routes.SETTINGS) {

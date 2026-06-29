@@ -59,7 +59,7 @@
 - `data/export/`：`DataExportManager` / `DataImportManager`（JSON + SAF 流读写）。
 - `data/DataModule.kt`：Hilt Module。
 - `di/DispatchersModule.kt`：Hilt Module + `@IoDispatcher` qualifier。
-- `feature/heatmap/`：`HeatmapScreen` / `HeatmapViewModel` / `HeatmapYearScreen` / `HeatmapYearViewModel` / `HeatmapCalculator`（object，纯函数）。
+- `feature/heatmap/`：`HeatmapScreen`（3 tab 容器：月/年/去向）/ `HeatmapMonthTab` / `HeatmapYearTab` / `HeatmapViewModel` / `HeatmapYearViewModel` / `HeatmapCalculator`（object，纯函数）/ `TimeAllocationCalculator`（object，纯函数，按标题聚合时长）/ `TimeAllocationViewModel` / `TimeAllocationTab`。
 - `feature/notes/`：`NotesScreen` / `NoteEditorSheet` / `NotesViewModel`。
 - `feature/recording/`：`RecordingSheet` / `RecordingViewModel` / `TimeRangeSlider`。
 - `feature/search/`：`SearchScreen` / `SearchViewModel`（内含 `SearchItem` sealed interface + internal 纯函数 `filterAndMerge`）。
@@ -146,10 +146,10 @@ Room schema：`AppDatabase` 标 `@Database(entities=[EventEntity, NoteEntity], v
    └─────────┘  └─────────┘ └────┬─────┘ └────┬─────┘
                                 │            │
                                 ▼            ▼
-                          ┌─────────────┐ ┌─────────┐
-                          │ HEATMAP_YEAR│ │  ABOUT  │
-                          │  (年视图)   │ │ (关于)  │
-                          └─────────────┘ └─────────┘
+                          ┌─────────┐
+                          │  ABOUT  │
+                          │ (关于)  │
+                          └─────────┘
 
    ┌─────────┐
    │ SEARCH  │ ← 从 TIMELINE 顶栏放大镜进入 (onSearchClick)
@@ -159,9 +159,9 @@ Room schema：`AppDatabase` 标 `@Database(entities=[EventEntity, NoteEntity], v
    注：HEATMAP 点日期 → popBackStack 回 TIMELINE 并带 heatmap_target_date
 ```
 
-**说明**：8 路由（`TIMELINE` / `NOTES` / `TIMEVIZ` / `HEATMAP` / `HEATMAP_YEAR` / `SEARCH` / `SETTINGS` / `ABOUT`）。`TIMELINE` 是启动页，5 个出口（`onNotesClick` / `onTimeVizClick` / `onHeatmapClick` / `onSearchClick` / `onSettingsClick`）。`HEATMAP` → `HEATMAP_YEAR` 是层级跳转（`onYearClick`）；`SETTINGS` → `ABOUT` 是层级跳转（`onAboutClick`）；`SEARCH` 从 `TIMELINE` 顶栏放大镜进入。
+**说明**：7 路由（`TIMELINE` / `NOTES` / `TIMEVIZ` / `HEATMAP` / `SEARCH` / `SETTINGS` / `ABOUT`）。`TIMELINE` 是启动页，5 个出口（`onNotesClick` / `onTimeVizClick` / `onHeatmapClick` / `onSearchClick` / `onSettingsClick`）。`HEATMAP` 内含 3 tab（月/年/去向），年视图不再独立路由；`SETTINGS` → `ABOUT` 是层级跳转（`onAboutClick`）；`SEARCH` 从 `TIMELINE` 顶栏放大镜进入。
 
-特殊链路：`HEATMAP` 点日期方块 → 写 `TIMELINE` 的 `savedStateHandle["heatmap_target_date"]` = `Triple<Int,Int,Int>(y,m,d)` 后 `popBackStack()` 回 `TIMELINE`（`onDateClick`）；`TIMELINE` 用 `LaunchedEffect` collect `savedStateHandle` 的 `getStateFlow` → `setDate` → `onDateApplied` 清空。`Triple<Int,Int,Int>` 实现 `Serializable` 可入 `Bundle`，是跨屏传选中日期的载体。其余叶子路由（`NOTES` / `TIMEVIZ` / `SEARCH` / `HEATMAP_YEAR` / `ABOUT`）用 `popBackStack()` 返回上级。
+特殊链路：`HEATMAP` 点日期方块 → 写 `TIMELINE` 的 `savedStateHandle["heatmap_target_date"]` = `Triple<Int,Int,Int>(y,m,d)` 后 `popBackStack()` 回 `TIMELINE`（`onDateClick`）；`TIMELINE` 用 `LaunchedEffect` collect `savedStateHandle` 的 `getStateFlow` → `setDate` → `onDateApplied` 清空。`Triple<Int,Int,Int>` 实现 `Serializable` 可入 `Bundle`，是跨屏传选中日期的载体。其余叶子路由（`NOTES` / `TIMEVIZ` / `SEARCH` / `ABOUT`）用 `popBackStack()` 返回上级。
 
 ## 6. 依赖注入（Hilt）
 

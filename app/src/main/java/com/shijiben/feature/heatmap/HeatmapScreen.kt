@@ -8,54 +8,38 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.ui.theme.Background
-import com.shijiben.ui.theme.Border
-import com.shijiben.ui.theme.Disabled
-import com.shijiben.ui.theme.DisabledText
-import com.shijiben.ui.theme.HeatmapLevel0
-import com.shijiben.ui.theme.HeatmapLevel1
-import com.shijiben.ui.theme.HeatmapLevel2
-import com.shijiben.ui.theme.HeatmapLevel3
-import com.shijiben.ui.theme.HeatmapLevel4
 import com.shijiben.ui.theme.Primary
+import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
-import com.shijiben.ui.theme.RainbowTrim
-import com.shijiben.ui.theme.TextTertiary
 
 @Composable
 fun HeatmapScreen(
     onBack: () -> Unit,
-    onDateClick: (Triple<Int, Int, Int>) -> Unit,
-    onYearClick: () -> Unit,
-    viewModel: HeatmapViewModel = hiltViewModel()
+    onDateClick: (Triple<Int, Int, Int>) -> Unit
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableIntStateOf(0) } // 0=月, 1=年, 2=去向
 
     Box(modifier = Modifier.fillMaxWidth().background(Background)) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -83,245 +67,48 @@ fun HeatmapScreen(
             // 2dp 黑色分隔线
             Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
 
-            // 月份切换栏：‹ + 年月 + › + 本月 + 年
-            MonthSwitcher(
-                yearMonth = state.yearMonth,
-                canGoNext = state.canGoNext,
-                isCurrentMonth = state.isCurrentMonth,
-                onPrevious = viewModel::previousMonth,
-                onNext = viewModel::nextMonth,
-                onGoCurrent = viewModel::goToCurrentMonth,
-                onYearClick = onYearClick
-            )
+            // tab 切换栏：月 / 年 / 去向
+            TabBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
             Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
 
-            // 主体（可滚动，防小屏挤压）
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(8.dp)
-            ) {
-                WeekHeader()
-                Spacer(Modifier.height(4.dp))
-                HeatmapGrid(cells = state.cells, onDateClick = onDateClick)
-                Spacer(Modifier.height(12.dp))
-                Legend()
-                Spacer(Modifier.height(8.dp))
+            // tab 内容
+            when (selectedTab) {
+                0 -> HeatmapMonthTab(onDateClick = onDateClick)
+                1 -> HeatmapYearTab(onDateClick = onDateClick)
+                2 -> TimeAllocationTab()
             }
         }
     }
 }
 
-
 @Composable
-private fun MonthSwitcher(
-    yearMonth: java.time.YearMonth,
-    canGoNext: Boolean,
-    isCurrentMonth: Boolean,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onGoCurrent: () -> Unit,
-    onYearClick: () -> Unit
+private fun TabBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
 ) {
+    val tabs = listOf("月", "年", "去向")
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SurfaceColor)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().background(SurfaceColor).padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // ‹ 总可点
-        PixelArrowBox(
-            onClick = onPrevious,
-            enabled = true,
-            arrow = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-            contentDescription = "上一月"
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = "${yearMonth.year}年${yearMonth.monthValue}月",
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            color = TextPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(Modifier.width(8.dp))
-        // › 仅 canGoNext=true 可点
-        PixelArrowBox(
-            onClick = onNext,
-            enabled = canGoNext,
-            arrow = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "下一月"
-        )
-        Spacer(Modifier.width(8.dp))
-        // 本月按钮：PixelOutlinedButton 风但小号
-        Box(
-            modifier = Modifier
-                .border(
-                    2.dp,
-                    if (isCurrentMonth) Disabled else Primary
-                )
-                .background(Color.Transparent)
-                .clickable(enabled = !isCurrentMonth, onClick = onGoCurrent)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = "本月",
-                color = if (isCurrentMonth) DisabledText else Primary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        // 年跳转按钮：与"本月"同范式，始终可点（年视图总是可达）
-        Spacer(Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .border(2.dp, Primary)
-                .background(Color.Transparent)
-                .clickable(onClick = onYearClick)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = "年",
-                color = Primary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun PixelArrowBox(
-    onClick: () -> Unit,
-    enabled: Boolean,
-    arrow: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String
-) {
-    Box(
-        modifier = Modifier
-            .size(26.dp)
-            .border(2.dp, Color.Black)
-            .background(if (enabled) SurfaceColor else Disabled)
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            arrow,
-            contentDescription = contentDescription,
-            tint = if (enabled) Color.Black else DisabledText,
-            modifier = Modifier.size(14.dp)
-        )
-    }
-}
-
-@Composable
-private fun WeekHeader() {
-    val labels = listOf("一", "二", "三", "四", "五", "六", "日")
-    Row(modifier = Modifier.fillMaxWidth()) {
-        for (label in labels) {
+        for (i in tabs.indices) {
+            val isSelected = i == selectedTab
             Box(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .border(2.dp, if (isSelected) Primary else Color.Black)
+                    .background(if (isSelected) Primary else SurfaceColor)
+                    .clickable { onTabSelected(i) }
+                    .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextTertiary
+                    text = tabs[i],
+                    color = if (isSelected) Color.White else TextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun HeatmapGrid(
-    cells: List<List<HeatmapCalculator.Cell>>,
-    onDateClick: (Triple<Int, Int, Int>) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        for (row in cells) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                for (cell in row) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        DayCell(cell = cell, onDateClick = onDateClick)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DayCell(
-    cell: HeatmapCalculator.Cell,
-    onDateClick: (Triple<Int, Int, Int>) -> Unit
-) {
-    // 补位方块：透明背景，不可点
-    if (!cell.isInMonth) {
-        Box(modifier = Modifier.size(40.dp))
-        return
-    }
-    val levelColor = when (cell.level) {
-        0 -> HeatmapLevel0
-        1 -> HeatmapLevel1
-        2 -> HeatmapLevel2
-        3 -> HeatmapLevel3
-        else -> HeatmapLevel4
-    }
-    val isFuture = cell.isFuture
-    val borderColor = when {
-        cell.isToday -> Primary
-        isFuture -> Border
-        else -> Color.Black
-    }
-    val cellModifier = Modifier
-        .size(40.dp)
-        .border(2.dp, borderColor)
-        .background(levelColor)
-        .let { base ->
-            if (isFuture) base.alpha(0.5f)
-            else base.clickable { onDateClick(Triple(cell.date.year, cell.date.monthValue, cell.date.dayOfMonth)) }
-        }
-    Box(modifier = cellModifier, contentAlignment = Alignment.Center) {
-        // 日期数字：浅背景用浅灰字（TextTertiary），深背景 level 2-4 用白字反色
-        Text(
-            text = cell.date.dayOfMonth.toString(),
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            color = when (cell.level) {
-                0, 1 -> TextTertiary
-                else -> Color.White
-            }
-        )
-    }
-}
-
-@Composable
-private fun Legend() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = "少", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.width(6.dp))
-        val colors = listOf(HeatmapLevel0, HeatmapLevel1, HeatmapLevel2, HeatmapLevel3, HeatmapLevel4)
-        for (c in colors) {
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .border(2.dp, Color.Black)
-                    .background(c)
-            )
-            Spacer(Modifier.width(4.dp))
-        }
-        Spacer(Modifier.width(2.dp))
-        Text(text = "多", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
     }
 }
