@@ -118,7 +118,13 @@ class RecordingViewModel @Inject constructor(
         }
 
         val status = when {
-            duration == 0 -> originalStatus ?: EventStatus.NotStarted.value
+            // duration=0 → 无 endTime。若原状态为 Completed，必须降级为 InProgress，
+            // 否则会保存非法的 Completed+endTime=null（违反 EventRepository 不变式）。
+            duration == 0 -> if (originalStatus == EventStatus.Completed.value) {
+                EventStatus.InProgress.value
+            } else {
+                originalStatus ?: EventStatus.NotStarted.value
+            }
             actualEnd != null && now > actualEnd -> EventStatus.Completed.value
             else -> EventStatus.InProgress.value
         }

@@ -1,12 +1,12 @@
 # Better state
 current_category: correctness
-cycle_count: 5
+cycle_count: 6
 last_run: 2026-06-29
 
 ## Category status
 | Category | Status | Cycles | Last finding |
 |----------|--------|--------|-------------|
-| correctness | RUNNING | 0 | — |
+| correctness | RUNNING | 1 | F006 |
 | security | TODO | 0 | — |
 | performance | TODO | 0 | — |
 | ux | TODO | 0 | — |

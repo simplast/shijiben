@@ -100,6 +100,34 @@ class RecordingViewModelTest {
     }
 
     @Test
+    fun save_editingCompletedEventWithZeroDuration_downgradesToInProgress() = runTest {
+        // A completed event with a real end time.
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "已完成",
+            startTime = now - 7200_000,
+            endTime = now - 3600_000,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        assertThat(event.status).isEqualTo(EventStatus.Completed.value)
+
+        // Edit it, drag duration to 0 (re-open the event, no end time).
+        vm.initEdit(event)
+        vm.onDurationChange(0)
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isTrue()
+
+        // Must be downgraded to InProgress (NOT stay Completed with null endTime — that's an invalid state).
+        val saved = eventRepo.getEventById(id)!!
+        assertThat(saved.status).isEqualTo(EventStatus.InProgress.value)
+        assertThat(saved.endTime).isNull()
+    }
+
+    @Test
     fun save_newEvent_hasNonNullEndTime() = runTest {
         // New events are not in-progress (currentStatus defaults to NotStarted),
         // so they get a real end time from the slider.
