@@ -1,6 +1,6 @@
 # Better state
-current_category: docs
-cycle_count: 12
+current_category: direction
+cycle_count: 13
 last_run: 2026-06-29
 
 ## Category status
@@ -15,4 +15,4 @@ last_run: 2026-06-29
 | ui | EXHAUSTED | 5 | "NotesScreen 标题栏结构与 5 屏标准结构漂移" |
 | dx | EXHAUSTED | 1 | F011 |
 | docs | EXHAUSTED | 1 | F012 |
-| direction | TODO | 0 | — |
+| direction | EXHAUSTED | 1 | "report-cycle-13" |
