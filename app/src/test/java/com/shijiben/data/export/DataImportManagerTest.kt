@@ -188,6 +188,22 @@ class DataImportManagerTest {
     }
 
     @Test
+    fun parseJsonString_invalidStatus_throwsIllegalArgumentException() {
+        // 构造合法 JSON（status=2）后改 events[0].status=99（非合法 EventStatus 值）
+        val event = EventEntity(
+            id = 1, title = "x", startTime = 100L, endTime = 200L,
+            status = 2, note = null, createdAt = 300L, updatedAt = 400L
+        )
+        val json = JSONObject(buildValidJson(events = listOf(event))).apply {
+            getJSONArray("events").getJSONObject(0).put("status", 99)
+        }.toString()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
     fun parseJsonString_partialFieldMissing_throwsJSONException() {
         // 删 event 的 title key → 严格 getString 抛
         val event = EventEntity(

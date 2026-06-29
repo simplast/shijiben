@@ -2,6 +2,7 @@ package com.shijiben.data.export
 
 import com.shijiben.data.local.EventEntity
 import com.shijiben.data.local.NoteEntity
+import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.NoteRepository
 import com.shijiben.feature.timeviz.TimeVizPrefs
@@ -68,13 +69,18 @@ object DataImportManager {
         val out = ArrayList<EventEntity>(arr.length())
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
+            val status = o.getInt("status")
+            // 信任边界校验：status 必须是合法 EventStatus 值，否则拒绝导入（与 schemaVersion 校验先例一致）
+            require(EventStatus.entries.any { it.value == status }) {
+                "非法 status 值: $status"
+            }
             out.add(
                 EventEntity(
                     id = o.getLong("id"),
                     title = o.getString("title"),
                     startTime = o.getLong("startTime"),
                     endTime = if (o.isNull("endTime")) null else o.getLong("endTime"),
-                    status = o.getInt("status"),
+                    status = status,
                     note = if (o.isNull("note")) null else o.getString("note"),
                     createdAt = o.getLong("createdAt"),
                     updatedAt = o.getLong("updatedAt")
