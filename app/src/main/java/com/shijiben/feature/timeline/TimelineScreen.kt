@@ -70,7 +70,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.R
 import com.shijiben.data.local.EventEntity
 import com.shijiben.data.local.NoteEntity
-import com.shijiben.feature.notes.NoteEditorSheet
 import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
@@ -125,14 +124,12 @@ fun TimelineScreen(
 
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
-    var showNoteSheet by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<EventEntity?>(null) }
     var activeDrawer by remember { mutableStateOf<DrawerType?>(null) }
     var eventDraft by remember { mutableStateOf("") }
     var noteDraft by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         // 像素山水背景（弱化）
@@ -342,15 +339,6 @@ fun TimelineScreen(
                 editingEvent = editingEvent,
                 onDismiss = { showSheet = false },
                 onSaved = { viewModel.refresh(); showSheet = false }
-            )
-        }
-
-        if (showNoteSheet) {
-            NoteEditorSheet(
-                editing = editingNote,
-                onDismiss = { showNoteSheet = false; notesViewModel.closeSheet() },
-                onSave = { content -> val ok = notesViewModel.save(content); if (ok) viewModel.refresh(); ok },
-                onDelete = { note -> notesViewModel.delete(note); viewModel.refresh() }
             )
         }
 

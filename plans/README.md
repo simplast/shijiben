@@ -1,9 +1,10 @@
 # Implementation Plans
 
-Two batches of plans from the `improve` skill:
+Three batches of plans from the `improve` skill:
 
 - **Batch 1 (2026-06-26, commit `d74ab99`)** — UI / interaction optimization, Compose UI only. Plans 001-010, all DONE.
 - **Batch 2 (2026-06-27, commit `9da5c72`)** — post-redesign cleanup: a data-corruption bug fix, a security/log cleanup, doc reconciliation after the tag removal, and a stated-but-undelivered V1 feature (note markers on the timeline). Plans 011-014, all DONE.
+- **Batch 3 (2026-06-29, commit `2a71f17`)** — UI-focused audit: dead `NoteEditorSheet` removal in Timeline, 隐私政策 routing fix, Chinese duration-badge units, `DayProgressBar` memoization, and `RainbowTrim` consolidation into `PixelComponents`. Plans 015-019, all TODO.
 
 Each executor: read the plan fully before starting, run its drift check, honor its STOP conditions, and update your row when done. Verification gates are shared across plans: `./gradlew :app:compileDebugKotlin` (typecheck) · `./gradlew :app:testDebugUnitTest` (unit tests) · `./gradlew assembleDebug` (build).
 
@@ -25,6 +26,11 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 012  | [Remove debug `Log.d` calls from production code](012-remove-debug-log-calls.md) | P2 | S | — | DONE |
 | 013  | [Update AGENT.md, design spec, and product brief to reflect the tag removal](013-update-docs-after-tag-removal.md) | P2 | S | — | DONE |
 | 014  | [Render note markers on the timeline (collect the unused `notes` Flow)](014-render-note-markers-on-timeline.md) | P2 | M | — | DONE |
+| 015  | [Remove dead `showNoteSheet`/`NoteEditorSheet` block from TimelineScreen](015-remove-dead-note-sheet-in-timeline.md) | P2 | S | — | DONE |
+| 016  | [Make "隐私政策" open the About page scrolled to the privacy section](016-privacy-route-scrolls-to-section.md) | P2 | S | — | TODO |
+| 017  | [Use Chinese units in `formatDurationShort` (timeline duration badges)](017-duration-badge-chinese-units.md) | P2 | S | — (disjoint from 015 in same file) | TODO |
+| 018  | [Memoize `coveredHours` in `DayProgressBar`](018-remember-coveredhours-dayprogressbar.md) | P3 | S | — | TODO |
+| 019  | [Consolidate `RainbowTrim` into `PixelComponents.kt`](019-consolidate-rainbowtrim.md) | P3 | M | — (land after 015/016/017) | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
 
@@ -43,6 +49,14 @@ There are **no hard dependencies** — every plan is independently shippable and
 Suggested overall sequence: **004 → 003 → 006 → 008 → 002 → 001 → 005 → 007 → 009 → 010**.
 This front-loads the no-overlap, lowest-risk wins (003, 006, 008), handles the `TimeRangeSlider.kt` pair (002→009) and the `TimelineScreen.kt` cluster (001→005→007) in dependency order, and closes with the trivial deletion (010).
 
+### Batch 3 (015–019) ordering
+
+- Suggested sequence: **015 → 017 → 018 → 016 → 019**.
+- **015, 017** both edit `TimelineScreen.kt` in disjoint sections (015 removes mid-file dead code; 017 rewrites `formatDurationShort` near the bottom). Either order works; land 015 first, then 017 re-runs its drift check.
+- **016** edits `SettingsScreen.kt` + `AboutScreen.kt` + `AppNavHost.kt`. Disjoint from 019's edits in the first two files (016 touches signature/scroll Column/privacy Section; 019 deletes the bottom-of-file `private fun RainbowTrim`).
+- **019 (M)** touches 8 files including `TimelineScreen.kt`, `SettingsScreen.kt`, `AboutScreen.kt` — all of which are also touched by 015/016/017. **Land 019 last**, after 015/016/017 have settled, so its drift check sees a stable base. Each of 019's edits is in a section disjoint from the other plans' edits (top-of-`Column` inline strip in Timeline/Search; bottom-of-file private fun in the 5 others).
+- 018 is fully isolated (`DayProgressBar.kt` only) — ship anytime.
+
 ## Findings considered and rejected
 
 - **#12 — Timeline empty-state guidance ("今天还是空白" lacks a + hint)**: not worth a plan right now — the bottom input (plan 003) and the existing `+` button are sufficient affordance once the placeholder copy is honest; a verbose empty state would clutter the sparse 8-bit aesthetic. Re-audit only if new-user onboarding telemetry shows confusion.
@@ -51,6 +65,14 @@ This front-loads the no-overlap, lowest-risk wins (003, 006, 008), handles the `
 - **Full date picker (calendar jump-to-date)**: deferred from plan 004. The "回今天" tap affordance covers the common "I drifted, get me back" case; arbitrary-date jump is a separate future plan.
 - **DayProgressBar tappable hours (tap an hour → pre-fill new event)**: a direction suggestion, not a bug fix — tracked separately, not in this batch.
 - **Notes list search / date grouping**: a V2 direction suggestion (notes grow unbounded); out of scope for this UI-polish batch.
+
+### Batch 3 (2026-06-29) — considered and rejected
+
+- **#6 — 26dp tap targets below 48dp a11y minimum**: real a11y gap (top-bar heatmap/search/settings boxes, bottom-bar triggers, heatmap arrows, timeviz steppers all use 26dp `Box(.clickable)`), but the 8-bit pixel aesthetic deliberately uses small squares — bumping visuals to 48dp would break the look. A fix preserving the visuals via `Modifier.minimumInteractiveComponentSize()` is feasible (M effort) but changes the touch-layout contract app-wide; deferred until the maintainer decides whether to commit to the a11y-vs-aesthetic tradeoff. Re-audit if a11y becomes a stated priority.
+- **#7 — `formatDateCompact` shows no year (`6/29/日`)**: ambiguous only when heatmap jump-to-date crosses into a past December; the date-picker dialog already shows the year, and the heatmap's own header shows `年/月`. Low-frequency confusion, not worth a plan right now.
+- **#8 — `nowHour` dead var in `TimelineScreen`**: leftover from the reverted plan-007 labels. Trivial to delete, but it's a one-line `val` with no behavioral impact; rolling it into the next edit of `TimelineScreen.kt` (e.g. 015 or 017) is cheaper than a standalone plan. If 015/017 don't remove it, re-audit.
+- **Direction — app-wide haptics (`LocalHapticFeedback`)**: would reinforce the "记录即审视" calm feel on long-press delete / start-stop / save. M effort, app-wide. Direction suggestion for the maintainer to weigh, not a bug fix — not planned this batch.
+- **Direction — `statsText` tap → TimeViz has no affordance**: the top-right stats text is silently `.clickable { onTimeVizClick() }`. A subtle `›` or underline hint would help discoverability. S effort but a deliberate design choice (the 8-bit aesthetic favors sparse, unlabeled taps); deferred to the maintainer's call.
 
 ## Verification baseline
 
