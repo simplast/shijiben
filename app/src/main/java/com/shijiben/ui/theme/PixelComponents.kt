@@ -3,6 +3,10 @@ package com.shijiben.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -92,6 +96,25 @@ fun PixelOutlinedButton(
 
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp
+            )
+        }
+    }
+}
+
+/** 顶部 8dp 彩虹条（全 app 唯一品牌标识条，各屏幕顶部统一调用）。 */
+@Composable
+fun RainbowTrim() {
+    val trimColors = listOf(
+        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+        Color(0xFF6366F1), Color(0xFFA855F7)
+    )
+    Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
+        for (i in 0 until 80) {
+            Box(
+                modifier = Modifier
+                    .weight(1f).fillMaxHeight()
+                    .background(trimColors[i % 8])
             )
         }
     }

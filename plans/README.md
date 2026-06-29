@@ -4,7 +4,7 @@ Three batches of plans from the `improve` skill:
 
 - **Batch 1 (2026-06-26, commit `d74ab99`)** — UI / interaction optimization, Compose UI only. Plans 001-010, all DONE.
 - **Batch 2 (2026-06-27, commit `9da5c72`)** — post-redesign cleanup: a data-corruption bug fix, a security/log cleanup, doc reconciliation after the tag removal, and a stated-but-undelivered V1 feature (note markers on the timeline). Plans 011-014, all DONE.
-- **Batch 3 (2026-06-29, commit `2a71f17`)** — UI-focused audit: dead `NoteEditorSheet` removal in Timeline, 隐私政策 routing fix, Chinese duration-badge units, `DayProgressBar` memoization, and `RainbowTrim` consolidation into `PixelComponents`. Plans 015-019, all TODO.
+- **Batch 3 (2026-06-29, commit `2a71f17`)** — UI-focused audit: dead `NoteEditorSheet` removal in Timeline, 隐私政策 routing fix, Chinese duration-badge units, `DayProgressBar` memoization, and `RainbowTrim` consolidation into `PixelComponents`. Plans 015-019, all DONE.
 
 Each executor: read the plan fully before starting, run its drift check, honor its STOP conditions, and update your row when done. Verification gates are shared across plans: `./gradlew :app:compileDebugKotlin` (typecheck) · `./gradlew :app:testDebugUnitTest` (unit tests) · `./gradlew assembleDebug` (build).
 
@@ -30,7 +30,7 @@ Each executor: read the plan fully before starting, run its drift check, honor i
 | 016  | [Make "隐私政策" open the About page scrolled to the privacy section](016-privacy-route-scrolls-to-section.md) | P2 | S | — | DONE |
 | 017  | [Use Chinese units in `formatDurationShort` (timeline duration badges)](017-duration-badge-chinese-units.md) | P2 | S | — (disjoint from 015 in same file) | DONE |
 | 018  | [Memoize `coveredHours` in `DayProgressBar`](018-remember-coveredhours-dayprogressbar.md) | P3 | S | — | DONE |
-| 019  | [Consolidate `RainbowTrim` into `PixelComponents.kt`](019-consolidate-rainbowtrim.md) | P3 | M | — (land after 015/016/017) | TODO |
+| 019  | [Consolidate `RainbowTrim` into `PixelComponents.kt`](019-consolidate-rainbowtrim.md) | P3 | M | — (land after 015/016/017) | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
 

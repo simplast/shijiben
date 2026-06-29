@@ -141,21 +141,8 @@ fun TimelineScreen(
             alignment = Alignment.TopCenter
         )
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 6.dp)) {
-            // 顶部 8dp 彩虹条（品牌标识，全 app 唯一保留处）
-            Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
-                val trimColors = listOf(
-                    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-                    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-                    Color(0xFF6366F1), Color(0xFFA855F7)
-                )
-                for (i in 0 until 80) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f).fillMaxHeight()
-                            .background(trimColors[i % 8])
-                    )
-                }
-            }
+            // 顶部 8dp 彩虹条（品牌标识）
+            RainbowTrim()
             // 顶栏一条带：左日期徽章 + 右概览统计
             Row(
                 modifier = Modifier.fillMaxWidth().background(Surface),

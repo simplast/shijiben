@@ -48,6 +48,7 @@ import com.shijiben.ui.theme.Primary
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
 import com.shijiben.ui.theme.TextSecondary
+import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.TextTertiary
 import java.util.Calendar
 import java.util.TimeZone
@@ -188,24 +189,6 @@ fun TimeVizScreen(
     }
 }
 
-/** 顶部 8dp 彩虹条（与首页一致，复制 8 行避免改 PixelComponents）。 */
-@Composable
-private fun RainbowTrim() {
-    val trimColors = listOf(
-        Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-        Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-        Color(0xFF6366F1), Color(0xFFA855F7)
-    )
-    Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
-        for (i in 0 until 80) {
-            Box(
-                modifier = Modifier
-                    .weight(1f).fillMaxHeight()
-                    .background(trimColors[i % 8])
-            )
-        }
-    }
-}
 
 /** 8-bit 卡片：2dp 黑边 + 白底 + 直角 + 2dp 阴影。 */
 @Composable

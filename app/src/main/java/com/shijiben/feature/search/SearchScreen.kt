@@ -48,6 +48,7 @@ import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeline.EventCard
 import com.shijiben.feature.timeline.NoteRow
 import com.shijiben.ui.theme.Background
+import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
 import com.shijiben.ui.theme.TextSecondary
@@ -75,20 +76,7 @@ fun SearchScreen(
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 顶部 8dp 彩虹条（与 TimelineScreen/HeatmapScreen 同款）
-            Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
-                val trimColors = listOf(
-                    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-                    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-                    Color(0xFF6366F1), Color(0xFFA855F7)
-                )
-                for (i in 0 until 80) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f).fillMaxHeight()
-                            .background(trimColors[i % 8])
-                    )
-                }
-            }
+            RainbowTrim()
             // 顶栏：‹ 返回 + "搜索" 标题
             Row(
                 modifier = Modifier.fillMaxWidth().background(SurfaceColor),
