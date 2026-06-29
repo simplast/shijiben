@@ -204,6 +204,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
 
 ## Recent changes (better cycles)
+- dx: 测试依赖版本管理统一——5 处 testImplementation 硬编码版本（junit/robolectric/androidx.test:core/coroutines-test/truth）改用 rootProject.extra 引用，新增 4 个 extra key，coroutines-test 复用既有 coroutines key——零行为变化，消除主/测试版本不同步风险
 - ux: RecordingSheet 保存按钮加 enabled=title.isNotBlank()——title 为空时按钮禁用并显示 Disabled 灰色，提供即时视觉反馈（此前按钮始终可点但 save() 静默失败无反馈）
 - architecture: 移除 EventRepository.shiftToTargetDay 的死代码 cal2（创建并赋值 e.endTime 但从未读取，推测为「保留钟点」改「保留时长」后的残留）——零行为变化
 - security: DataImportManager.parseEvents 新增 status 信任边界校验——非法值（非 0/1/2）抛 IllegalArgumentException 拒绝导入，防止恶意文件污染事件状态机 + 新增回归测试

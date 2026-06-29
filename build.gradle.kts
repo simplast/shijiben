@@ -16,3 +16,9 @@ extra["hiltNavigationCompose"] = "1.2.0"
 extra["room"] = "2.6.1"
 extra["coroutines"] = "1.8.1"
 extra["splashscreen"] = "1.0.1"
+
+// 测试依赖（与生产依赖统一走 extra，避免版本漏改/不同步）
+extra["junit"] = "4.13.2"
+extra["robolectric"] = "4.13"
+extra["androidxTestCore"] = "1.6.1"
+extra["truth"] = "1.4.4"
