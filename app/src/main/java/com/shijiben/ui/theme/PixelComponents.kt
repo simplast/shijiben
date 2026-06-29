@@ -50,7 +50,7 @@ fun PixelButton(
     backgroundColor: Color = Primary,
     textColor: Color = TextOnPrimary,
 ) {
-    val bg = if (enabled) backgroundColor else Color(0xFFCBD5E1)
+    val bg = if (enabled) backgroundColor else Disabled
     
     Surface(
         color = bg,
@@ -84,7 +84,7 @@ fun PixelOutlinedButton(
     Surface(
         color = Color.Transparent,
         shape = RoundedCornerShape(0.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, if (enabled) borderColor else Color(0xFFCBD5E1)),
+        border = androidx.compose.foundation.BorderStroke(2.dp, if (enabled) borderColor else Disabled),
         modifier = modifier
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 10.dp, horizontal = 16.dp)
@@ -92,7 +92,7 @@ fun PixelOutlinedButton(
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = text,
-                color = if (enabled) textColor else Color(0xFF94A3B8),
+                color = if (enabled) textColor else DisabledText,
 
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp

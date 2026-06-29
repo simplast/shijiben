@@ -41,6 +41,7 @@ val TextOnSurface = Color(0xFF000000)  // 纯黑
 val Border = Color(0xFFE5E7EB)        // 浅灰边框
 val BorderLight = Color(0xFFF3F4F6)   // 极浅灰边框
 val Disabled = Color(0xFFCBD5E1)      // slate-300，disabled 统一色（与历史硬编码一致）
+val DisabledText = Color(0xFF94A3B8)  // slate-400，disabled 文字/图标色
 
 // ==================== 彩虹状态色 ====================
 val Error = Color(0xFFEF4444)          // 红

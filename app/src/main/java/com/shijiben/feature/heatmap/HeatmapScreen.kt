@@ -35,6 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.ui.theme.Background
 import com.shijiben.ui.theme.Border
+import com.shijiben.ui.theme.Disabled
+import com.shijiben.ui.theme.DisabledText
 import com.shijiben.ui.theme.HeatmapLevel0
 import com.shijiben.ui.theme.HeatmapLevel1
 import com.shijiben.ui.theme.HeatmapLevel2
@@ -158,7 +160,7 @@ private fun MonthSwitcher(
             modifier = Modifier
                 .border(
                     2.dp,
-                    if (isCurrentMonth) Color(0xFFCBD5E1) else Primary
+                    if (isCurrentMonth) Disabled else Primary
                 )
                 .background(Color.Transparent)
                 .clickable(enabled = !isCurrentMonth, onClick = onGoCurrent)
@@ -166,7 +168,7 @@ private fun MonthSwitcher(
         ) {
             Text(
                 text = "本月",
-                color = if (isCurrentMonth) Color(0xFF94A3B8) else Primary,
+                color = if (isCurrentMonth) DisabledText else Primary,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -201,14 +203,14 @@ private fun PixelArrowBox(
         modifier = Modifier
             .size(26.dp)
             .border(2.dp, Color.Black)
-            .background(if (enabled) SurfaceColor else Color(0xFFCBD5E1))
+            .background(if (enabled) SurfaceColor else Disabled)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             arrow,
             contentDescription = contentDescription,
-            tint = if (enabled) Color.Black else Color(0xFF94A3B8),
+            tint = if (enabled) Color.Black else DisabledText,
             modifier = Modifier.size(14.dp)
         )
     }
