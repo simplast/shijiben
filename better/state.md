@@ -1,12 +1,13 @@
 # Better state
-current_category: correctness
-cycle_count: 6
+current_category: tests
+cycle_count: 7
 last_run: 2026-06-29
 
 ## Category status
 | Category | Status | Cycles | Last finding |
 |----------|--------|--------|-------------|
-| correctness | RUNNING | 1 | F006 |
+| correctness | EXHAUSTED | 1 | F006 |
+| tests | RUNNING | 1 | F007 |
 | security | TODO | 0 | — |
 | performance | TODO | 0 | — |
 | ux | TODO | 0 | — |

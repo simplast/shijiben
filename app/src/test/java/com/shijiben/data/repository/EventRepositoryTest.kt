@@ -285,6 +285,123 @@ class EventRepositoryTest {
         assertThat(repo.determineStatus(now, now + 1000, now)).isEqualTo(EventStatus.Completed)
     }
 
+    // ==================== shiftToTargetDay（直接单测，覆盖日历边界）====================
+
+    @Test
+    fun shiftToTargetDay_preservesHourAndMinute() {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        cal.set(Calendar.HOUR_OF_DAY, 14)
+        cal.set(Calendar.MINUTE, 30)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val yesterdayStart = cal.timeInMillis
+
+        val event = EventEntity(
+            title = "x", startTime = yesterdayStart, endTime = yesterdayStart + 3600_000,
+            status = EventStatus.NotStarted.value, note = null,
+            createdAt = yesterdayStart, updatedAt = yesterdayStart
+        )
+
+        val shifted = repo.shiftToTargetDay(event, todayY, todayM, todayD)!!
+        val shiftedCal = Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = shifted.first }
+        assertThat(shiftedCal.get(Calendar.YEAR)).isEqualTo(todayY)
+        assertThat(shiftedCal.get(Calendar.MONTH) + 1).isEqualTo(todayM)
+        assertThat(shiftedCal.get(Calendar.DAY_OF_MONTH)).isEqualTo(todayD)
+        assertThat(shiftedCal.get(Calendar.HOUR_OF_DAY)).isEqualTo(14)
+        assertThat(shiftedCal.get(Calendar.MINUTE)).isEqualTo(30)
+    }
+
+    @Test
+    fun shiftToTargetDay_crossMonthBoundary() {
+        // 1月31日 10:00 → 顺延到 2月1日（跨月边界，Calendar 自动处理 31→1）
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(2026, Calendar.JANUARY, 31, 10, 0, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val jan31Start = cal.timeInMillis
+
+        val event = EventEntity(
+            title = "x", startTime = jan31Start, endTime = jan31Start + 3600_000,
+            status = EventStatus.NotStarted.value, note = null,
+            createdAt = jan31Start, updatedAt = jan31Start
+        )
+
+        val shifted = repo.shiftToTargetDay(event, 2026, 2, 1)!!
+        val shiftedCal = Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = shifted.first }
+        assertThat(shiftedCal.get(Calendar.YEAR)).isEqualTo(2026)
+        assertThat(shiftedCal.get(Calendar.MONTH)).isEqualTo(Calendar.FEBRUARY)
+        assertThat(shiftedCal.get(Calendar.DAY_OF_MONTH)).isEqualTo(1)
+        assertThat(shiftedCal.get(Calendar.HOUR_OF_DAY)).isEqualTo(10)
+    }
+
+    @Test
+    fun shiftToTargetDay_nullEndTime_returnsNullEnd() {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        cal.add(Calendar.DAY_OF_MONTH, -1)
+        cal.set(Calendar.HOUR_OF_DAY, 9)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val yesterdayStart = cal.timeInMillis
+
+        val event = EventEntity(
+            title = "x", startTime = yesterdayStart, endTime = null,
+            status = EventStatus.NotStarted.value, note = null,
+            createdAt = yesterdayStart, updatedAt = yesterdayStart
+        )
+
+        val shifted = repo.shiftToTargetDay(event, todayY, todayM, todayD)!!
+        assertThat(shifted.second).isNull()
+    }
+
+    @Test
+    fun shiftToTargetDay_alreadyOnTargetDay_returnsNull() {
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(Calendar.HOUR_OF_DAY, 11)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val todayY = cal.get(Calendar.YEAR)
+        val todayM = cal.get(Calendar.MONTH) + 1
+        val todayD = cal.get(Calendar.DAY_OF_MONTH)
+        val todayStart = cal.timeInMillis
+
+        val event = EventEntity(
+            title = "x", startTime = todayStart, endTime = todayStart + 3600_000,
+            status = EventStatus.NotStarted.value, note = null,
+            createdAt = todayStart, updatedAt = todayStart
+        )
+
+        // 已在目标日 → 返回 null（无需顺延）
+        assertThat(repo.shiftToTargetDay(event, todayY, todayM, todayD)).isNull()
+    }
+
+    @Test
+    fun shiftToTargetDay_preservesDurationWithEndTime() {
+        // 6月10日 10:00→11:00（1h）顺延到 6月15日，时长应保持 1h
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(2026, Calendar.JUNE, 10, 10, 0, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val start = cal.timeInMillis
+        val end = start + 3600_000
+
+        val event = EventEntity(
+            title = "x", startTime = start, endTime = end,
+            status = EventStatus.NotStarted.value, note = null,
+            createdAt = start, updatedAt = start
+        )
+
+        val shifted = repo.shiftToTargetDay(event, 2026, 6, 15)!!
+        val duration = shifted.second!! - shifted.first
+        assertThat(duration).isEqualTo(3600_000)
+    }
+
     @Test
     fun markNotStarted_validEventId_setsStatusToNotStarted() = runTest {
         val now = System.currentTimeMillis()
