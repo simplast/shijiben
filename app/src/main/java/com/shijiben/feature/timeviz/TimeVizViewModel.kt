@@ -27,7 +27,9 @@ class TimeVizViewModel @Inject constructor(
 
     data class TimeVizUiState(
         val todayRemaining: String = "",
+        val todayProgress: Float = 0f,
         val yearRemaining: String = "",
+        val yearProgress: Float = 0f,
         val lifeResult: LifeResult? = null,   // null 表示未设生日
         val birthdayMillis: Long = 0L,
         val lifespanYears: Int = 80
@@ -83,7 +85,9 @@ class TimeVizViewModel @Inject constructor(
         }
         return TimeVizUiState(
             todayRemaining = TimeVizCalculator.todayRemaining(now),
+            todayProgress = TimeVizCalculator.todayProgress(now),
             yearRemaining = TimeVizCalculator.yearRemaining(now),
+            yearProgress = TimeVizCalculator.yearProgress(now),
             lifeResult = lifeResult,
             birthdayMillis = birthdayMillis,
             lifespanYears = lifespan

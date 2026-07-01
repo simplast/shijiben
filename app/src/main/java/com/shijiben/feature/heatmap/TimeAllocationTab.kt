@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -135,19 +137,21 @@ private fun AllocationRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 标题
+        // 标题：固定宽度（约 6 个 16sp 字符），单行省略，保证柱状图起点对齐
         Text(
             text = item.title,
             color = TextPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.width(96.dp)
         )
         Spacer(Modifier.width(8.dp))
-        // 像素方块条
+        // 像素方块条：weight(1f) 填充剩余空间，所有行总长度一致
         Box(
             modifier = Modifier
-                .weight(2f)
+                .weight(1f)
                 .height(16.dp)
                 .border(2.dp, Color.Black)
                 .background(SurfaceColor)
@@ -160,12 +164,14 @@ private fun AllocationRow(
             )
         }
         Spacer(Modifier.width(8.dp))
-        // 时长
+        // 时长：固定宽度右对齐，避免长度不一挤压柱状图
         Text(
             text = formatDuration(item.totalMs),
             color = TextSecondary,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(64.dp),
+            textAlign = TextAlign.End
         )
     }
 }

@@ -54,8 +54,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -76,6 +78,7 @@ import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
 import com.shijiben.ui.theme.*
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
@@ -145,8 +148,20 @@ fun TimelineScreen(
             // 顶部 8dp 彩虹条（品牌标识）
             RainbowTrim()
             // 顶栏一条带：左日期徽章 + 右概览统计
+            // 背景即进度条：已过去时间填 PrimaryLight 浅红，剩余白色
+            val todayFraction = todayProgressFraction(date, now)
             Row(
-                modifier = Modifier.fillMaxWidth().background(Surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Surface)
+                    .drawBehind {
+                        if (todayFraction > 0f) {
+                            drawRect(
+                                color = PrimaryLight,
+                                size = Size(size.width * todayFraction, size.height)
+                            )
+                        }
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -604,6 +619,15 @@ private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
 private fun isToday(date: Triple<Int, Int, Int>): Boolean {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+}
+
+/** 顶栏进度条比例：今天按当前时刻、过去日期=1f（整条填色）、未来日期=0f（全白）。 */
+private fun todayProgressFraction(date: Triple<Int, Int, Int>, now: Long): Float {
+    return when {
+        isToday(date) -> TimeVizCalculator.todayProgress(now)
+        LocalDate.of(date.first, date.second, date.third).isBefore(LocalDate.now()) -> 1f
+        else -> 0f
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

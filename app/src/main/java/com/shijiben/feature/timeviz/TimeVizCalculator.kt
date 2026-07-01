@@ -26,6 +26,17 @@ object TimeVizCalculator {
     }
 
     /**
+     * 今天已过去的进度比例 [0, 1]，用于进度条填充。
+     * 00:00:00 → 0f；23:59:59 → ~1f。
+     */
+    fun todayProgress(nowMillis: Long): Float {
+        val now = LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), ZoneId.systemDefault())
+        val startOfToday = now.toLocalDate().atStartOfDay()
+        val elapsedMin = Duration.between(startOfToday, now).toMinutes().toFloat()
+        return (elapsedMin / (24f * 60f)).coerceIn(0f, 1f)
+    }
+
+    /**
      * 今年还剩多少时间。以「次年 1-1 00:00:00」为终点。
      * 例：1-1 00:00:00（平年）→ "今年还有 365 天 0 小时"。
      */
@@ -36,6 +47,19 @@ object TimeVizCalculator {
         val days = dur.toDays().toInt()
         val hours = (dur.toHours() % 24).toInt()
         return "今年还有 ${days} 天 ${hours} 小时"
+    }
+
+    /**
+     * 今年已过去的进度比例 [0, 1]，用于进度条填充。
+     * 1-1 00:00:00 → 0f；12-31 23:59:59 → ~1f。
+     */
+    fun yearProgress(nowMillis: Long): Float {
+        val now = LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), ZoneId.systemDefault())
+        val startOfYear = LocalDate.of(now.year, 1, 1).atStartOfDay()
+        val endOfYear = LocalDate.of(now.year + 1, 1, 1).atStartOfDay()
+        val total = Duration.between(startOfYear, endOfYear).toMillis().toFloat()
+        val elapsed = Duration.between(startOfYear, now).toMillis().toFloat()
+        return (elapsed / total).coerceIn(0f, 1f)
     }
 
     /**

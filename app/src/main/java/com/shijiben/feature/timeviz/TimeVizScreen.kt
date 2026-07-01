@@ -8,14 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -24,7 +22,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -36,8 +33,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -107,18 +110,22 @@ fun TimeVizScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TimeVizCard(title = "今天") {
+                    PixelProgressBar(fraction = state.todayProgress)
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        text = state.todayRemaining,
+                        text = "还剩 ${state.todayRemaining}",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         color = TextPrimary
                     )
                 }
                 TimeVizCard(title = "今年") {
+                    PixelProgressBar(fraction = state.yearProgress)
+                    Spacer(Modifier.height(8.dp))
                     Text(
                         text = state.yearRemaining,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         color = TextPrimary
                     )
                 }
@@ -191,18 +198,17 @@ fun TimeVizScreen(
 }
 
 
-/** 8-bit 卡片：2dp 黑边 + 白底 + 直角 + 2dp 阴影。 */
+/** 8-bit 卡片：虚线柔和边框 + 白底 + 直角。虚线替代纯黑实线，降低视觉重量。 */
 @Composable
 private fun TimeVizCard(
     title: String,
     content: @Composable () -> Unit
 ) {
-    Surface(
-        color = SurfaceColor,
-        shape = RoundedCornerShape(0.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, Color.Black),
-        shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .dashedBorder(2.dp, TextSecondary)
+            .background(SurfaceColor)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
@@ -214,6 +220,45 @@ private fun TimeVizCard(
             content()
         }
     }
+}
+
+/** 像素进度条：已过去=Primary，剩余=Disabled，直角无圆角，8-bit 风格。 */
+@Composable
+private fun PixelProgressBar(fraction: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(20.dp)
+            .background(Disabled)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .height(20.dp)
+                .background(Primary)
+        )
+    }
+}
+
+/** 虚线边框：比纯黑实线柔和，降低视觉重量。 */
+private fun Modifier.dashedBorder(
+    width: Dp,
+    color: Color,
+    dash: Dp = 6.dp,
+    gap: Dp = 4.dp
+): Modifier = drawWithContent {
+    drawContent()
+    val w = width.toPx()
+    val stroke = Stroke(
+        width = w,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash.toPx(), gap.toPx()), 0f)
+    )
+    drawRect(
+        color = color,
+        topLeft = Offset(w / 2f, w / 2f),
+        size = Size(size.width - w, size.height - w),
+        style = stroke
+    )
 }
 
 /** 寿命 stepper：[- N +]，两个 26dp 黑边方块按钮 + 中间数字。 */
