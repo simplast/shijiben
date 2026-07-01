@@ -8,11 +8,14 @@ import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -53,8 +56,17 @@ class SearchViewModel @Inject constructor(
         noteRepository.getAllNotes()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // 防抖查询流：每次按键触发一次完整 filter+merge+sort（O(N+M) 字符串分配 + 全量排序），
+    // 连续输入时浪费严重。debounce(150ms) 等用户停顿再触发；distinctUntilChanged 防止
+    // 相同 query 重复触发（如输入后删除回原值）。UI 文本框仍绑定 `query` 即时显示。
+    @OptIn(FlowPreview::class)
+    private val debouncedQuery: StateFlow<String> = _query
+        .debounce(150L)
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
     val state: StateFlow<SearchUiState> =
-        combine(eventsFlow, notesFlow, _query) { events, notes, q ->
+        combine(eventsFlow, notesFlow, debouncedQuery) { events, notes, q ->
             val items = filterAndMerge(events, notes, q)
             SearchUiState(query = q, items = items, isEmpty = items.isEmpty())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SearchUiState())
