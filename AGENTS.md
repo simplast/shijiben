@@ -213,6 +213,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - security: DataImportManager.parseEvents 新增 status 信任边界校验——非法值（非 0/1/2）抛 IllegalArgumentException 拒绝导入，防止恶意文件污染事件状态机 + 新增回归测试
 - tests: 为 EventRepository.shiftToTargetDay 新增 5 个直接单测（hour:minute 保留 / 跨月边界 / null endTime / 已到目标日 / 时长保留），此前仅通过慢速 DB 集成测试间接覆盖
 - correctness: RecordingViewModel.save() 修复非法状态——编辑 Completed 事件并把 duration 调到 0 时，降级为 InProgress（避免保存 Completed+endTime=null，违反 EventRepository 不变式）+ 新增回归测试
+- correctness: RecordingViewModel.save() 新增 `start > now → NotStarted` 分支——未来开始时间的事件（duration>0）此前误标 InProgress，破坏状态机不变式并虚增热力图时长，现与 determineStatus 不变式对齐 + 新增回归测试
 - ui: NotesScreen 标题栏重构为 Row + SurfaceColor + 2dp 黑色分隔线，与其他 5 屏标准结构一致（移除 PixelCard 包裹 + 加 tint=TextPrimary + 加 Color/Surface/TextPrimary imports）
 - ui: NotesScreen 标题字号统一为 16sp Bold，与其他 5 屏一致（移除 titleLarge 22sp + MaterialTheme import）
 - ui: NotesScreen 补齐 RainbowTrim 品牌条 + Background，与其他 7 屏一致

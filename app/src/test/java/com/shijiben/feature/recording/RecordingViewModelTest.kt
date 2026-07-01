@@ -122,6 +122,8 @@ class RecordingViewModelTest {
         assertThat(ok).isTrue()
 
         // Must be downgraded to InProgress (NOT stay Completed with null endTime — that's an invalid state).
+        // Note: duration==0 branch fires before start>now check, so even if initEdit's coerceIn(300,1440)
+        // pushes start to a future time (e.g. 5:00 AM during early-morning runs), the downgrade still holds.
         val saved = eventRepo.getEventById(id)!!
         assertThat(saved.status).isEqualTo(EventStatus.InProgress.value)
         assertThat(saved.endTime).isNull()
@@ -143,6 +145,27 @@ class RecordingViewModelTest {
         assertThat(events).hasSize(1)
         assertThat(events.first().endTime).isNotNull()
         assertThat(events.first().title).isEqualTo("新事件")
+    }
+
+    @Test
+    fun save_futureStartEventWithDuration_markedNotStartedNotInProgress() = runTest {
+        // viewingDate = tomorrow, so any start time is in the future.
+        val tomorrow = Calendar.getInstance(TimeZone.getDefault()).apply {
+            add(Calendar.DAY_OF_MONTH, 1)
+        }.let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+
+        vm.initNew()
+        vm.onStartChange(540) // 9:00
+        vm.onDurationChange(60)
+        vm.onTitleChange("明天事件")
+        val ok = vm.save(tomorrow)
+        assertThat(ok).isTrue()
+
+        val saved = eventRepo.getAllEvents().first().single()
+        assertThat(saved.status).isEqualTo(EventStatus.NotStarted.value)
+        assertThat(saved.endTime).isNotNull() // duration>0 still produces an endTime
     }
 
     @Test

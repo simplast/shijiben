@@ -120,11 +120,16 @@ class RecordingViewModel @Inject constructor(
         val status = when {
             // duration=0 → 无 endTime。若原状态为 Completed，必须降级为 InProgress，
             // 否则会保存非法的 Completed+endTime=null（违反 EventRepository 不变式）。
+            // 此分支优先于 start>now 检查：保证 Completed 降级不变式在 initEdit 的
+            // coerceIn(300,1440) 把 start 推到未来时仍然成立。
             duration == 0 -> if (originalStatus == EventStatus.Completed.value) {
                 EventStatus.InProgress.value
             } else {
                 originalStatus ?: EventStatus.NotStarted.value
             }
+            // duration>0 且开始时间在未来 → 未开始（与 determineStatus 不变式对齐：
+            // startTime > now → NotStarted）。防止未来计划事件被误标 InProgress 而在热力图虚增时长。
+            start > now -> EventStatus.NotStarted.value
             actualEnd != null && now > actualEnd -> EventStatus.Completed.value
             else -> EventStatus.InProgress.value
         }
