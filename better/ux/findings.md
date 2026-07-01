@@ -11,3 +11,11 @@
 - status: DONE (cycle 17)
 - evidence: app/src/main/java/com/shijiben/feature/timeline/TimelineScreen.kt:275
 - impact: M
+
+## F027 — 关键动作无触觉反馈，8-bit 像素质感缺一笔触觉印记
+- status: DONE (cycle 27)
+- evidence: app/src/main/java/com/shijiben/feature/timeline/TimelineScreen.kt:140
+- impact: M
+- cycle: 27
+- 问题：开始/停止/删除/快速添加都是"重要动作"，但点下后只有视觉反馈（按钮变色、列表变化），没有触觉反馈。8-bit 美学强调"按下即响应"的物理感，缺触觉则像素风失去一笔关键印记。
+- 修复：在 TimelineScreen 顶层取 `LocalHapticFeedback.current`，关键动作各包一层：开始/停止/删除用 `HapticFeedbackType.LongPress`（强确认），快速添加提交用 `HapticFeedbackType.TextHandleMove`（轻确认，区分"创建"与"状态切换"语义）。

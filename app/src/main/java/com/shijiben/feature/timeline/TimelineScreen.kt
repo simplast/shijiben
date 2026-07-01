@@ -60,6 +60,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -138,6 +140,12 @@ fun TimelineScreen(
     val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
     var showNoteSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // 关键动作触觉反馈：开始/停止/删除/快速添加 — 强化 8-bit 像素质感的"按下即响应"
+    val haptic = LocalHapticFeedback.current
+    val onTapStart: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+    val onTapStop: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+    val onTapDelete: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+    val onQuickAdd: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         // 像素山水背景（弱化）
@@ -272,8 +280,8 @@ fun TimelineScreen(
                             editingEvent = event
                             showSheet = true
                         },
-                        onStartEvent = { event -> viewModel.markInProgress(event.id) },
-                        onStopEvent = { event -> viewModel.markCompleted(event.id) },
+                        onStartEvent = { event -> onTapStart(); viewModel.markInProgress(event.id) },
+                        onStopEvent = { event -> onTapStop(); viewModel.markCompleted(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
                         onNoteClick = { note ->
                             notesViewModel.startEdit(note)
@@ -306,6 +314,7 @@ fun TimelineScreen(
                     when (activeDrawer) {
                         DrawerType.EVENT -> {
                             if (text.isNotBlank()) {
+                                onQuickAdd()
                                 viewModel.quickAddEvent(text.trim())
                                 eventDraft = ""
                             }
@@ -314,6 +323,7 @@ fun TimelineScreen(
                             if (text.isNotBlank()) {
                                 scope.launch {
                                     if (notesViewModel.save(text.trim())) {
+                                        onQuickAdd()
                                         noteDraft = ""
                                         viewModel.refresh()
                                     }
@@ -374,6 +384,7 @@ fun TimelineScreen(
                 text = { Text("「${target.title}」将被永久删除，无法恢复。", color = TextSecondary) },
                 confirmButton = {
                     TextButton(onClick = {
+                        onTapDelete()
                         viewModel.deleteEvent(target.id)
                         pendingDelete = null
                     }) { Text("删除", color = Error) }
