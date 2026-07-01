@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -760,7 +761,10 @@ private fun BottomEntryBar(
     }
 }
 
-/** B2：抽屉 overlay（遮罩 + 底部抽屉本体）。无提交按钮、无 ✕，靠 IME Done 提交、点遮罩关闭。 */
+/** B2：抽屉 overlay（遮罩 + 底部抽屉本体）。点遮罩关闭。
+ * 记事：单行输入，IME Done 提交；
+ * 随笔：多行输入，回车换行，底部"保存"按钮提交。
+ * 抽屉本体应用 imePadding 避免被输入法遮挡。 */
 @Composable
 private fun EntryDrawer(
     drawerType: DrawerType,
@@ -788,7 +792,8 @@ private fun EntryDrawer(
                 .background(Color.Black.copy(alpha = 0.4f))
                 .clickable(onClick = onDismiss)
         )
-        // 抽屉本体
+        // 抽屉本体：根 Surface 的 safeDrawingPadding 已统一消费 IME inset，
+        // 此处 align(BottomCenter) 自动贴在 IME 上方，无需再加 imePadding
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -813,11 +818,11 @@ private fun EntryDrawer(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                // 多行输入框：2dp 黑边、白底、min-height 96dp、IME Done 提交
+                // 输入框：记事单行，随笔多行（min-height 96dp）
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 96.dp)
+                        .heightIn(min = if (isEvent) 40.dp else 96.dp)
                         .border(2.dp, Color.Black)
                         .background(Surface)
                         .padding(8.dp)
@@ -834,8 +839,10 @@ private fun EntryDrawer(
                             color = TextPrimary
                         ),
                         cursorBrush = SolidColor(Color.Black),
-                        singleLine = false,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        singleLine = isEvent,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = if (isEvent) ImeAction.Done else ImeAction.Default
+                        ),
                         keyboardActions = KeyboardActions(
                             onDone = { onSubmit(currentDraft) }
                         ),
@@ -853,6 +860,26 @@ private fun EntryDrawer(
                             }
                         }
                     )
+                }
+                // 随笔：底部"保存"按钮（回车键已用于换行，需要独立提交入口）
+                if (!isEvent) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Box(
+                            modifier = Modifier
+                                .border(2.dp, Color.Black)
+                                .background(Accent)
+                                .clickable { onSubmit(currentDraft) }
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "保存",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
