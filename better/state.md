@@ -1,6 +1,6 @@
 # Better state
-current_category: dx
-cycle_count: 21
+current_category: docs
+cycle_count: 22
 last_run: 2026-07-02
 
 ## Category status
@@ -14,7 +14,7 @@ last_run: 2026-07-02
 | performance | DONE | 1 | F016 |
 | ui | DONE | 6 | F018 |
 | dx | DONE | 2 | F021 |
-| docs | TODO | 1 | F012 |
+| docs | DONE | 2 | F022 |
 | direction | TODO | 1 | "report-cycle-13" |
 
 ## Rotation plan (30 rounds, user-requested unattended)

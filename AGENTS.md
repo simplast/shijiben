@@ -35,7 +35,7 @@ shijiben/
         DataModule.kt   # Hilt 提供方法
       di/              # Hilt 模块（DispatchersModule）
       feature/
-        heatmap/   # 热力图回看（月视图 + 年视图）（HeatmapScreen, HeatmapViewModel, HeatmapYearScreen, HeatmapYearViewModel, HeatmapCalculator）
+        heatmap/   # 热力图回看（3 tab 容器：月/年/去向）（HeatmapScreen, HeatmapViewModel, HeatmapMonthTab, HeatmapYearTab, HeatmapYearViewModel, HeatmapCalculator, TimeAllocationCalculator, TimeAllocationViewModel, TimeAllocationTab）
         notes/     # 随笔列表与编辑（NotesScreen, NoteEditorSheet, NotesViewModel）
         recording/ # 记录弹窗（RecordingSheet, RecordingViewModel, TimeRangeSlider）
         search/    # 搜索（SearchScreen, SearchViewModel）
@@ -203,6 +203,8 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-28-flaky-rootfix-and-docs-design.md](docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md) — flaky test 根治（路由 Room executor）+ 文档打磨
 - [2026-06-28-heatmap-year-view-design.md](docs/superpowers/specs/2026-06-28-heatmap-year-view-design.md) — 热力图年视图（12 月迷你月历拼贴）
 - [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
+- [2026-06-29-time-allocation-design.md](docs/superpowers/specs/2026-06-29-time-allocation-design.md) — 时间去向聚合（HeatmapScreen 3 tab 容器 + TimeAllocationCalculator/ViewModel/Tab）
+- [2026-06-29-debug-console-overlay-design.md](docs/superpowers/specs/2026-06-29-debug-console-overlay-design.md) — 调试控制台悬浮 overlay（DebugOverlay + DebugLog ring buffer）
 
 ## Recent changes (better cycles)
 - tests: 为 TimeVizCalculator.todayProgress/yearProgress 新增 7 个零覆盖纯函数单测（00:00/12:00/23:59:59 三点 + 年初/年中/年末三点 + 闰年 vs 非闰年分母比值=365/366），UTC 时区固定，全区间断言防浮点抖动
@@ -223,6 +225,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - ux: TimelineScreen 点击随笔改为内联打开 NoteEditorSheet（对齐 SearchScreen 模式）——EventList.onNoteClick 改 (NoteEntity)->Unit 转发具体随笔，新增 showNoteSheet/editingNote 状态 + NoteEditorSheet 渲染块，save/delete 后调 viewModel.refresh() 同步；底部 ✎ 图标仍跳转随笔列表（view-all 意图）
 - security: AndroidManifest allowBackup 改 false + fullBackupContent=false + dataExtractionRules=null——关闭 Auto Backup（Google Drive 上传）与 adb backup 提取，对齐隐私政策「数据不离开本设备、无备份」承诺
 - ui: NoteEditorSheet 标题移除最后一个 MaterialTheme.typography.titleLarge 残留——改用显式 20sp Bold + TextPrimary，与 6 屏标准一致（PixelText 旧别名→TextPrimary 令牌）
+- docs: AGENT.md 结构树 heatmap 行同步 cycle 13 重构（HeatmapYearScreen→HeatmapYearTab + 补 5 个 TimeAllocation/MonthTab 文件 + 标注 3 tab 容器）+ Spec 索引补 2 条 2026-06-29 spec（time-allocation + debug-console-overlay）
 - performance: TimelineScreen 60s `now` tick 改为 `State<Long>` 透传——drawBehind 读 nowState（顶栏进度条 draw-phase 重绘不重组）、新增 RowScope.StatsText + ElapsedBadge 叶子组合件独读 nowState.value、EventCard/EventList/DayProgressBar 参数改 nowState，整树 20 卡片/分钟重组降至 1（仅 in-progress）
 - architecture: DataImportManager 去除对 feature 层 TimeVizPrefs 的依赖——applyImport 签名移除 timeVizPrefs 参数 + ImportCounts 去 prefsUpdated 字段，prefs 写回职责上移到 ImportViewModel（data 层零向上引用，仿 DataExportManager 接原语范式）
 - dx: 依赖版本管理迁移到 Gradle version catalog（libs.versions.toml）——root/app build 脚本删除 14 处 extra 定义 + 21 处 rootProject.extra 引用，改用类型安全 libs.xxx 访问器，IDE 自动补全 + 编译期拼写检查，零行为变化

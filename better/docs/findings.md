@@ -7,3 +7,8 @@
 - 修复：AGENT.md 项目结构树补充 `ui/debug/` 节点；ARCHITECTURE.md §2 包路径列表补充 `ui/debug/` 条目（含 DebugOverlay/DebugLog 职责说明）
 - evidence：AGENT.md「项目结构」树形图 + docs/ARCHITECTURE.md §2 包路径列表均缺 ui/debug/，对照 MainActivity.kt:29 / ShiJiBenApplication.kt:12 实际使用
 - impact：M
+
+## F022 — AGENT.md heatmap 结构树 + Spec 索引未同步 cycle 13 TimeAllocation 重构
+- status: DONE (cycle 22)
+- evidence: AGENTS.md:38
+- impact: M
