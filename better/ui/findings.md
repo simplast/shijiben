@@ -29,3 +29,11 @@
 - status: DONE (cycle 18)
 - evidence: app/src/main/java/com/shijiben/feature/notes/NoteEditorSheet.kt:64
 - impact: M
+
+## F028 — TimeAllocationTab 条形图全红无排名视觉分层，"时间去向"缺少一眼可读的排行榜感
+- status: DONE (cycle 28)
+- evidence: app/src/main/java/com/shijiben/feature/heatmap/TimeAllocationTab.kt:131
+- impact: M
+- cycle: 28
+- 问题：所有 bar 都是 Primary 红色，10 个标题看上去都一样"显眼"，无法一眼看出哪几个是主要时间去向。8-bit 像素风的强项是"游戏排行榜"视觉，缺一笔就少了一份辨识度。
+- 修复：(1) 引入 `rankColor(rank)` — 前 4 名暖色梯度（红/橙/黄/绿，热→冷），5+ 名冷色循环（青/紫/粉/柠檬绿），与像素调色板一致；(2) 前 3 名加 20dp 排名徽章（数字白字 + 黑边 + 排名色背景），4+ 名留等宽空白保持对齐；(3) `itemsIndexed` 替代 `items` 传 rank。

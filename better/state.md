@@ -1,6 +1,6 @@
 # Better state
-current_category: ui
-cycle_count: 27
+current_category: architecture
+cycle_count: 28
 last_run: 2026-07-02
 
 ## Category status
@@ -12,7 +12,7 @@ last_run: 2026-07-02
 | architecture | DONE | 2 | F019 |
 | ux | DONE | 3 | F027 |
 | performance | DONE | 2 | F026 |
-| ui | RUNNING | 6 | F018 |
+| ui | DONE | 7 | F028 |
 | dx | DONE | 2 | F021 |
 | docs | DONE | 2 | F022 |
 | direction | DONE | 2 | "report-cycle-23" |
@@ -21,4 +21,4 @@ last_run: 2026-07-02
 Order: correctness → security → performance → ux → ui → architecture → tests → dx → docs → direction
 Target: 30 cycles total (cycle 14 through 43) — Rotation 2 in progress (24-33)
 User directive: be creative, bold, no homogenization concerns, no questions
-Next: cycle 28 (ui R3)
+Next: cycle 29 (architecture R3)
