@@ -148,7 +148,7 @@ private fun DebugPanel(onClose: () -> Unit) {
                     text = "调试 console",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 16.sp
                 )
                 Spacer(Modifier.width(12.dp))
                 DebugFilterTab("全部", DebugFilter.ALL, filter) { filter = it }
@@ -158,7 +158,7 @@ private fun DebugPanel(onClose: () -> Unit) {
                 Text(
                     text = "${filtered.size}条",
                     color = Color(0xFF999999),
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
                 Icon(
                     Icons.Default.Close,
@@ -176,7 +176,7 @@ private fun DebugPanel(onClose: () -> Unit) {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("暂无记录", color = Color(0xFF666666), fontSize = 13.sp)
+                    Text("暂无记录", color = Color(0xFF666666), fontSize = 16.sp)
                 }
             } else {
                 LazyColumn(
@@ -203,7 +203,7 @@ private fun DebugFilterTab(
     Text(
         text = label,
         color = if (selected) Color(0xFFFF6666) else Color(0xFF999999),
-        fontSize = 12.sp,
+        fontSize = 16.sp,
         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         modifier = Modifier
             .padding(horizontal = 8.dp)
@@ -230,14 +230,14 @@ private fun DebugEntryRow(entry: DebugEntry, timeFmt: SimpleDateFormat) {
             Text(
                 text = timeFmt.format(Date(entry.time)),
                 color = Color(0xFF999999),
-                fontSize = 10.sp,
+                fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace
             )
             Spacer(Modifier.width(6.dp))
             Text(
                 text = entry.level.name,
                 color = levelColor,
-                fontSize = 10.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
             entry.tag?.let {
@@ -245,14 +245,14 @@ private fun DebugEntryRow(entry: DebugEntry, timeFmt: SimpleDateFormat) {
                 Text(
                     text = "[$it]",
                     color = Color(0xFF888888),
-                    fontSize = 10.sp
+                    fontSize = 12.sp
                 )
             }
             Spacer(Modifier.width(6.dp))
             Text(
                 text = entry.summary,
                 color = Color(0xFFDDDDDD),
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 maxLines = if (expanded) 1 else 2,
                 modifier = Modifier.weight(1f)
             )
@@ -260,7 +260,7 @@ private fun DebugEntryRow(entry: DebugEntry, timeFmt: SimpleDateFormat) {
                 Text(
                     text = if (expanded) "▾" else "▸",
                     color = Color(0xFF999999),
-                    fontSize = 10.sp
+                    fontSize = 12.sp
                 )
             }
         }
@@ -269,7 +269,7 @@ private fun DebugEntryRow(entry: DebugEntry, timeFmt: SimpleDateFormat) {
             Text(
                 text = entry.stacktrace,
                 color = Color(0xFFAAAAAA),
-                fontSize = 9.sp,
+                fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier
                     .fillMaxWidth()

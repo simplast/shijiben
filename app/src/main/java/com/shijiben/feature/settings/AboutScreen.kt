@@ -66,7 +66,7 @@ fun AboutScreen(
                 Text(
                     text = "关于事记本",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
             }
@@ -93,14 +93,14 @@ fun AboutScreen(
                 Section(title = "关于事记本") {
                     Text(
                         text = "事记本 ShiJiBen",
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = "一个纯粹的本地时间记录工具，受《奇特的一生》启发。",
-                        fontSize = 13.sp,
+                        fontSize = 16.sp,
                         color = TextSecondary
                     )
                     Spacer(Modifier.height(4.dp))
@@ -115,7 +115,7 @@ fun AboutScreen(
                 Section(title = "隐私政策") {
                     Text(
                         text = "事记本是一款纯本地时间记录应用。本隐私政策说明数据处理方式：",
-                        fontSize = 13.sp,
+                        fontSize = 16.sp,
                         color = TextSecondary
                     )
                     Spacer(Modifier.height(8.dp))
@@ -169,13 +169,13 @@ private fun PrivacyBullet(text: String) {
     ) {
         Text(
             text = "•",
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             color = TextTertiary,
             modifier = Modifier.padding(end = 6.dp)
         )
         Text(
             text = text,
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             color = TextSecondary
         )
     }

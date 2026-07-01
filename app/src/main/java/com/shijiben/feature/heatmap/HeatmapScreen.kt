@@ -60,7 +60,7 @@ fun HeatmapScreen(
                 Text(
                     text = "回看",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
             }
@@ -105,7 +105,7 @@ private fun TabBar(
                 Text(
                     text = tabs[i],
                     color = if (isSelected) Color.White else TextPrimary,
-                    fontSize = 13.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }

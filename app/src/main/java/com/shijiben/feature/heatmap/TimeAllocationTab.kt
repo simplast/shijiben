@@ -56,7 +56,7 @@ fun TimeAllocationTab(
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "加载中…", color = TextSecondary, fontSize = 14.sp)
+                    Text(text = "加载中…", color = TextSecondary, fontSize = 16.sp)
                 }
             }
             is TimeAllocationViewModel.UiState.Success -> {
@@ -65,7 +65,7 @@ fun TimeAllocationTab(
                         modifier = Modifier.fillMaxWidth().padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "暂无记录", color = TextSecondary, fontSize = 14.sp)
+                        Text(text = "暂无记录", color = TextSecondary, fontSize = 16.sp)
                     }
                 } else {
                     AllocationList(items = s.items)
@@ -104,7 +104,7 @@ private fun RangeSelector(
                 Text(
                     text = label,
                     color = if (isSelected) Color.White else DisabledText,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -139,7 +139,7 @@ private fun AllocationRow(
         Text(
             text = item.title,
             color = TextPrimary,
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
@@ -164,7 +164,7 @@ private fun AllocationRow(
         Text(
             text = formatDuration(item.totalMs),
             color = TextSecondary,
-            fontSize = 12.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
     }

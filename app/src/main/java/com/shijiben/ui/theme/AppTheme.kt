@@ -45,22 +45,22 @@ private val PixelTypography = Typography(
     bodyMedium = TextStyle(
         fontFamily = PixelFont,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp
+        fontSize = 16.sp
     ),
     titleLarge = TextStyle(
         fontFamily = PixelFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 22.sp
+        fontSize = 20.sp
     ),
     titleMedium = TextStyle(
         fontFamily = PixelFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 18.sp
+        fontSize = 20.sp
     ),
     labelLarge = TextStyle(
         fontFamily = PixelMonoFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 14.sp
+        fontSize = 12.sp
     ),
     labelMedium = TextStyle(
         fontFamily = PixelMonoFont,

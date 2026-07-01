@@ -64,7 +64,7 @@ fun NotesScreen(
                         tint = TextPrimary
                     )
                 }
-                Text("随笔", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+                Text("随笔", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextPrimary)
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { viewModel.startCreate() }) {
                     Icon(Icons.Default.Add, contentDescription = "新增")
@@ -81,7 +81,7 @@ fun NotesScreen(
                             text = "还没有随笔，点右上角 + 记下此刻的想法",
                             color = PixelTextSecondary,
 
-                            fontSize = 15.sp
+                            fontSize = 16.sp
                         )
                     }
                 } else {
@@ -117,7 +117,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
                 note.content,
                 color = PixelText,
 
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -126,7 +126,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
                 formatTimestamp(note.timestamp),
                 color = PixelTextSecondary,
 
-                fontSize = 11.sp
+                fontSize = 12.sp
             )
         }
     }

@@ -91,7 +91,7 @@ fun TimeVizScreen(
                 Text(
                     text = "时间可视化",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
             }
@@ -110,7 +110,7 @@ fun TimeVizScreen(
                     Text(
                         text = state.todayRemaining,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
+                        fontSize = 20.sp,
                         color = TextPrimary
                     )
                 }
@@ -118,7 +118,7 @@ fun TimeVizScreen(
                     Text(
                         text = state.yearRemaining,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
+                        fontSize = 20.sp,
                         color = TextPrimary
                     )
                 }
@@ -142,7 +142,7 @@ fun TimeVizScreen(
                         Text(
                             text = "已走过 ${life.yearsLived} 年",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
                             color = TextPrimary
                         )
                         Spacer(Modifier.height(4.dp))

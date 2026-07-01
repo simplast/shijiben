@@ -120,7 +120,7 @@ private fun YearSwitcher(
         Text(
             text = "${year.value}年",
             fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
+            fontSize = 16.sp,
             color = TextPrimary,
             modifier = Modifier.weight(1f)
         )
@@ -142,7 +142,7 @@ private fun YearSwitcher(
             Text(
                 text = "今年",
                 color = if (isCurrentYear) DisabledText else Primary,
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -181,7 +181,7 @@ private fun MiniMonth(monthGrid: HeatmapCalculator.MonthGrid) {
     ) {
         Text(
             text = monthGrid.monthLabel,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
         )
@@ -235,7 +235,7 @@ private fun Legend() {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "少", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
+        Text(text = "少", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
         Spacer(Modifier.width(6.dp))
         val colors = listOf(HeatmapLevel0, HeatmapLevel1, HeatmapLevel2, HeatmapLevel3, HeatmapLevel4)
         for (c in colors) {
@@ -248,6 +248,6 @@ private fun Legend() {
             Spacer(Modifier.width(4.dp))
         }
         Spacer(Modifier.width(2.dp))
-        Text(text = "多", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
+        Text(text = "多", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
     }
 }

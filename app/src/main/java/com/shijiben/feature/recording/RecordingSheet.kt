@@ -68,7 +68,7 @@ fun RecordingSheet(
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 textStyle = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )

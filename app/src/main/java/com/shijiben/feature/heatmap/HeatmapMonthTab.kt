@@ -105,7 +105,7 @@ private fun MonthSwitcher(
         Text(
             text = "${yearMonth.year}年${yearMonth.monthValue}月",
             fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
+            fontSize = 16.sp,
             color = TextPrimary,
             modifier = Modifier.weight(1f)
         )
@@ -127,7 +127,7 @@ private fun MonthSwitcher(
             Text(
                 text = "本月",
                 color = if (isCurrentMonth) DisabledText else Primary,
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -169,7 +169,7 @@ private fun WeekHeader() {
             ) {
                 Text(
                     text = label,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextTertiary
                 )
@@ -232,7 +232,7 @@ private fun DayCell(
     Box(modifier = cellModifier, contentAlignment = Alignment.Center) {
         Text(
             text = cell.date.dayOfMonth.toString(),
-            fontSize = 9.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = when (cell.level) {
                 0, 1 -> TextTertiary
@@ -249,7 +249,7 @@ private fun Legend() {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "少", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
+        Text(text = "少", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
         Spacer(Modifier.width(6.dp))
         val colors = listOf(HeatmapLevel0, HeatmapLevel1, HeatmapLevel2, HeatmapLevel3, HeatmapLevel4)
         for (c in colors) {
@@ -262,6 +262,6 @@ private fun Legend() {
             Spacer(Modifier.width(4.dp))
         }
         Spacer(Modifier.width(2.dp))
-        Text(text = "多", fontSize = 11.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
+        Text(text = "多", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
     }
 }

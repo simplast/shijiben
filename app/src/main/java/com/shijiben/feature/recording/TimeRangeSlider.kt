@@ -63,7 +63,7 @@ fun TimeRangeSlider(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("开始", fontWeight = FontWeight.Medium, fontSize = 13.sp, color = TextSecondary)
+            Text("开始", fontWeight = FontWeight.Medium, fontSize = 16.sp, color = TextSecondary)
             Box(
                 modifier = Modifier
                     .background(Accent, RoundedCornerShape(0.dp))
@@ -71,7 +71,7 @@ fun TimeRangeSlider(
             ) {
                 Text(
                     text = formatTime(startMinutes),
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.White
+                    fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White
                 )
             }
         }
@@ -90,7 +90,7 @@ fun TimeRangeSlider(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("时长", fontWeight = FontWeight.Medium, fontSize = 13.sp, color = TextSecondary)
+            Text("时长", fontWeight = FontWeight.Medium, fontSize = 16.sp, color = TextSecondary)
             Box(
                 modifier = Modifier
                     .background(Primary, RoundedCornerShape(0.dp))
@@ -98,7 +98,7 @@ fun TimeRangeSlider(
             ) {
                 Text(
                     text = formatDuration(durationMinutes),
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.White
+                    fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White
                 )
             }
         }
@@ -327,7 +327,7 @@ private fun BarLabels(items: List<Pair<String, Float>>) {
             val x = fraction.coerceIn(0f, 1f) * widthPx
             Text(
                 text = text,
-                fontSize = 9.sp,
+                fontSize = 12.sp,
                 color = TextTertiary,
                 textAlign = TextAlign.Center,
                 maxLines = 1,

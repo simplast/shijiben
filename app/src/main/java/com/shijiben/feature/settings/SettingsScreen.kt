@@ -151,7 +151,7 @@ fun SettingsScreen(
                 Text(
                     text = "设置",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
             }
@@ -181,7 +181,7 @@ fun SettingsScreen(
                         if (state is ExportViewModel.ExportState.Exporting) {
                             Text("导出中...", fontSize = 12.sp, color = TextTertiary)
                         } else {
-                            Text("›", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
+                            Text("›", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
                         }
                     }
                 )
@@ -194,7 +194,7 @@ fun SettingsScreen(
                         if (importState is ImportViewModel.ImportState.Importing) {
                             Text("导入中...", fontSize = 12.sp, color = TextTertiary)
                         } else {
-                            Text("›", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
+                            Text("›", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
                         }
                     }
                 )
@@ -251,12 +251,12 @@ private fun SettingsRow(
         ) {
             Text(
                 text = title,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (enabled) TextPrimary else TextTertiary
             )
             if (trailing != null) trailing()
-            else Text("›", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
+            else Text("›", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextTertiary)
         }
     }
 }

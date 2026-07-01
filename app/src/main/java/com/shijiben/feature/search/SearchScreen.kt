@@ -92,7 +92,7 @@ fun SearchScreen(
                 Text(
                     text = "搜索",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextPrimary
                 )
             }
@@ -123,7 +123,7 @@ fun SearchScreen(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         textStyle = TextStyle(
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         ),
@@ -137,7 +137,7 @@ fun SearchScreen(
                                     Text(
                                         text = "搜索事/随笔...",
                                         color = TextTertiary,
-                                        fontSize = 14.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -176,12 +176,12 @@ fun SearchScreen(
                         Text(
                             text = "没有相关记录",
                             fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                             color = TextSecondary
                         )
                         Text(
                             text = "试试其他关键词",
-                            fontSize = 13.sp,
+                            fontSize = 16.sp,
                             color = TextTertiary,
                             modifier = Modifier.padding(top = 4.dp)
                         )
