@@ -85,7 +85,7 @@ class RecordingViewModel @Inject constructor(
         }
 
         cal.timeInMillis = event.startTime
-        val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
+        val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(0, 1440)
         _startMinutes.value = start
         val rawDuration = if (event.endTime != null) {
             // 用绝对时间差计算，避免跨午夜时 end < start 的分钟差为负

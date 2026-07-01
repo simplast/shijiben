@@ -17,3 +17,8 @@
 - 修复：在 `save()` 的 `status` when 中 `duration==0` 分支之后加 `start > now -> EventStatus.NotStarted.value`（放在 duration==0 之后以保证 Completed 降级不变式优先）。
 - 回归测试：`RecordingViewModelTest.save_futureStartEventWithDuration_markedNotStartedNotInProgress`
 - 计划：`better/correctness/plan-cycle-14.md`
+
+## F024 — initEdit 把 Completed 事件开始时间钳到 5:00 AM，编辑保存后凌晨事件被静默篡改
+- status: DONE (cycle 24)
+- evidence: app/src/main/java/com/shijiben/feature/recording/RecordingViewModel.kt:88
+- impact: M

@@ -26,7 +26,7 @@ import com.shijiben.ui.theme.*
 private val CursorColor = Color(0xFFD946EF)   // 亮粉紫光标
 
 // ==================== 开始时间参数 ====================
-private const val ABS_MIN = 300      // 5:00
+private const val ABS_MIN = 0        // 0:00 (allow early-morning events)
 private const val ABS_MAX = 1440     // 24:00
 private const val WINDOW_HALF = 180  // ±3h 半宽
 

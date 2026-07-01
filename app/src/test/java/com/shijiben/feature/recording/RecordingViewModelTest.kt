@@ -288,4 +288,48 @@ class RecordingViewModelTest {
         assertThat(vm.durationMax.value).isEqualTo(180)
         assertThat(possibleSnaps.contains(vm.startMinutes.value)).isTrue()
     }
+
+    @Test
+    fun save_editingCompletedEventBeforeFiveAM_preservesOriginalStartTime() = runTest {
+        // A completed event that started at 00:30 (before the old ABS_MIN=300=5:00 AM).
+        // Without the fix, initEdit clamps start to 300 (5:00 AM), and save() silently
+        // corrupts the start time from 00:30 to 05:00.
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 30)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        val startTime = cal.timeInMillis
+        cal.set(Calendar.HOUR_OF_DAY, 1)
+        cal.set(Calendar.MINUTE, 0)
+        val endTime = cal.timeInMillis
+
+        val id = eventRepo.createEvent(
+            title = "深夜事件",
+            startTime = startTime,
+            endTime = endTime,
+            note = null
+        )
+        val event = eventRepo.getEventById(id)!!
+        assertThat(event.status).isEqualTo(EventStatus.Completed.value)
+
+        // Edit only the title — don't touch the slider.
+        vm.initEdit(event)
+        // initEdit must preserve 00:30 (30 minutes), NOT clamp to 300 (5:00 AM)
+        assertThat(vm.startMinutes.value).isEqualTo(30)
+        vm.onTitleChange("深夜事件改名")
+        val today = Calendar.getInstance(TimeZone.getDefault()).let {
+            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
+        }
+        val ok = vm.save(today)
+        assertThat(ok).isTrue()
+
+        val saved = eventRepo.getEventById(id)!!
+        val savedCal = Calendar.getInstance(TimeZone.getDefault())
+        savedCal.timeInMillis = saved.startTime
+        // The start time must NOT be silently clamped to 5:00 AM.
+        assertThat(savedCal.get(Calendar.HOUR_OF_DAY)).isEqualTo(0)
+        assertThat(savedCal.get(Calendar.MINUTE)).isEqualTo(30)
+        assertThat(saved.title).isEqualTo("深夜事件改名")
+    }
 }
