@@ -223,3 +223,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - security: AndroidManifest allowBackup 改 false + fullBackupContent=false + dataExtractionRules=null——关闭 Auto Backup（Google Drive 上传）与 adb backup 提取，对齐隐私政策「数据不离开本设备、无备份」承诺
 - ui: NoteEditorSheet 标题移除最后一个 MaterialTheme.typography.titleLarge 残留——改用显式 20sp Bold + TextPrimary，与 6 屏标准一致（PixelText 旧别名→TextPrimary 令牌）
 - performance: TimelineScreen 60s `now` tick 改为 `State<Long>` 透传——drawBehind 读 nowState（顶栏进度条 draw-phase 重绘不重组）、新增 RowScope.StatsText + ElapsedBadge 叶子组合件独读 nowState.value、EventCard/EventList/DayProgressBar 参数改 nowState，整树 20 卡片/分钟重组降至 1（仅 in-progress）
+- architecture: DataImportManager 去除对 feature 层 TimeVizPrefs 的依赖——applyImport 签名移除 timeVizPrefs 参数 + ImportCounts 去 prefsUpdated 字段，prefs 写回职责上移到 ImportViewModel（data 层零向上引用，仿 DataExportManager 接原语范式）

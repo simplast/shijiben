@@ -46,16 +46,24 @@ class ImportViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = ImportState.Importing
             try {
-                val counts = withContext(ioDispatcher) {
+                val success = withContext(ioDispatcher) {
                     val json = DataImportManager.readFromStream(inputStream)
                     val result = DataImportManager.parseJsonString(json)
-                    DataImportManager.applyImport(result, eventRepository, noteRepository, timeVizPrefs)
+                    val counts = DataImportManager.applyImport(result, eventRepository, noteRepository)
+                    val prefsUpdated = result.timeVizPrefs != null
+                    if (prefsUpdated) {
+                        result.timeVizPrefs!!.let {
+                            timeVizPrefs.setBirthdayMillis(it.birthdayMillis)
+                            timeVizPrefs.setLifespanYears(it.lifespanYears)
+                        }
+                    }
+                    ImportState.Success(
+                        events = counts.eventsImported,
+                        notes = counts.notesImported,
+                        prefsUpdated = prefsUpdated
+                    )
                 }
-                _state.value = ImportState.Success(
-                    events = counts.eventsImported,
-                    notes = counts.notesImported,
-                    prefsUpdated = counts.prefsUpdated
-                )
+                _state.value = success
             } catch (e: Exception) {
                 _state.value = ImportState.Error("导入失败，请重试")
             }

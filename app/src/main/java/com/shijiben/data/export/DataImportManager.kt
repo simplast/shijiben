@@ -5,7 +5,6 @@ import com.shijiben.data.local.NoteEntity
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.NoteRepository
-import com.shijiben.feature.timeviz.TimeVizPrefs
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
@@ -14,9 +13,11 @@ import java.io.InputStream
  * 数据导入：把 v1 JSON 反向解析为本地快照并落库。与 DataExportManager 构成备份/恢复对。
  *
  * - 纯本地、不联网。
- * - 只读 JSON，写 Entity/Dao/Repository/TimeVizPrefs；不改 DB schema。
+ * - 只读 JSON，写 Entity/Dao/Repository；不改 DB schema。
  * - 仅用 Android 内置 org.json，不引入新依赖。
  * - schemaVersion 校验：只支持 v1（= DataExportManager.SCHEMA_VERSION）；不匹配抛异常。
+ * - timeVizPrefs 字段以 ImportedTimeVizPrefs 原语形式暴露给调用方，由上层 VM 决定如何写回
+ *   （data 层不依赖 feature 层，仿 DataExportManager 接原语的范式）。
  */
 object DataImportManager {
 
@@ -34,11 +35,10 @@ object DataImportManager {
         val timeVizPrefs: ImportedTimeVizPrefs?
     )
 
-    /** applyImport 的计数结果。 */
+    /** applyImport 的计数结果。prefs 写回由上层 VM 基于 ImportResult.timeVizPrefs 决定。 */
     data class ImportCounts(
         val eventsImported: Int,
-        val notesImported: Int,
-        val prefsUpdated: Boolean
+        val notesImported: Int
     )
 
     /**
@@ -47,7 +47,7 @@ object DataImportManager {
      * - 损坏 / 非 JSON / 空字符串 → 抛 JSONException（由 VM catch → Error）。
      * - schemaVersion 缺失或不等于 SCHEMA_VERSION → 抛 IllegalArgumentException。
      * - events / notes 数组缺失 → 视为空列表。
-     * - timeVizPrefs 缺失 → null（导入跳过，不改现有）。
+     * - timeVizPrefs 缺失 → null（由调用方决定跳过，不改现有）。
      * - endTime / note 字段：JSON null 或 key 缺失 → 实体 null（isNull 同时覆盖两种）。
      * - 其余必填字段（id/title/startTime/status/createdAt/updatedAt；content/timestamp）
      *   缺失 → 抛 JSONException（非标准文件 → Error，保证数据完整性）。
@@ -117,29 +117,22 @@ object DataImportManager {
     }
 
     /**
-     * 薄 IO：把 ImportResult 落库。
+     * 薄 IO：把 ImportResult 的 events/notes 落库。
      * - events/notes 用 Repository.upsertAll（保留原 ID，冲突 REPLACE 覆盖，幂等可重复导入）。
-     * - timeVizPrefs 非空时覆盖现有生日/寿命（与导出对称）；null 时跳过不改。
+     * - timeVizPrefs 由调用方（ImportViewModel）基于 result.timeVizPrefs 自行写回；
+     *   data 层不接触 feature 层 prefs 类型。
      * 返回导入计数。
      */
     suspend fun applyImport(
         result: ImportResult,
         eventRepository: EventRepository,
-        noteRepository: NoteRepository,
-        timeVizPrefs: TimeVizPrefs
+        noteRepository: NoteRepository
     ): ImportCounts {
         eventRepository.upsertAll(result.events)
         noteRepository.upsertAll(result.notes)
-        var prefsUpdated = false
-        result.timeVizPrefs?.let {
-            timeVizPrefs.setBirthdayMillis(it.birthdayMillis)
-            timeVizPrefs.setLifespanYears(it.lifespanYears)
-            prefsUpdated = true
-        }
         return ImportCounts(
             eventsImported = result.events.size,
-            notesImported = result.notes.size,
-            prefsUpdated = prefsUpdated
+            notesImported = result.notes.size
         )
     }
 

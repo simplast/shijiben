@@ -9,7 +9,6 @@ import com.shijiben.data.local.EventEntity
 import com.shijiben.data.local.NoteEntity
 import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.NoteRepository
-import com.shijiben.feature.timeviz.TimeVizPrefs
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.json.JSONException
@@ -27,7 +26,8 @@ import org.robolectric.annotation.Config
  *
  * - parseJsonString 为纯函数单测主目标（仅 org.json，Robolectric 提供）。
  * - 用 DataExportManager.buildJsonString 产合法 JSON 做反向解析，保证 round-trip 对称。
- * - applyImport 的 ID 冲突用例用内存 Room + fake TimeVizPrefs 验证 REPLACE 行为。
+ * - applyImport 的 ID 冲突用例用内存 Room 验证 REPLACE 行为。
+ * - prefs 写回行为已上移到 ImportViewModel，由 ImportViewModelTest 覆盖，本测试不再涉及。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -36,7 +36,6 @@ class DataImportManagerTest {
     private lateinit var db: AppDatabase
     private lateinit var eventRepo: EventRepository
     private lateinit var noteRepo: NoteRepository
-    private lateinit var fakePrefs: FakeTimeVizPrefs
 
     @Before
     fun setup() {
@@ -46,7 +45,6 @@ class DataImportManagerTest {
             .build()
         eventRepo = EventRepository(db.eventDao())
         noteRepo = NoteRepository(db.noteDao())
-        fakePrefs = FakeTimeVizPrefs()
     }
 
     @After
@@ -290,10 +288,9 @@ class DataImportManagerTest {
             timeVizPrefs = null
         )
 
-        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo, fakePrefs)
+        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo)
         assertThat(counts.eventsImported).isEqualTo(1)
         assertThat(counts.notesImported).isEqualTo(0)
-        assertThat(counts.prefsUpdated).isFalse()
 
         // 仍 1 行，且字段为 B
         val after = eventRepo.getAllEvents().first()
@@ -304,52 +301,12 @@ class DataImportManagerTest {
         assertThat(row.note).isEqualTo("new")
 
         // 再导一次同文件 → 仍 1 行（幂等）
-        DataImportManager.applyImport(result, eventRepo, noteRepo, fakePrefs)
+        DataImportManager.applyImport(result, eventRepo, noteRepo)
         assertThat(eventRepo.getAllEvents().first()).hasSize(1)
     }
 
     @Test
-    fun applyImport_prefsNull_doesNotChangePrefs() = runTest {
-        fakePrefs.birthday = 999L
-        fakePrefs.lifespan = 88
-        val result = DataImportManager.ImportResult(
-            schemaVersion = 1,
-            events = emptyList(),
-            notes = emptyList(),
-            timeVizPrefs = null
-        )
-
-        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo, fakePrefs)
-
-        assertThat(counts.prefsUpdated).isFalse()
-        assertThat(counts.eventsImported).isEqualTo(0)
-        assertThat(counts.notesImported).isEqualTo(0)
-        assertThat(fakePrefs.birthday).isEqualTo(999L)
-        assertThat(fakePrefs.lifespan).isEqualTo(88)
-    }
-
-    @Test
-    fun applyImport_prefsNonNull_overwritesPrefs() = runTest {
-        fakePrefs.birthday = 0L
-        fakePrefs.lifespan = 80
-        val result = DataImportManager.ImportResult(
-            schemaVersion = 1,
-            events = emptyList(),
-            notes = emptyList(),
-            timeVizPrefs = DataImportManager.ImportedTimeVizPrefs(birthdayMillis = 111L, lifespanYears = 33)
-        )
-
-        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo, fakePrefs)
-
-        assertThat(counts.prefsUpdated).isTrue()
-        assertThat(counts.eventsImported).isEqualTo(0)
-        assertThat(counts.notesImported).isEqualTo(0)
-        assertThat(fakePrefs.birthday).isEqualTo(111L)
-        assertThat(fakePrefs.lifespan).isEqualTo(33)
-    }
-
-    @Test
-    fun applyImport_fullDataset_countsAllThree() = runTest {
+    fun applyImport_fullDataset_countsEventsAndNotes() = runTest {
         val e1 = EventEntity(
             id = 1, title = "事件一", startTime = 1000L, endTime = 2000L,
             status = 2, note = "n1", createdAt = 3000L, updatedAt = 4000L
@@ -369,24 +326,11 @@ class DataImportManagerTest {
             timeVizPrefs = DataImportManager.ImportedTimeVizPrefs(birthdayMillis = 999L, lifespanYears = 77)
         )
 
-        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo, fakePrefs)
+        val counts = DataImportManager.applyImport(result, eventRepo, noteRepo)
 
         assertThat(counts.eventsImported).isEqualTo(2)
         assertThat(counts.notesImported).isEqualTo(1)
-        assertThat(counts.prefsUpdated).isTrue()
         assertThat(eventRepo.getAllEvents().first()).hasSize(2)
         assertThat(noteRepo.getAllNotes().first()).hasSize(1)
-        assertThat(fakePrefs.birthday).isEqualTo(999L)
-        assertThat(fakePrefs.lifespan).isEqualTo(77)
     }
-}
-
-/** 内存版 TimeVizPrefs，用于测试。 */
-private class FakeTimeVizPrefs : TimeVizPrefs {
-    var birthday: Long = 0L
-    var lifespan: Int = 80
-    override fun getBirthdayMillis(): Long = birthday
-    override fun setBirthdayMillis(millis: Long) { birthday = millis }
-    override fun getLifespanYears(): Int = lifespan
-    override fun setLifespanYears(years: Int) { lifespan = years }
 }
