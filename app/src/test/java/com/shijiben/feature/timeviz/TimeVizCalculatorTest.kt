@@ -179,4 +179,73 @@ class TimeVizCalculatorTest {
         assertThat(r.yearsRemaining).isEqualTo(1)
         assertThat(r.exceeded).isFalse()
     }
+
+    // ===================== todayProgress =====================
+
+    @Test
+    fun todayProgress_atMidnight_returns0() {
+        val now = localMillis(2026, 6, 28, 0, 0, 0)
+        assertThat(TimeVizCalculator.todayProgress(now)).isEqualTo(0f)
+    }
+
+    @Test
+    fun todayProgress_atNoon_returns0_5() {
+        // 12:00 → elapsed = 720 min, 720/1440 = 0.5（IEEE 754 精确可表）
+        val now = localMillis(2026, 6, 28, 12, 0, 0)
+        assertThat(TimeVizCalculator.todayProgress(now)).isEqualTo(0.5f)
+    }
+
+    @Test
+    fun todayProgress_oneSecondBeforeMidnight_returnsAlmost1() {
+        // 23:59:59 → toMinutes 截断为 1439 min, 1439/1440 ≈ 0.9993（< 1f 且 > 0.999f）
+        val now = localMillis(2026, 6, 28, 23, 59, 59)
+        val progress = TimeVizCalculator.todayProgress(now)
+        assertThat(progress).isLessThan(1f)
+        assertThat(progress).isGreaterThan(0.999f)
+    }
+
+    // ===================== yearProgress =====================
+
+    @Test
+    fun yearProgress_atStartOfYear_returns0() {
+        val now = localMillis(2026, 1, 1, 0, 0, 0)
+        assertThat(TimeVizCalculator.yearProgress(now)).isEqualTo(0f)
+    }
+
+    @Test
+    fun yearProgress_atMidYear_returnsCloseToHalf() {
+        // 2026-07-02 12:00 UTC：1-1 至 7-2 12:00 共 181 天 + 1.5 天 = 182.5 天
+        // 365 天的年中点恰为 182.5 天 → progress = 0.5；区间断言防浮点抖动
+        val now = localMillis(2026, 7, 2, 12, 0, 0)
+        val progress = TimeVizCalculator.yearProgress(now)
+        assertThat(progress).isGreaterThan(0.49f)
+        assertThat(progress).isLessThan(0.51f)
+    }
+
+    @Test
+    fun yearProgress_oneSecondBeforeYearEnd_returnsAlmost1() {
+        // 2026-12-31 23:59:59 → elapsed = 365 days - 1s, total = 365 days
+        // progress = 1 - 1/31536000 ≈ 0.99999997（< 1f 且 > 0.9999f）
+        val now = localMillis(2026, 12, 31, 23, 59, 59)
+        val progress = TimeVizCalculator.yearProgress(now)
+        assertThat(progress).isLessThan(1f)
+        assertThat(progress).isGreaterThan(0.9999f)
+    }
+
+    @Test
+    fun yearProgress_leapYearVsNonLeapYear_denominatorMatchesYearLength() {
+        // 同一日历点 2024-01-15 12:00（闰年）vs 2026-01-15 12:00（非闰年）。
+        // 选 1-15（早于 2-28）使两年 elapsed 完全相同（14 天 12 小时），
+        // 仅分母不同（366 vs 365 天），从而把「闰年分母」从 elapsed 中隔离出来。
+        // progress_leap / progress_nonLeap = (14.5/366) / (14.5/365) = 365/366
+        val leap = localMillis(2024, 1, 15, 12, 0, 0)
+        val nonLeap = localMillis(2026, 1, 15, 12, 0, 0)
+        val progressLeap = TimeVizCalculator.yearProgress(leap)
+        val progressNonLeap = TimeVizCalculator.yearProgress(nonLeap)
+        // 闰年分母更大 → progress 更小
+        assertThat(progressLeap).isLessThan(progressNonLeap)
+        // 比值 = 365/366（验证闰年分母是 366 天而非 365）
+        val ratio = progressLeap / progressNonLeap
+        assertThat(ratio).isWithin(1e-6f).of(365f / 366f)
+    }
 }
