@@ -1,24 +1,7 @@
 plugins {
-    id("com.android.application") version "8.7.3" apply false
-    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
-    id("com.google.dagger.hilt.android") version "2.52" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false
-    id("com.google.devtools.ksp") version "2.0.21-1.0.27" apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.hilt) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.ksp) apply false
 }
-
-extra["coreKtx"] = "1.13.1"
-extra["lifecycle"] = "2.8.7"
-extra["activityCompose"] = "1.9.3"
-extra["composeBom"] = "2024.10.01"
-extra["navigationCompose"] = "2.8.5"
-extra["hilt"] = "2.52"
-extra["hiltNavigationCompose"] = "1.2.0"
-extra["room"] = "2.6.1"
-extra["coroutines"] = "1.8.1"
-extra["splashscreen"] = "1.0.1"
-
-// 测试依赖（与生产依赖统一走 extra，避免版本漏改/不同步）
-extra["junit"] = "4.13.2"
-extra["robolectric"] = "4.13"
-extra["androidxTestCore"] = "1.6.1"
-extra["truth"] = "1.4.4"

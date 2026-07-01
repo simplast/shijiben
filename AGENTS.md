@@ -225,3 +225,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - ui: NoteEditorSheet 标题移除最后一个 MaterialTheme.typography.titleLarge 残留——改用显式 20sp Bold + TextPrimary，与 6 屏标准一致（PixelText 旧别名→TextPrimary 令牌）
 - performance: TimelineScreen 60s `now` tick 改为 `State<Long>` 透传——drawBehind 读 nowState（顶栏进度条 draw-phase 重绘不重组）、新增 RowScope.StatsText + ElapsedBadge 叶子组合件独读 nowState.value、EventCard/EventList/DayProgressBar 参数改 nowState，整树 20 卡片/分钟重组降至 1（仅 in-progress）
 - architecture: DataImportManager 去除对 feature 层 TimeVizPrefs 的依赖——applyImport 签名移除 timeVizPrefs 参数 + ImportCounts 去 prefsUpdated 字段，prefs 写回职责上移到 ImportViewModel（data 层零向上引用，仿 DataExportManager 接原语范式）
+- dx: 依赖版本管理迁移到 Gradle version catalog（libs.versions.toml）——root/app build 脚本删除 14 处 extra 定义 + 21 处 rootProject.extra 引用，改用类型安全 libs.xxx 访问器，IDE 自动补全 + 编译期拼写检查，零行为变化

@@ -1,6 +1,6 @@
 # Better state
-current_category: tests
-cycle_count: 20
+current_category: dx
+cycle_count: 21
 last_run: 2026-07-02
 
 ## Category status
@@ -13,7 +13,7 @@ last_run: 2026-07-02
 | ux | DONE | 2 | F017 |
 | performance | DONE | 1 | F016 |
 | ui | DONE | 6 | F018 |
-| dx | TODO | 1 | F011 |
+| dx | DONE | 2 | F021 |
 | docs | TODO | 1 | F012 |
 | direction | TODO | 1 | "report-cycle-13" |
 
