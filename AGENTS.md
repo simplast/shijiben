@@ -219,5 +219,6 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - ui: NotesScreen 补齐 RainbowTrim 品牌条 + Background，与其他 7 屏一致
 - ui: disabled 颜色硬编码改用 Disabled/DisabledText 令牌，统一 4 文件 11 处
 - ui: 移除 TimeVizScreen 的 PixelOutlinedButtonLocal 本地副本，改用共享 PixelOutlinedButton 统一按钮风格
+- ux: TimelineScreen 点击随笔改为内联打开 NoteEditorSheet（对齐 SearchScreen 模式）——EventList.onNoteClick 改 (NoteEntity)->Unit 转发具体随笔，新增 showNoteSheet/editingNote 状态 + NoteEditorSheet 渲染块，save/delete 后调 viewModel.refresh() 同步；底部 ✎ 图标仍跳转随笔列表（view-all 意图）
 - security: AndroidManifest allowBackup 改 false + fullBackupContent=false + dataExtractionRules=null——关闭 Auto Backup（Google Drive 上传）与 adb backup 提取，对齐隐私政策「数据不离开本设备、无备份」承诺
 - performance: TimelineScreen 60s `now` tick 改为 `State<Long>` 透传——drawBehind 读 nowState（顶栏进度条 draw-phase 重绘不重组）、新增 RowScope.StatsText + ElapsedBadge 叶子组合件独读 nowState.value、EventCard/EventList/DayProgressBar 参数改 nowState，整树 20 卡片/分钟重组降至 1（仅 in-progress）

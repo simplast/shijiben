@@ -75,6 +75,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.R
 import com.shijiben.data.local.EventEntity
 import com.shijiben.data.local.NoteEntity
+import com.shijiben.feature.notes.NoteEditorSheet
 import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
@@ -134,6 +135,8 @@ fun TimelineScreen(
     var activeDrawer by remember { mutableStateOf<DrawerType?>(null) }
     var eventDraft by remember { mutableStateOf("") }
     var noteDraft by remember { mutableStateOf("") }
+    val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
+    var showNoteSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
@@ -272,7 +275,10 @@ fun TimelineScreen(
                         onStartEvent = { event -> viewModel.markInProgress(event.id) },
                         onStopEvent = { event -> viewModel.markCompleted(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
-                        onNoteClick = onNotesClick,
+                        onNoteClick = { note ->
+                            notesViewModel.startEdit(note)
+                            showNoteSheet = true
+                        },
                         nowState = nowState
                     )
                 }
@@ -328,6 +334,25 @@ fun TimelineScreen(
                 editingEvent = editingEvent,
                 onDismiss = { showSheet = false },
                 onSaved = { viewModel.refresh(); showSheet = false }
+            )
+        }
+
+        if (showNoteSheet) {
+            NoteEditorSheet(
+                editing = editingNote,
+                onDismiss = {
+                    showNoteSheet = false
+                    notesViewModel.closeSheet()
+                },
+                onSave = { content ->
+                    val ok = notesViewModel.save(content)
+                    if (ok) viewModel.refresh()
+                    ok
+                },
+                onDelete = { note ->
+                    notesViewModel.delete(note)
+                    viewModel.refresh()
+                }
             )
         }
 
@@ -420,7 +445,7 @@ fun EventList(
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
     onEventLongClick: (EventEntity) -> Unit,
-    onNoteClick: () -> Unit,
+    onNoteClick: (NoteEntity) -> Unit,
     nowState: State<Long>
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
@@ -450,7 +475,7 @@ fun EventList(
                     )
                     is TimelineItem.NoteItem -> NoteRow(
                         note = item.note,
-                        onClick = onNoteClick
+                        onClick = { onNoteClick(item.note) }
                     )
                 }
             }
