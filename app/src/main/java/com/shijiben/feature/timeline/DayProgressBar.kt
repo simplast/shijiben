@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,12 +25,12 @@ import java.util.TimeZone
 fun DayProgressBar(
     events: List<EventEntity>,
     viewingDate: Triple<Int, Int, Int>,
-    now: Long,
+    nowState: State<Long>,
     modifier: Modifier = Modifier
 ) {
     val today = isToday(viewingDate)
     val past = isPastDay(viewingDate)
-    val nowCal = remember(now) { Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = now } }
+    val nowCal = remember(nowState.value) { Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = nowState.value } }
     val nowHour = nowCal.get(Calendar.HOUR_OF_DAY)
     val coveredHours = remember(events) {
         events.flatMap { e ->

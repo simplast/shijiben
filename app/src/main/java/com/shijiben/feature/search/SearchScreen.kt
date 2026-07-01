@@ -70,7 +70,7 @@ fun SearchScreen(
     var showNoteSheet by remember { mutableStateOf(false) }
 
     // now 快照：EventCard 仅对 in-progress 事件用 now 显示运行时长，搜索非主计时场景，不起定时器
-    val now = remember { System.currentTimeMillis() }
+    val nowState = remember { mutableStateOf(System.currentTimeMillis()) }
     val focusRequester = remember { FocusRequester() }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
@@ -211,7 +211,7 @@ fun SearchScreen(
                                 onStart = {},
                                 onStop = {},
                                 onLongClick = {},
-                                now = now
+                                nowState = nowState
                             )
                             is SearchViewModel.SearchItem.NoteItem -> NoteRow(
                                 note = item.note,

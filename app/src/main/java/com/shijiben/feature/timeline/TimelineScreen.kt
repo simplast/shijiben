@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -118,8 +120,7 @@ fun TimelineScreen(
     val events by viewModel.events.collectAsStateWithLifecycle()
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
-    val nowHour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY)
-    val now by produceState(initialValue = System.currentTimeMillis()) {
+    val nowState = produceState(initialValue = System.currentTimeMillis()) {
         while (true) {
             delay(60_000L)
             value = System.currentTimeMillis()
@@ -149,16 +150,17 @@ fun TimelineScreen(
             RainbowTrim()
             // 顶栏一条带：左日期徽章 + 右概览统计
             // 背景即进度条：已过去时间填 PrimaryLight 浅红，剩余白色
-            val todayFraction = todayProgressFraction(date, now)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Surface)
                     .drawBehind {
-                        if (todayFraction > 0f) {
+                        val now = nowState.value
+                        val fraction = todayProgressFraction(date, now)
+                        if (fraction > 0f) {
                             drawRect(
                                 color = PrimaryLight,
-                                size = Size(size.width * todayFraction, size.height)
+                                size = Size(size.width * fraction, size.height)
                             )
                         }
                     },
@@ -240,28 +242,12 @@ fun TimelineScreen(
                         )
                     }
                 }
-                val hasRecords = events.isNotEmpty() || notes.isNotEmpty()
-                val baseStats = if (hasRecords) {
-                    "${events.size} 件事 · ${notes.size} 条随笔"
-                } else "还没有记录"
-                val statsText = if (isToday(date)) {
-                    if (hasRecords) {
-                        "今天还有 ${TimeVizCalculator.todayRemaining(now)} · $baseStats"
-                    } else {
-                        "今天还有 ${TimeVizCalculator.todayRemaining(now)}"
-                    }
-                } else baseStats
-                Text(
-                    text = statsText,
-                    fontSize = 12.sp,
-                    color = TextTertiary,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onTimeVizClick() }
-                        .padding(end = 12.dp, start = 8.dp)
+                StatsText(
+                    date = date,
+                    events = events,
+                    notes = notes,
+                    nowState = nowState,
+                    onClick = onTimeVizClick
                 )
             }
             // 2dp 黑色底分隔线
@@ -272,7 +258,7 @@ fun TimelineScreen(
                     DayProgressBar(
                         events = events,
                         viewingDate = date,
-                        now = now
+                        nowState = nowState
                     )
                 }
                 Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 12.dp, top = 12.dp, end = 12.dp)) {
@@ -287,7 +273,7 @@ fun TimelineScreen(
                         onStopEvent = { event -> viewModel.markCompleted(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
                         onNoteClick = onNotesClick,
-                        now = now
+                        nowState = nowState
                     )
                 }
             }
@@ -376,6 +362,57 @@ fun TimelineScreen(
 }
 
 @Composable
+private fun RowScope.StatsText(
+    date: Triple<Int, Int, Int>,
+    events: List<EventEntity>,
+    notes: List<NoteEntity>,
+    nowState: State<Long>,
+    onClick: () -> Unit
+) {
+    val now = nowState.value
+    val hasRecords = events.isNotEmpty() || notes.isNotEmpty()
+    val baseStats = if (hasRecords) {
+        "${events.size} 件事 · ${notes.size} 条随笔"
+    } else "还没有记录"
+    val statsText = if (isToday(date)) {
+        if (hasRecords) {
+            "今天还有 ${TimeVizCalculator.todayRemaining(now)} · $baseStats"
+        } else {
+            "今天还有 ${TimeVizCalculator.todayRemaining(now)}"
+        }
+    } else baseStats
+    Text(
+        text = statsText,
+        fontSize = 12.sp,
+        color = TextTertiary,
+        fontWeight = FontWeight.Medium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .weight(1f)
+            .clickable { onClick() }
+            .padding(end = 12.dp, start = 8.dp)
+    )
+}
+
+@Composable
+private fun ElapsedBadge(startTime: Long, nowState: State<Long>) {
+    val now = nowState.value
+    Box(
+        modifier = Modifier
+            .background(Primary, RoundedCornerShape(0.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = formatDurationShort(startTime, now),
+            fontSize = 12.sp,
+            color = TextOnPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
 fun EventList(
     events: List<EventEntity>,
     notes: List<NoteEntity>,
@@ -384,7 +421,7 @@ fun EventList(
     onStopEvent: (EventEntity) -> Unit,
     onEventLongClick: (EventEntity) -> Unit,
     onNoteClick: () -> Unit,
-    now: Long
+    nowState: State<Long>
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
         val items = remember(events, notes) {
@@ -409,7 +446,7 @@ fun EventList(
                         onStart = { onStartEvent(item.event) },
                         onStop = { onStopEvent(item.event) },
                         onLongClick = { onEventLongClick(item.event) },
-                        now = now
+                        nowState = nowState
                     )
                     is TimelineItem.NoteItem -> NoteRow(
                         note = item.note,
@@ -429,7 +466,7 @@ fun EventCard(
     onStart: () -> Unit,
     onStop: () -> Unit,
     onLongClick: () -> Unit,
-    now: Long
+    nowState: State<Long>
 ) {
     Surface(
         color = Surface,
@@ -504,19 +541,7 @@ fun EventCard(
                         color = TextSecondary
                     )
                     Spacer(Modifier.width(6.dp))
-                    val elapsed = formatDurationShort(event.startTime, now)
-                    Box(
-                        modifier = Modifier
-                            .background(Primary, RoundedCornerShape(0.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = elapsed,
-                            fontSize = 12.sp,
-                            color = TextOnPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    ElapsedBadge(startTime = event.startTime, nowState = nowState)
                 }
                 2 -> {
                     // 已完成：原时间范围 + 耗时 badge（保持不变）
