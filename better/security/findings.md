@@ -7,3 +7,8 @@
 - 修复：读取后 `require(EventStatus.entries.any { it.value == status })`，不合法抛 IllegalArgumentException（与 schemaVersion 校验先例一致）
 - 回归测试：`DataImportManagerTest.parseJsonString_invalidStatus_throwsIllegalArgumentException`
 - 计划：`better/security/plan-cycle-8.md`
+
+## F015 — AndroidManifest allowBackup=true 违反隐私政策承诺（自动云备份+adb backup 泄露）
+- status: DONE (cycle 15)
+- evidence: app/src/main/AndroidManifest.xml:6
+- impact: M

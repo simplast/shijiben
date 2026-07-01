@@ -219,3 +219,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - ui: NotesScreen 补齐 RainbowTrim 品牌条 + Background，与其他 7 屏一致
 - ui: disabled 颜色硬编码改用 Disabled/DisabledText 令牌，统一 4 文件 11 处
 - ui: 移除 TimeVizScreen 的 PixelOutlinedButtonLocal 本地副本，改用共享 PixelOutlinedButton 统一按钮风格
+- security: AndroidManifest allowBackup 改 false + fullBackupContent=false + dataExtractionRules=null——关闭 Auto Backup（Google Drive 上传）与 adb backup 提取，对齐隐私政策「数据不离开本设备、无备份」承诺
