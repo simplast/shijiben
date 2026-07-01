@@ -24,3 +24,8 @@
 - status: DONE (cycle 5)
 - evidence: NotesScreen.kt:52-67 (PixelCard 包裹 + Column padding=12dp)；PixelComponents.kt:25-42 (PixelCard 默认 1dp 灰边)；对比 SearchScreen.kt:79-100 / AboutScreen.kt:53-74 / TimeVizScreen.kt:78-99 (Row+SurfaceColor+2dp 黑色分隔线)
 - impact: M
+
+## F018 — NoteEditorSheet 标题残留 MaterialTheme.typography.titleLarge 间接引用 + PixelText 旧别名（全 app 唯一 typography.* 调用点，与 6 屏显式 20sp Bold + TextPrimary 标准漂移）
+- status: DONE (cycle 18)
+- evidence: app/src/main/java/com/shijiben/feature/notes/NoteEditorSheet.kt:64
+- impact: M

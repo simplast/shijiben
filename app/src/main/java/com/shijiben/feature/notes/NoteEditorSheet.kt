@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.data.local.NoteEntity
@@ -31,8 +31,8 @@ import com.shijiben.ui.theme.Error
 import com.shijiben.ui.theme.PixelButton
 import com.shijiben.ui.theme.PixelOutlinedButton
 import com.shijiben.ui.theme.PixelSurface
-import com.shijiben.ui.theme.PixelText
 import com.shijiben.ui.theme.PixelTextSecondary
+import com.shijiben.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -61,8 +61,9 @@ fun NoteEditorSheet(
         ) {
             Text(
                 text = if (editing != null) "编辑随笔" else "记一笔随笔",
-                style = MaterialTheme.typography.titleLarge,
-                color = PixelText
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = TextPrimary
             )
             if (editing != null) {
                 Text(
