@@ -1,6 +1,6 @@
 # Better state
-current_category: correctness
-cycle_count: 24
+current_category: security
+cycle_count: 25
 last_run: 2026-07-02
 
 ## Category status
@@ -8,7 +8,7 @@ last_run: 2026-07-02
 |----------|--------|--------|-------------|
 | correctness | DONE | 3 | F024 |
 | tests | DONE | 2 | F020 |
-| security | DONE | 2 | F015 |
+| security | DONE | 3 | F025 |
 | architecture | DONE | 2 | F019 |
 | ux | DONE | 2 | F017 |
 | performance | DONE | 1 | F016 |

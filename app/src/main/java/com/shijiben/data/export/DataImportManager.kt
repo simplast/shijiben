@@ -21,6 +21,12 @@ import java.io.InputStream
  */
 object DataImportManager {
 
+    /** 导入文件大小上限：50 MB（远超任何合理备份，足以挡住 OOM 攻击）。 */
+    private const val MAX_IMPORT_BYTES = 50L * 1024 * 1024
+
+    /** 单个数组（events / notes）条目上限：10 万条（远超日常使用，挡住数组 DoS）。 */
+    private const val MAX_ARRAY_ENTRIES = 100_000
+
     /** 解析后的可选 TimeViz 偏好。null 表示 JSON 中缺失，导入时跳过不改现有。 */
     data class ImportedTimeVizPrefs(
         val birthdayMillis: Long,
@@ -66,6 +72,9 @@ object DataImportManager {
 
     private fun parseEvents(arr: JSONArray?): List<EventEntity> {
         if (arr == null) return emptyList()
+        require(arr.length() <= MAX_ARRAY_ENTRIES) {
+            "数组条目过多（>${MAX_ARRAY_ENTRIES}）：${arr.length()}"
+        }
         val out = ArrayList<EventEntity>(arr.length())
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
@@ -92,6 +101,9 @@ object DataImportManager {
 
     private fun parseNotes(arr: JSONArray?): List<NoteEntity> {
         if (arr == null) return emptyList()
+        require(arr.length() <= MAX_ARRAY_ENTRIES) {
+            "数组条目过多（>${MAX_ARRAY_ENTRIES}）：${arr.length()}"
+        }
         val out = ArrayList<NoteEntity>(arr.length())
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
@@ -136,7 +148,22 @@ object DataImportManager {
         )
     }
 
-    /** 薄 IO 包装：UTF-8 读取流并关闭。失败抛异常由 VM catch。 */
-    fun readFromStream(input: InputStream): String =
-        input.use { it.readBytes().toString(Charsets.UTF_8) }
+    /** 薄 IO 包装：UTF-8 读取流并关闭。超过 [MAX_IMPORT_BYTES] 抛 IllegalArgumentException 由 VM catch。 */
+    fun readFromStream(input: InputStream): String {
+        return input.use { stream ->
+            val out = java.io.ByteArrayOutputStream()
+            val chunk = ByteArray(8 * 1024)
+            var total = 0L
+            while (true) {
+                val read = stream.read(chunk)
+                if (read == -1) break
+                total += read
+                if (total > MAX_IMPORT_BYTES) {
+                    throw IllegalArgumentException("导入文件过大（>$MAX_IMPORT_BYTES 字节）")
+                }
+                out.write(chunk, 0, read)
+            }
+            out.toString(Charsets.UTF_8.name())
+        }
+    }
 }

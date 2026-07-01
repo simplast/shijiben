@@ -12,3 +12,8 @@
 - status: DONE (cycle 15)
 - evidence: app/src/main/AndroidManifest.xml:6
 - impact: M
+
+## F025 — Import 文件 DoS：readFromStream 无大小上限 + parseEvents/parseNotes 无数组长度上限
+- status: DONE (cycle 25)
+- evidence: app/src/main/java/com/shijiben/data/export/DataImportManager.kt:141
+- impact: M

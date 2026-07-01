@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.InputStream
 
 /**
  * DataImportManager 单测（spec §7.2）。
@@ -332,5 +333,57 @@ class DataImportManagerTest {
         assertThat(counts.notesImported).isEqualTo(1)
         assertThat(eventRepo.getAllEvents().first()).hasSize(2)
         assertThat(noteRepo.getAllNotes().first()).hasSize(1)
+    }
+
+    // ===== DoS 防护回归测试（cycle 25）=====
+    // readFromStream 字节上限 + parseEvents/parseNotes 数组长度上限
+
+    @Test
+    fun readFromStream_exceedsMaxBytes_throwsIllegalArgumentException() {
+        // 无限 0 字节流：触发 readFromStream 在 >MAX_IMPORT_BYTES 时抛 IAE，
+        // 无需实际分配 50 MB 内存（覆盖 bulk read 路径）
+        val infiniteZeroStream = object : InputStream() {
+            override fun read(): Int = 0
+            override fun read(b: ByteArray, off: Int, len: Int): Int {
+                java.util.Arrays.fill(b, off, off + len, 0.toByte())
+                return len
+            }
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.readFromStream(infiniteZeroStream)
+        }
+    }
+
+    @Test
+    fun parseJsonString_tooManyEvents_throwsIllegalArgumentException() {
+        // 直接拼字符串构造 100001 个最小 event，避免 100001 个 JSONObject 的内存压力
+        // require 检查发生在 parse 循环之前，元素内容不影响测试结果（用 {} 占位）
+        val sb = StringBuilder()
+        sb.append("{\"schemaVersion\":1,\"events\":[")
+        repeat(100_001) { i ->
+            if (i > 0) sb.append(',')
+            sb.append("{}")
+        }
+        sb.append("]}")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(sb.toString())
+        }
+    }
+
+    @Test
+    fun parseJsonString_tooManyNotes_throwsIllegalArgumentException() {
+        val sb = StringBuilder()
+        sb.append("{\"schemaVersion\":1,\"notes\":[")
+        repeat(100_001) { i ->
+            if (i > 0) sb.append(',')
+            sb.append("{}")
+        }
+        sb.append("]}")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(sb.toString())
+        }
     }
 }

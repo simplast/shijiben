@@ -207,6 +207,7 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-29-debug-console-overlay-design.md](docs/superpowers/specs/2026-06-29-debug-console-overlay-design.md) — 调试控制台悬浮 overlay（DebugOverlay + DebugLog ring buffer）
 
 ## Recent changes (better cycles)
+- security: DataImportManager 导入 DoS 防护——readFromStream 改 8KB 分块读取并加 50MB 字节上限 + parseEvents/parseNotes 加 10 万条数组长度上限，超限抛 IllegalArgumentException（被 ImportViewModel catch 走 Error 提示）+ 新增 3 个回归测试
 - tests: 为 TimeVizCalculator.todayProgress/yearProgress 新增 7 个零覆盖纯函数单测（00:00/12:00/23:59:59 三点 + 年初/年中/年末三点 + 闰年 vs 非闰年分母比值=365/366），UTC 时区固定，全区间断言防浮点抖动
 - feat: 时间去向聚合——HeatmapScreen 重构为 3 tab 容器（月/年/去向），新增 TimeAllocationCalculator（纯函数按标题聚合 completed 事件时长）+ TimeAllocationViewModel + TimeAllocationTab（范围选择器+水平条形图列表），废弃 HeatmapYearScreen 独立路由
 - docs: AGENT.md 项目结构树 + ARCHITECTURE.md §2 包路径列表补充 `ui/debug/` 模块（DebugOverlay + DebugLog）——此前 MainActivity/Application 实际使用但文档未记录，AI agent/开发者不知道有 app 内调试控制台
