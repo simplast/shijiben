@@ -82,6 +82,7 @@ import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
 import com.shijiben.ui.theme.*
+import com.shijiben.util.isToday
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Calendar
@@ -708,10 +709,6 @@ private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
     val weekdayNames = arrayOf("日", "一", "二", "三", "四", "五", "六")
     val weekday = weekdayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
     return "${date.second}/${date.third}/$weekday"
-}
-private fun isToday(date: Triple<Int, Int, Int>): Boolean {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
 }
 
 /** 顶栏进度条比例：今天按当前时刻、过去日期=1f（整条填色）、未来日期=0f（全白）。 */

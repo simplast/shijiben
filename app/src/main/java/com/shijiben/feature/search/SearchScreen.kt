@@ -53,8 +53,7 @@ import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
 import com.shijiben.ui.theme.TextSecondary
 import com.shijiben.ui.theme.TextTertiary
-import java.util.Calendar
-import java.util.TimeZone
+import com.shijiben.util.todayTriple
 
 @Composable
 fun SearchScreen(
@@ -244,13 +243,4 @@ fun SearchScreen(
             )
         }
     }
-}
-
-private fun todayTriple(): Triple<Int, Int, Int> {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    return Triple(
-        cal.get(Calendar.YEAR),
-        cal.get(Calendar.MONTH) + 1,
-        cal.get(Calendar.DAY_OF_MONTH)
-    )
 }

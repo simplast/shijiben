@@ -18,6 +18,8 @@ import com.shijiben.data.local.EventEntity
 import com.shijiben.ui.theme.BorderLight
 import com.shijiben.ui.theme.RainbowHourColors
 import com.shijiben.ui.theme.TimeBlockNowBorder
+import com.shijiben.util.isPastDay
+import com.shijiben.util.isToday
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -70,25 +72,4 @@ private fun hourOfDay(timestamp: Long): Int {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     cal.timeInMillis = timestamp
     return cal.get(Calendar.HOUR_OF_DAY)
-}
-
-private fun isToday(date: Triple<Int, Int, Int>): Boolean {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    return date == Triple(
-        cal.get(Calendar.YEAR),
-        cal.get(Calendar.MONTH) + 1,
-        cal.get(Calendar.DAY_OF_MONTH)
-    )
-}
-
-private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
-    val cal = Calendar.getInstance(TimeZone.getDefault())
-    val today = Triple(
-        cal.get(Calendar.YEAR),
-        cal.get(Calendar.MONTH) + 1,
-        cal.get(Calendar.DAY_OF_MONTH)
-    )
-    val (ty, tm, td) = today
-    val (y, m, d) = date
-    return y < ty || (y == ty && (m < tm || (m == tm && d < td)))
 }

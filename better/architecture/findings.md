@@ -20,3 +20,15 @@
 - cycle: 29
 - 问题：两份完全相同的私有函数副本，调整色阶/箭头尺寸/边框色需同步改两处，易漂移。
 - 修复：新增 `HeatmapCommon.kt` 集中 `HeatmapLegend()` + `PixelArrowBox()` 为 internal 共享函数；两 Tab 删除本地副本，调用点改用共享版本；清理两 Tab 因删除副本而失效的 imports（Icon/ImageVector 等）。
+
+## F039 — isToday/todayTriple 在 3 文件逐字重复（DRY 漂移）
+- status: DONE (cycle 39)
+- evidence:
+  - app/src/main/java/com/shijiben/feature/timeline/TimelineScreen.kt (private isToday)
+  - app/src/main/java/com/shijiben/feature/timeline/DayProgressBar.kt (private isToday + isPastDay)
+  - app/src/main/java/com/shijiben/feature/search/SearchScreen.kt (private todayTriple)
+- impact: M
+- cycle: 39
+- 问题：`isToday(Triple<Int,Int,Int>)` 在 TimelineScreen 与 DayProgressBar 各一份逐字相同的私有副本；`todayTriple()` 在 SearchScreen 又重复了 isToday 内部的 Calendar 取值逻辑。调整"今天"判定（如换时区策略）需同步改 3 处，易漂移。
+- 修复：新增 `com.shijiben.util.DateUtils.kt` 集中 `todayTriple()` + `isToday()` + `isPastDay()` 为 internal 顶层函数；3 个 feature 文件删除私有副本，改 import 共享版本。
+- 注：Triple<Int,Int,Int> 是 UI 层 viewingDate 传参约定，非 data 层模型；data/repository 层用 java.time.LocalDate/epoch millis，不走本工具。
