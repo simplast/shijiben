@@ -13,6 +13,7 @@ import com.shijiben.feature.heatmap.HeatmapScreen
 import com.shijiben.feature.notes.NotesScreen
 import com.shijiben.feature.search.SearchScreen
 import com.shijiben.feature.settings.AboutScreen
+import com.shijiben.feature.settings.CircadianScreen
 import com.shijiben.feature.settings.SettingsScreen
 import com.shijiben.feature.timeviz.TimeVizScreen
 import com.shijiben.feature.timeline.TimelineScreen
@@ -26,6 +27,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val ABOUT = "about"
     const val PRIVACY = "privacy"
+    const val CIRCADIAN = "circadian"
 }
 
 @Composable
@@ -80,7 +82,8 @@ fun AppNavHost() {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onAboutClick = { navController.navigate(Routes.ABOUT) },
-                onPrivacyClick = { navController.navigate(Routes.PRIVACY) }
+                onPrivacyClick = { navController.navigate(Routes.PRIVACY) },
+                onCircadianClick = { navController.navigate(Routes.CIRCADIAN) }
             )
         }
         composable(Routes.ABOUT) {
@@ -91,6 +94,9 @@ fun AppNavHost() {
                 onBack = { navController.popBackStack() },
                 scrollToPrivacy = true
             )
+        }
+        composable(Routes.CIRCADIAN) {
+            CircadianScreen(onBack = { navController.popBackStack() })
         }
     }
 }

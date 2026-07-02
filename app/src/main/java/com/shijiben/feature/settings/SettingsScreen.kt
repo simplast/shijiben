@@ -64,6 +64,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onAboutClick: () -> Unit,
     onPrivacyClick: () -> Unit,
+    onCircadianClick: () -> Unit,
     viewModel: ExportViewModel = hiltViewModel(),
     importViewModel: ImportViewModel = hiltViewModel()
 ) {
@@ -166,6 +167,7 @@ fun SettingsScreen(
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                SettingsRow(title = "我的生物钟", onClick = onCircadianClick)
                 SettingsRow(title = "关于事记本", onClick = onAboutClick)
                 SettingsRow(title = "隐私政策", onClick = onPrivacyClick)
                 SettingsRow(
