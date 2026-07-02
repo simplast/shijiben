@@ -82,6 +82,11 @@ object HeatmapCalculator {
      * 构建年视图网格：12 个月的 mini 月历拼贴。
      * 每月调用既有 [buildGrid] 构建 6×7 网格（复用！），从 activities 过滤当月活动传入。
      * today 用于标记今天（与 buildGrid 同语义）。
+     *
+     * **去重**：[buildGrid] 会把 today 标记到 padding 格（上下月补位），
+     * 在单月视图中有意义（"今天在下个月"），但在年视图中，今天的日期会在
+     * 相邻月 padding + 当前月实体各出现一次，导致重复标记。
+     * 年视图语义：今天只在当前所在月的实体格标记，padding 格不标 isToday。
      */
     fun buildYearGrid(
         year: Year,
@@ -91,7 +96,13 @@ object HeatmapCalculator {
         val months = (1..12).map { m ->
             val yearMonth = YearMonth.of(year.value, m)
             val monthActivities = activities.filter { YearMonth.from(it.date) == yearMonth }
-            val cells = buildGrid(yearMonth, monthActivities, today)  // 复用既有 buildGrid
+            val rawCells = buildGrid(yearMonth, monthActivities, today)  // 复用既有 buildGrid
+            // 年视图去重：padding 格（isInMonth=false）不标 isToday
+            val cells = rawCells.map { row ->
+                row.map { cell ->
+                    if (cell.isInMonth) cell else cell.copy(isToday = false)
+                }
+            }
             MonthGrid(
                 yearMonth = yearMonth,
                 cells = cells,
