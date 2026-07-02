@@ -386,4 +386,91 @@ class DataImportManagerTest {
             DataImportManager.parseJsonString(sb.toString())
         }
     }
+
+    // ===== F035 回归：时间戳与字符串长度信任边界 =====
+
+    @Test
+    fun parseJsonString_negativeStartTime_throws() {
+        val event = EventEntity(
+            id = 1, title = "x", startTime = -1L, endTime = 200L,
+            status = 2, note = null, createdAt = 300L, updatedAt = 400L
+        )
+        val json = buildValidJson(events = listOf(event))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
+    fun parseJsonString_endTimeBeforeStartTime_throws() {
+        val event = EventEntity(
+            id = 1, title = "x", startTime = 500L, endTime = 200L,
+            status = 2, note = null, createdAt = 300L, updatedAt = 400L
+        )
+        val json = buildValidJson(events = listOf(event))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
+    fun parseJsonString_endTimeEqualsStartTime_accepted() {
+        // 边界：endTime == startTime（0 时长）应被接受
+        val event = EventEntity(
+            id = 1, title = "x", startTime = 500L, endTime = 500L,
+            status = 2, note = null, createdAt = 300L, updatedAt = 400L
+        )
+        val json = buildValidJson(events = listOf(event))
+        val result = DataImportManager.parseJsonString(json)
+        assertThat(result.events).hasSize(1)
+        assertThat(result.events[0].endTime).isEqualTo(500L)
+    }
+
+    @Test
+    fun parseJsonString_overlongTitle_throws() {
+        val event = EventEntity(
+            id = 1, title = "a".repeat(1001), startTime = 100L, endTime = 200L,
+            status = 2, note = null, createdAt = 300L, updatedAt = 400L
+        )
+        val json = buildValidJson(events = listOf(event))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
+    fun parseJsonString_overlongNote_throws() {
+        val event = EventEntity(
+            id = 1, title = "x", startTime = 100L, endTime = 200L,
+            status = 2, note = "a".repeat(10001), createdAt = 300L, updatedAt = 400L
+        )
+        val json = buildValidJson(events = listOf(event))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
+    fun parseJsonString_overlongContent_throws() {
+        val note = NoteEntity(
+            id = 1, content = "a".repeat(100001), timestamp = 100L,
+            createdAt = 200L, updatedAt = 300L
+        )
+        val json = buildValidJson(notes = listOf(note))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
+
+    @Test
+    fun parseJsonString_negativeTimestamp_throws() {
+        val note = NoteEntity(
+            id = 1, content = "x", timestamp = -1L,
+            createdAt = 200L, updatedAt = 300L
+        )
+        val json = buildValidJson(notes = listOf(note))
+        assertThrows(IllegalArgumentException::class.java) {
+            DataImportManager.parseJsonString(json)
+        }
+    }
 }

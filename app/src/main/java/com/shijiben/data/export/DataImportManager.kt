@@ -27,6 +27,11 @@ object DataImportManager {
     /** 单个数组（events / notes）条目上限：10 万条（远超日常使用，挡住数组 DoS）。 */
     private const val MAX_ARRAY_ENTRIES = 100_000
 
+    /** 单字段字符串上限：title 1000 字、note 1 万字、content 10 万字（远超日常使用，挡单字段 OOM）。 */
+    private const val MAX_TITLE_LEN = 1_000
+    private const val MAX_NOTE_LEN = 10_000
+    private const val MAX_CONTENT_LEN = 100_000
+
     /** 解析后的可选 TimeViz 偏好。null 表示 JSON 中缺失，导入时跳过不改现有。 */
     data class ImportedTimeVizPrefs(
         val birthdayMillis: Long,
@@ -83,14 +88,33 @@ object DataImportManager {
             require(EventStatus.entries.any { it.value == status }) {
                 "非法 status 值: $status"
             }
+            val title = o.getString("title")
+            require(title.length <= MAX_TITLE_LEN) {
+                "title 过长（>${MAX_TITLE_LEN}）：${title.length}"
+            }
+            val startTime = o.getLong("startTime")
+            require(startTime >= 0) { "startTime 不能为负：$startTime" }
+            val endTime = if (o.isNull("endTime")) null else o.getLong("endTime")
+            // 不变式：endTime 非空时必须 >= startTime（防负时长污染热力图与状态机）
+            if (endTime != null) {
+                require(endTime >= startTime) {
+                    "endTime($endTime) < startTime($startTime)：负时长事件"
+                }
+            }
+            val note = if (o.isNull("note")) null else o.getString("note")
+            if (note != null) {
+                require(note.length <= MAX_NOTE_LEN) {
+                    "note 过长（>${MAX_NOTE_LEN}）：${note.length}"
+                }
+            }
             out.add(
                 EventEntity(
                     id = o.getLong("id"),
-                    title = o.getString("title"),
-                    startTime = o.getLong("startTime"),
-                    endTime = if (o.isNull("endTime")) null else o.getLong("endTime"),
+                    title = title,
+                    startTime = startTime,
+                    endTime = endTime,
                     status = status,
-                    note = if (o.isNull("note")) null else o.getString("note"),
+                    note = note,
                     createdAt = o.getLong("createdAt"),
                     updatedAt = o.getLong("updatedAt")
                 )
@@ -107,11 +131,17 @@ object DataImportManager {
         val out = ArrayList<NoteEntity>(arr.length())
         for (i in 0 until arr.length()) {
             val o = arr.getJSONObject(i)
+            val content = o.getString("content")
+            require(content.length <= MAX_CONTENT_LEN) {
+                "content 过长（>${MAX_CONTENT_LEN}）：${content.length}"
+            }
+            val timestamp = o.getLong("timestamp")
+            require(timestamp >= 0) { "timestamp 不能为负：$timestamp" }
             out.add(
                 NoteEntity(
                     id = o.getLong("id"),
-                    content = o.getString("content"),
-                    timestamp = o.getLong("timestamp"),
+                    content = content,
+                    timestamp = timestamp,
                     createdAt = o.getLong("createdAt"),
                     updatedAt = o.getLong("updatedAt")
                 )
