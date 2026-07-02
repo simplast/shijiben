@@ -285,6 +285,43 @@ class EventRepositoryTest {
         assertThat(repo.determineStatus(now, now + 1000, now)).isEqualTo(EventStatus.Completed)
     }
 
+    // ==================== determineStatus 全分支覆盖（ARCHITECTURE.md §8 状态机不变式） ====================
+
+    @Test
+    fun determineStatus_pastStart_nullEnd_isInProgress() = runTest {
+        // startTime 严格早于 now + endTime null → InProgress（进行中）
+        val now = System.currentTimeMillis()
+        val pastStart = now - 3600_000L // 1h 前
+        assertThat(repo.determineStatus(pastStart, null, now)).isEqualTo(EventStatus.InProgress)
+    }
+
+    @Test
+    fun determineStatus_futureStart_nullEnd_isNotStarted() = runTest {
+        // startTime 严格晚于 now + endTime null → NotStarted（预写）
+        val now = System.currentTimeMillis()
+        val futureStart = now + 3600_000L // 1h 后
+        assertThat(repo.determineStatus(futureStart, null, now)).isEqualTo(EventStatus.NotStarted)
+    }
+
+    @Test
+    fun determineStatus_futureStart_withEnd_isNotStarted() = runTest {
+        // startTime 严格晚于 now + endTime 已设 → 仍 NotStarted（未来计划事件，即使有预估结束也属预写）
+        // 此分支是 cycle 26 修复的 bug 场景：RecordingViewModel.save() 此前误把 duration>0 的未来事件标 InProgress
+        val now = System.currentTimeMillis()
+        val futureStart = now + 3600_000L
+        val futureEnd = now + 7200_000L
+        assertThat(repo.determineStatus(futureStart, futureEnd, now)).isEqualTo(EventStatus.NotStarted)
+    }
+
+    @Test
+    fun determineStatus_pastStart_withEnd_isCompleted() = runTest {
+        // startTime 严格早于 now + endTime 已设 → Completed（补录已完成）
+        val now = System.currentTimeMillis()
+        val pastStart = now - 7200_000L // 2h 前
+        val pastEnd = now - 3600_000L   // 1h 前
+        assertThat(repo.determineStatus(pastStart, pastEnd, now)).isEqualTo(EventStatus.Completed)
+    }
+
     // ==================== shiftToTargetDay（直接单测，覆盖日历边界）====================
 
     @Test
