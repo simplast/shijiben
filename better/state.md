@@ -2,7 +2,7 @@
 current_category: direction
 cycle_count: 43
 last_run: 2026-07-02
-last_commit_sha: ae9511f
+last_commit_sha: df4c5f2
 
 ## Category status
 | Category | Status | Cycles | Last finding |
