@@ -181,8 +181,8 @@ Room schema：`AppDatabase` 标 `@Database(entities=[EventEntity, NoteEntity], v
 2. **纯函数抽离**：`aggregateMonth` / `aggregateYear` / `effectiveDurationMs` / `filterAndMerge` / `HeatmapCalculator` / `TimeVizCalculator` 均无 Android 依赖，纯 JUnit 可测（对应 `EventRepositoryHeatmapTest` / `SearchFilterTest` / `HeatmapCalculatorTest` / `TimeVizCalculatorTest`）。
 3. **sealed interface 状态机**：`TimelineItem` / `SearchItem`（列表项多态合并）、`ExportState` / `ImportState`（一次性动作状态机，`Idle → Exporting/Importing → Success/Error → resetState() → Idle`），编译期穷尽性检查。
 4. **8-bit 美学集中**：所有视觉元素集中在 `ui/theme`——`AppColors`（高饱和彩虹色板 + `HeatmapLevel0..4` 绿色色阶 + `RainbowHourColors` 8 色循环）、`AppTheme`（强制浅色 + Fusion Pixel 字体 + 全 0.dp 直角 `PixelShapes`）、`PixelComponents`（`PixelCard` 等复用组件）。feature 层只消费色板/组件，不自定义视觉常量。
-5. **flaky test 根治方案 A**（迭代 9 落地，仅测试侧改动，生产代码零改动）：根因 `WhileSubscribed(5000)` grace period 内 Room invalidation tracker 跑在真实 executor 线程 + `Dispatchers.resetMain()` 后命中 `NoopDispatcher`。方案 A 在 `HeatmapViewModelTest.setup()` 用 `setQueryExecutor` / `setTransactionExecutor` 把 Room executor 桥接到 `StandardTestDispatcher`，teardown 后队列静止不再 emit，竞态从根上消除。详见 `docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md`，5 次独立验证全绿。
-6. **DB 迁移历史**：`AppDatabase` version=2，v1→v2 迁移是标签移除（建新表-拷数据-删旧-改名重建索引，删 `tags` 表），详见 spec `2026-06-27-top-bottom-redesign-design.md` Part C。
+5. **flaky test 根治方案 A**（迭代 9 落地，仅测试侧改动，生产代码零改动）：根因 `WhileSubscribed(5000)` grace period 内 Room invalidation tracker 跑在真实 executor 线程 + `Dispatchers.resetMain()` 后命中 `NoopDispatcher`。方案 A 在 `HeatmapViewModelTest.setup()` 用 `setQueryExecutor` / `setTransactionExecutor` 把 Room executor 桥接到 `StandardTestDispatcher`，teardown 后队列静止不再 emit，竞态从根上消除，5 次独立验证全绿。
+6. **DB 迁移历史**：`AppDatabase` version=2，v1→v2 迁移是标签移除（建新表-拷数据-删旧-改名重建索引，删 `tags` 表），见 `AppDatabase.kt` 的 `MIGRATION_1_2`。
 
 ## 8. 事件状态机
 

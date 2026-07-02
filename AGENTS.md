@@ -1,7 +1,7 @@
 # AGENT.md — 事记本（ShiJiBen）项目上下文
 
 > 本文档供 AI agent 阅读，提供项目约定和关键上下文。
-> 2026-06-27 更新：标签（Tag）功能已移除，DB v1→v2 迁移见 [docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md](docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md) Part C。
+> 2026-06-27 更新：标签（Tag）功能已移除，DB v1→v2 迁移见 `AppDatabase.kt` 的 `MIGRATION_1_2`（建新表-拷数据-删旧-改名）。
 
 ## 项目概述
 
@@ -57,7 +57,7 @@ shijiben/
 
 ## 数据模型
 
-两张核心表，详见 [docs/2026-06-22-shijiben-design.md](docs/2026-06-22-shijiben-design.md)：
+两张核心表（见 `EventEntity` / `NoteEntity` 与 [ARCHITECTURE.md](docs/ARCHITECTURE.md) §1）：
 
 - **Event**：事件，有 start_time/end_time/status/note（可选）
 - **Note**：随笔，有 timestamp/content
@@ -127,7 +127,7 @@ keyPassword=shijiben
 
 - `keystore/release.jks` 为自签名 dev keystore，**非生产发布密钥**。
 - 全新 clone 无 `keystore.properties` 时 release APK 仍可构建（未签名），不阻塞 CI。
-- 若需重新生成 keystore，参考 [docs/superpowers/specs/2026-06-28-release-build-config-design.md](docs/superpowers/specs/2026-06-28-release-build-config-design.md) §A.1。
+- 若需重新生成 keystore，用 `keytool` 生成自签名 dev keystore，写入 `keystore.properties` 即可。
 
 ### 验证门（四道全绿才算过）
 
@@ -174,10 +174,10 @@ adb shell dumpsys package com.shijiben
 ## 常见问题 FAQ
 
 **Q1：keystore.properties 缺失怎么办？**
-A：release 走 fallback 产出 unsigned APK，构建仍成功，不阻塞 CI/全新 clone。若需签名 APK，参考 [docs/superpowers/specs/2026-06-28-release-build-config-design.md](docs/superpowers/specs/2026-06-28-release-build-config-design.md) §A.1 重新生成（即上方「Keystore 配置」子节）。
+A：release 走 fallback 产出 unsigned APK，构建仍成功，不阻塞 CI/全新 clone。若需签名 APK，按上方「Keystore 配置」子节重新生成 keystore。
 
 **Q2：flaky test 是否复发？**
-A：迭代 9 方案 A 根治（路由 Room executor 到 StandardTestDispatcher，从根上消除 teardown 竞态），5 次独立验证全绿，未复发。详见 [docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md](docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md)。
+A：迭代 9 方案 A 根治（路由 Room executor 到 StandardTestDispatcher，从根上消除 teardown 竞态），5 次独立验证全绿，未复发。详见 [ARCHITECTURE.md](docs/ARCHITECTURE.md) §7.5。
 
 **Q3：如何重置生日（TimeViz）？**
 A：`adb shell pm clear com.shijiben` 清除 app 全部数据（含 SharedPreferences 与 Room DB），重开 app 触发首次设置流程重新输入生日。注意：会同时清空所有事件与随笔，操作前请先导出备份。
@@ -191,22 +191,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - **V2**：时间可视化（今天/今年/一生）+ 热力图月视图回看 + 随笔完整化（已落地）
 - **V3**：设置页 + 数据导出/备份 + 数据导入 + 年视图 + 搜索 + 其他打磨（设置页 + 数据导出/导入 + 年视图 + 搜索已落地）
 
-## Spec 索引
-
-- [2026-06-27-top-bottom-redesign-design.md](docs/superpowers/specs/2026-06-27-top-bottom-redesign-design.md) — 顶底重设计 + 标签移除
-- [2026-06-28-homepage-composition-rebalance-design.md](docs/superpowers/specs/2026-06-28-homepage-composition-rebalance-design.md) — 首页构图重平衡（底部双 block 替代悬浮加号）
-- [2026-06-28-time-visualization-design.md](docs/superpowers/specs/2026-06-28-time-visualization-design.md) — 时间可视化
-- [2026-06-28-heatmap-design.md](docs/superpowers/specs/2026-06-28-heatmap-design.md) — 热力图月视图
-- [2026-06-28-settings-privacy-backlog-design.md](docs/superpowers/specs/2026-06-28-settings-privacy-backlog-design.md) — 设置页 + 隐私政策 + backlog 修复
-- [2026-06-28-data-export-and-flaky-fix-design.md](docs/superpowers/specs/2026-06-28-data-export-and-flaky-fix-design.md) — 数据导出（JSON + SAF）+ flaky test 修复
-- [2026-06-28-splash-docs-nit-cleanup-design.md](docs/superpowers/specs/2026-06-28-splash-docs-nit-cleanup-design.md) — Splash 接入 + 文档对齐 + nit 清理（本 spec）
-- [2026-06-28-release-build-config-design.md](docs/superpowers/specs/2026-06-28-release-build-config-design.md) — Release 构建配置（签名 + 混淆 + 缩减 + ProGuard 规则）（本 spec）
-- [2026-06-28-fallback-fix-and-icons-cleanup-design.md](docs/superpowers/specs/2026-06-28-fallback-fix-and-icons-cleanup-design.md) — fallback 修复 + 应用图标清理
-- [2026-06-28-data-import-design.md](docs/superpowers/specs/2026-06-28-data-import-design.md) — 数据导入（JSON 解析 + SAF 读取 + DB 写入）
-- [2026-06-28-flaky-rootfix-and-docs-design.md](docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md) — flaky test 根治（路由 Room executor）+ 文档打磨
-- [2026-06-28-heatmap-year-view-design.md](docs/superpowers/specs/2026-06-28-heatmap-year-view-design.md) — 热力图年视图（12 月迷你月历拼贴）
-- [2026-06-28-search-design.md](docs/superpowers/specs/2026-06-28-search-design.md) — 搜索（events.title/note + notes.content 全文检索，LIKE 内存过滤）
-- [2026-06-29-time-allocation-design.md](docs/superpowers/specs/2026-06-29-time-allocation-design.md) — 时间去向聚合（HeatmapScreen 3 tab 容器 + TimeAllocationCalculator/ViewModel/Tab）
-- [2026-06-29-debug-console-overlay-design.md](docs/superpowers/specs/2026-06-29-debug-console-overlay-design.md) — 调试控制台悬浮 overlay（DebugOverlay + DebugLog ring buffer）
-
-> 变更历史见 `git log`，不在本文件维护。
+> 设计 spec 与变更历史见 `git log`，不在本仓库维护独立文档。架构详情见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
