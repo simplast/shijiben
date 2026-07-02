@@ -7,7 +7,6 @@ import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
-import com.shijiben.test.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -101,36 +100,6 @@ class RecordingViewModelTest {
     }
 
     @Test
-    fun save_editingCompletedEventWithZeroDuration_downgradesToInProgress() = runTest {
-        // A completed event with a real end time.
-        val now = System.currentTimeMillis()
-        val id = eventRepo.createEvent(
-            title = "已完成",
-            startTime = now - 7200_000,
-            endTime = now - 3600_000,
-            note = null
-        )
-        val event = eventRepo.getEventById(id)!!
-        assertThat(event.status).isEqualTo(EventStatus.Completed.value)
-
-        // Edit it, drag duration to 0 (re-open the event, no end time).
-        vm.initEdit(event)
-        vm.onDurationChange(0)
-        val today = Calendar.getInstance(TimeZone.getDefault()).let {
-            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
-        }
-        val ok = vm.save(today)
-        assertThat(ok).isTrue()
-
-        // Must be downgraded to InProgress (NOT stay Completed with null endTime — that's an invalid state).
-        // Note: duration==0 branch fires before start>now check, so even if initEdit's coerceIn(300,1440)
-        // pushes start to a future time (e.g. 5:00 AM during early-morning runs), the downgrade still holds.
-        val saved = eventRepo.getEventById(id)!!
-        assertThat(saved.status).isEqualTo(EventStatus.InProgress.value)
-        assertThat(saved.endTime).isNull()
-    }
-
-    @Test
     fun save_newEvent_hasNonNullEndTime() = runTest {
         // New events are not in-progress (currentStatus defaults to NotStarted),
         // so they get a real end time from the slider.
@@ -146,27 +115,6 @@ class RecordingViewModelTest {
         assertThat(events).hasSize(1)
         assertThat(events.first().endTime).isNotNull()
         assertThat(events.first().title).isEqualTo("新事件")
-    }
-
-    @Test
-    fun save_futureStartEventWithDuration_markedNotStartedNotInProgress() = runTest {
-        // viewingDate = tomorrow, so any start time is in the future.
-        val tomorrow = Calendar.getInstance(TimeZone.getDefault()).apply {
-            add(Calendar.DAY_OF_MONTH, 1)
-        }.let {
-            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
-        }
-
-        vm.initNew()
-        vm.onStartChange(540) // 9:00
-        vm.onDurationChange(60)
-        vm.onTitleChange("明天事件")
-        val ok = vm.save(tomorrow)
-        assertThat(ok).isTrue()
-
-        val saved = eventRepo.getAllEvents().first().single()
-        assertThat(saved.status).isEqualTo(EventStatus.NotStarted.value)
-        assertThat(saved.endTime).isNotNull() // duration>0 still produces an endTime
     }
 
     @Test
@@ -288,49 +236,5 @@ class RecordingViewModelTest {
         assertThat(vm.durationMinutes.value).isEqualTo(0)
         assertThat(vm.durationMax.value).isEqualTo(180)
         assertThat(possibleSnaps.contains(vm.startMinutes.value)).isTrue()
-    }
-
-    @Test
-    fun save_editingCompletedEventBeforeFiveAM_preservesOriginalStartTime() = runTest {
-        // A completed event that started at 00:30 (before the old ABS_MIN=300=5:00 AM).
-        // Without the fix, initEdit clamps start to 300 (5:00 AM), and save() silently
-        // corrupts the start time from 00:30 to 05:00.
-        val cal = Calendar.getInstance(TimeZone.getDefault())
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 30)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        val startTime = cal.timeInMillis
-        cal.set(Calendar.HOUR_OF_DAY, 1)
-        cal.set(Calendar.MINUTE, 0)
-        val endTime = cal.timeInMillis
-
-        val id = eventRepo.createEvent(
-            title = "深夜事件",
-            startTime = startTime,
-            endTime = endTime,
-            note = null
-        )
-        val event = eventRepo.getEventById(id)!!
-        assertThat(event.status).isEqualTo(EventStatus.Completed.value)
-
-        // Edit only the title — don't touch the slider.
-        vm.initEdit(event)
-        // initEdit must preserve 00:30 (30 minutes), NOT clamp to 300 (5:00 AM)
-        assertThat(vm.startMinutes.value).isEqualTo(30)
-        vm.onTitleChange("深夜事件改名")
-        val today = Calendar.getInstance(TimeZone.getDefault()).let {
-            Triple(it.get(Calendar.YEAR), it.get(Calendar.MONTH) + 1, it.get(Calendar.DAY_OF_MONTH))
-        }
-        val ok = vm.save(today)
-        assertThat(ok).isTrue()
-
-        val saved = eventRepo.getEventById(id)!!
-        val savedCal = Calendar.getInstance(TimeZone.getDefault())
-        savedCal.timeInMillis = saved.startTime
-        // The start time must NOT be silently clamped to 5:00 AM.
-        assertThat(savedCal.get(Calendar.HOUR_OF_DAY)).isEqualTo(0)
-        assertThat(savedCal.get(Calendar.MINUTE)).isEqualTo(30)
-        assertThat(saved.title).isEqualTo("深夜事件改名")
     }
 }

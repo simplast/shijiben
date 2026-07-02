@@ -3,23 +3,28 @@ package com.shijiben.feature.recording
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shijiben.data.local.EventEntity
+import com.shijiben.data.local.TagEntity
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
+import com.shijiben.data.repository.TagRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
 
-private const val NEW_EVENT_DURATION_MAX = 180   // 与 TimeRangeSlider 默认一致
-private const val DURATION_HARD_CEILING = 480
-
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val tagRepository: TagRepository
 ) : ViewModel() {
+
+    val tags: StateFlow<List<TagEntity>> = tagRepository.getAllTags()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
@@ -30,73 +35,51 @@ class RecordingViewModel @Inject constructor(
     private val _durationMinutes = MutableStateFlow(10) // 10 分钟默认
     val durationMinutes: StateFlow<Int> = _durationMinutes.asStateFlow()
 
-    private val _durationMax = MutableStateFlow(NEW_EVENT_DURATION_MAX)
-    val durationMax: StateFlow<Int> = _durationMax.asStateFlow()
+    private val _selectedTagId = MutableStateFlow<Long?>(null)
+    val selectedTagId: StateFlow<Long?> = _selectedTagId.asStateFlow()
 
     private val _note = MutableStateFlow("")
     val note: StateFlow<String> = _note.asStateFlow()
 
     private var editingId: Long? = null
-    private var originalStatus: Int? = null   // preserved across initEdit so save() can keep in-progress events null-ended
 
     fun onTitleChange(v: String) { _title.value = v }
     fun onNoteChange(v: String) { _note.value = v }
     fun onStartChange(v: Int) { _startMinutes.value = v }
     fun onDurationChange(v: Int) { _durationMinutes.value = v }
+    fun onTagSelected(id: Long?) { _selectedTagId.value = id }
 
     /** 进入"新建"模式：基于当前时间初始化（取整到最近一刻钟） */
     fun initNew() {
         editingId = null
-        originalStatus = null
         _title.value = ""
         _note.value = ""
+        _selectedTagId.value = null
         val cal = Calendar.getInstance(TimeZone.getDefault())
         val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
         val snapped = ((nowMin / 15) * 15).coerceIn(300, 1440)
         _startMinutes.value = snapped
         _durationMinutes.value = 10
-        _durationMax.value = NEW_EVENT_DURATION_MAX
     }
 
     /** 进入"编辑"模式：加载已有事件 */
     fun initEdit(event: EventEntity) {
         editingId = event.id
-        originalStatus = event.status
         _title.value = event.title
         _note.value = event.note ?: ""
+        _selectedTagId.value = event.tagId
         val cal = Calendar.getInstance(TimeZone.getDefault())
-
-        // 没有设置时间（NotStarted 且无 endTime）：默认使用当前时间
-        if (event.endTime == null && event.status == EventStatus.NotStarted.value) {
-            val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-            _startMinutes.value = ((nowMin / 15) * 15).coerceIn(0, 1440)
-            _durationMinutes.value = 0
-            _durationMax.value = NEW_EVENT_DURATION_MAX
-            return
-        }
-        // 进行中（InProgress 且 endTime=null）：保持无结束时间，保留原始 startTime
-        if (event.endTime == null && event.status == EventStatus.InProgress.value) {
-            cal.timeInMillis = event.startTime
-            val startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(0, 1440)
-            _startMinutes.value = startMin
-            _durationMinutes.value = 0
-            _durationMax.value = NEW_EVENT_DURATION_MAX
-            return
-        }
-
         cal.timeInMillis = event.startTime
-        val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(0, 1440)
+        val start = (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)).coerceIn(300, 1440)
         _startMinutes.value = start
-        val rawDuration = if (event.endTime != null) {
-            // 用绝对时间差计算，避免跨午夜时 end < start 的分钟差为负
-            ((event.endTime - event.startTime) / 60_000L).toInt().coerceAtLeast(0)
+        _durationMinutes.value = if (event.endTime != null) {
+            val cal2 = Calendar.getInstance(TimeZone.getDefault())
+            cal2.timeInMillis = event.endTime
+            val end = cal2.get(Calendar.HOUR_OF_DAY) * 60 + cal2.get(Calendar.MINUTE)
+            (end - start).coerceIn(0, 480)
         } else {
-            60   // defensive; unreachable after Step 2 (both null-endTime branches return early)
+            60
         }
-        _durationMinutes.value = rawDuration.coerceIn(0, DURATION_HARD_CEILING)
-        // 编辑时上限 = max(默认 3h, 实际时长向上取整到整点)，保证滑块能表示当前值
-        _durationMax.value = maxOf(NEW_EVENT_DURATION_MAX, ((rawDuration + 59) / 60) * 60)
-            .coerceAtMost(DURATION_HARD_CEILING)
     }
 
     /**
@@ -118,18 +101,7 @@ class RecordingViewModel @Inject constructor(
         }
 
         val status = when {
-            // duration=0 → 无 endTime。若原状态为 Completed，必须降级为 InProgress，
-            // 否则会保存非法的 Completed+endTime=null（违反 EventRepository 不变式）。
-            // 此分支优先于 start>now 检查：保证 Completed 降级不变式在 initEdit 的
-            // coerceIn(300,1440) 把 start 推到未来时仍然成立。
-            duration == 0 -> if (originalStatus == EventStatus.Completed.value) {
-                EventStatus.InProgress.value
-            } else {
-                originalStatus ?: EventStatus.NotStarted.value
-            }
-            // duration>0 且开始时间在未来 → 未开始（与 determineStatus 不变式对齐：
-            // startTime > now → NotStarted）。防止未来计划事件被误标 InProgress 而在热力图虚增时长。
-            start > now -> EventStatus.NotStarted.value
+            duration == 0 -> EventStatus.NotStarted.value
             actualEnd != null && now > actualEnd -> EventStatus.Completed.value
             else -> EventStatus.InProgress.value
         }
@@ -143,6 +115,7 @@ class RecordingViewModel @Inject constructor(
                     startTime = start,
                     endTime = actualEnd,
                     status = status,
+                    tagId = _selectedTagId.value,
                     note = _note.value.ifBlank { null }
                 )
             )
@@ -152,6 +125,7 @@ class RecordingViewModel @Inject constructor(
                 startTime = start,
                 endTime = actualEnd,
                 status = status,
+                tagId = _selectedTagId.value,
                 note = _note.value.ifBlank { null }
             )
         }

@@ -11,14 +11,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,7 +44,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -56,12 +53,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -82,9 +75,7 @@ import com.shijiben.feature.notes.NotesViewModel
 import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
 import com.shijiben.ui.theme.*
-import com.shijiben.util.isToday
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
@@ -124,7 +115,8 @@ fun TimelineScreen(
     val events by viewModel.events.collectAsStateWithLifecycle()
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val date by viewModel.viewingDate.collectAsStateWithLifecycle()
-    val nowState = produceState(initialValue = System.currentTimeMillis()) {
+    val nowHour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY)
+    val now by produceState(initialValue = System.currentTimeMillis()) {
         while (true) {
             delay(60_000L)
             value = System.currentTimeMillis()
@@ -133,20 +125,14 @@ fun TimelineScreen(
 
     var showSheet by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<EventEntity?>(null) }
+    var showNoteSheet by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<EventEntity?>(null) }
     var activeDrawer by remember { mutableStateOf<DrawerType?>(null) }
     var eventDraft by remember { mutableStateOf("") }
     var noteDraft by remember { mutableStateOf("") }
-    val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
-    var showNoteSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    // 关键动作触觉反馈：开始/停止/删除/快速添加 — 强化 8-bit 像素质感的"按下即响应"
-    val haptic = LocalHapticFeedback.current
-    val onTapStart: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
-    val onTapStop: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
-    val onTapDelete: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
-    val onQuickAdd: () -> Unit = { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+    val editingNote by notesViewModel.editing.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         // 像素山水背景（弱化）
@@ -158,24 +144,24 @@ fun TimelineScreen(
             alignment = Alignment.TopCenter
         )
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 6.dp)) {
-            // 顶部 8dp 彩虹条（品牌标识）
-            RainbowTrim()
+            // 顶部 8dp 彩虹条（品牌标识，全 app 唯一保留处）
+            Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
+                val trimColors = listOf(
+                    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
+                    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
+                    Color(0xFF6366F1), Color(0xFFA855F7)
+                )
+                for (i in 0 until 80) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f).fillMaxHeight()
+                            .background(trimColors[i % 8])
+                    )
+                }
+            }
             // 顶栏一条带：左日期徽章 + 右概览统计
-            // 背景即进度条：已过去时间填 PrimaryLight 浅红，剩余白色
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Surface)
-                    .drawBehind {
-                        val now = nowState.value
-                        val fraction = todayProgressFraction(date, now)
-                        if (fraction > 0f) {
-                            drawRect(
-                                color = PrimaryLight,
-                                size = Size(size.width * fraction, size.height)
-                            )
-                        }
-                    },
+                modifier = Modifier.fillMaxWidth().background(Surface),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -193,7 +179,7 @@ fun TimelineScreen(
                                 Text(
                                     text = formatDateCompact(date),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
+                                    fontSize = 13.sp,
                                     color = if (isToday(date)) TextPrimary else Accent
                                 )
                             }
@@ -254,12 +240,28 @@ fun TimelineScreen(
                         )
                     }
                 }
-                StatsText(
-                    date = date,
-                    events = events,
-                    notes = notes,
-                    nowState = nowState,
-                    onClick = onTimeVizClick
+                val hasRecords = events.isNotEmpty() || notes.isNotEmpty()
+                val baseStats = if (hasRecords) {
+                    "${events.size} 件事 · ${notes.size} 条随笔"
+                } else "还没有记录"
+                val statsText = if (isToday(date)) {
+                    if (hasRecords) {
+                        "今天还有 ${TimeVizCalculator.todayRemaining(now)} · $baseStats"
+                    } else {
+                        "今天还有 ${TimeVizCalculator.todayRemaining(now)}"
+                    }
+                } else baseStats
+                Text(
+                    text = statsText,
+                    fontSize = 11.sp,
+                    color = TextTertiary,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onTimeVizClick() }
+                        .padding(end = 12.dp, start = 8.dp)
                 )
             }
             // 2dp 黑色底分隔线
@@ -270,26 +272,22 @@ fun TimelineScreen(
                     DayProgressBar(
                         events = events,
                         viewingDate = date,
-                        nowState = nowState
+                        now = now
                     )
                 }
                 Box(modifier = Modifier.fillMaxHeight().weight(1f).padding(start = 12.dp, top = 12.dp, end = 12.dp)) {
                     EventList(
                         events = events,
                         notes = notes,
-                        viewingDate = date,
                         onEventClick = { event ->
                             editingEvent = event
                             showSheet = true
                         },
-                        onStartEvent = { event -> onTapStart(); viewModel.markInProgress(event.id) },
-                        onStopEvent = { event -> onTapStop(); viewModel.markCompleted(event.id) },
+                        onStartEvent = { event -> viewModel.markInProgress(event.id) },
+                        onStopEvent = { event -> viewModel.markCompleted(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
-                        onNoteClick = { note ->
-                            notesViewModel.startEdit(note)
-                            showNoteSheet = true
-                        },
-                        nowState = nowState
+                        onNoteClick = onNotesClick,
+                        now = now
                     )
                 }
             }
@@ -316,7 +314,6 @@ fun TimelineScreen(
                     when (activeDrawer) {
                         DrawerType.EVENT -> {
                             if (text.isNotBlank()) {
-                                onQuickAdd()
                                 viewModel.quickAddEvent(text.trim())
                                 eventDraft = ""
                             }
@@ -325,7 +322,6 @@ fun TimelineScreen(
                             if (text.isNotBlank()) {
                                 scope.launch {
                                     if (notesViewModel.save(text.trim())) {
-                                        onQuickAdd()
                                         noteDraft = ""
                                         viewModel.refresh()
                                     }
@@ -352,19 +348,9 @@ fun TimelineScreen(
         if (showNoteSheet) {
             NoteEditorSheet(
                 editing = editingNote,
-                onDismiss = {
-                    showNoteSheet = false
-                    notesViewModel.closeSheet()
-                },
-                onSave = { content ->
-                    val ok = notesViewModel.save(content)
-                    if (ok) viewModel.refresh()
-                    ok
-                },
-                onDelete = { note ->
-                    notesViewModel.delete(note)
-                    viewModel.refresh()
-                }
+                onDismiss = { showNoteSheet = false; notesViewModel.closeSheet() },
+                onSave = { content -> val ok = notesViewModel.save(content); if (ok) viewModel.refresh(); ok },
+                onDelete = { note -> notesViewModel.delete(note); viewModel.refresh() }
             )
         }
 
@@ -386,7 +372,6 @@ fun TimelineScreen(
                 text = { Text("「${target.title}」将被永久删除，无法恢复。", color = TextSecondary) },
                 confirmButton = {
                     TextButton(onClick = {
-                        onTapDelete()
                         viewModel.deleteEvent(target.id)
                         pendingDelete = null
                     }) { Text("删除", color = Error) }
@@ -400,67 +385,15 @@ fun TimelineScreen(
 }
 
 @Composable
-private fun RowScope.StatsText(
-    date: Triple<Int, Int, Int>,
-    events: List<EventEntity>,
-    notes: List<NoteEntity>,
-    nowState: State<Long>,
-    onClick: () -> Unit
-) {
-    val now = nowState.value
-    val hasRecords = events.isNotEmpty() || notes.isNotEmpty()
-    val baseStats = if (hasRecords) {
-        "${events.size} 件事 · ${notes.size} 条随笔"
-    } else "还没有记录"
-    val statsText = if (isToday(date)) {
-        if (hasRecords) {
-            "今天还有 ${TimeVizCalculator.todayRemaining(now)} · $baseStats"
-        } else {
-            "今天还有 ${TimeVizCalculator.todayRemaining(now)}"
-        }
-    } else baseStats
-    Text(
-        text = statsText,
-        fontSize = 12.sp,
-        color = TextTertiary,
-        fontWeight = FontWeight.Medium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .weight(1f)
-            .clickable { onClick() }
-            .padding(end = 12.dp, start = 8.dp)
-    )
-}
-
-@Composable
-private fun ElapsedBadge(startTime: Long, nowState: State<Long>) {
-    val now = nowState.value
-    Box(
-        modifier = Modifier
-            .background(Primary, RoundedCornerShape(0.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = formatDurationShort(startTime, now),
-            fontSize = 12.sp,
-            color = TextOnPrimary,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
 fun EventList(
     events: List<EventEntity>,
     notes: List<NoteEntity>,
-    viewingDate: Triple<Int, Int, Int>,
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
     onEventLongClick: (EventEntity) -> Unit,
-    onNoteClick: (NoteEntity) -> Unit,
-    nowState: State<Long>
+    onNoteClick: () -> Unit,
+    now: Long
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
         val items = remember(events, notes) {
@@ -468,7 +401,14 @@ fun EventList(
                 .sortedBy { it.sortKey }
         }
         if (items.isEmpty()) {
-            EmptyDayState(viewingDate = viewingDate)
+            Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "今天还是空白",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = TextSecondary
+                )
+            }
         } else {
             items.forEach { item ->
                 when (item) {
@@ -478,50 +418,13 @@ fun EventList(
                         onStart = { onStartEvent(item.event) },
                         onStop = { onStopEvent(item.event) },
                         onLongClick = { onEventLongClick(item.event) },
-                        nowState = nowState
+                        now = now
                     )
                     is TimelineItem.NoteItem -> NoteRow(
                         note = item.note,
-                        onClick = { onNoteClick(item.note) }
+                        onClick = onNoteClick
                     )
                 }
-            }
-        }
-    }
-}
-
-/**
- * 空日状态：按"今天/过去/未来"区分文案，避免过去空日误显"今天还是空白"。
- * - 今天：主文案 + 引导提示（指向底部输入入口），轻量不催促
- * - 过去：事实陈述"这天没有记录"，不评判（对齐"记录即审视，不制造焦虑"）
- * - 未来：友好提示"这天还没到来"，不预设计划焦虑
- */
-@Composable
-private fun EmptyDayState(viewingDate: Triple<Int, Int, Int>) {
-    val today = isToday(viewingDate)
-    val isFuture = LocalDate.of(viewingDate.first, viewingDate.second, viewingDate.third)
-        .isAfter(LocalDate.now())
-    Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            val main = when {
-                today -> "今天还是空白"
-                isFuture -> "这天还没到来"
-                else -> "这天没有记录"
-            }
-            Text(
-                text = main,
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp,
-                color = TextSecondary
-            )
-            // 今天空态：加一行小字引导，指向底部输入入口（不催促，仅提示）
-            if (today) {
-                Text(
-                    text = "在下方记一笔",
-                    fontSize = 12.sp,
-                    color = TextTertiary,
-                    modifier = Modifier.padding(top = 6.dp)
-                )
             }
         }
     }
@@ -535,7 +438,7 @@ fun EventCard(
     onStart: () -> Unit,
     onStop: () -> Unit,
     onLongClick: () -> Unit,
-    nowState: State<Long>
+    now: Long
 ) {
     Surface(
         color = Surface,
@@ -588,7 +491,7 @@ fun EventCard(
             Text(
                 text = event.title,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 color = when (event.status) {
                     2 -> Success
                     0 -> TextTertiary
@@ -606,17 +509,29 @@ fun EventCard(
                     // 进行中：显示开始时间 + 运行中时长 badge
                     Text(
                         text = "自 ${formatTime(event.startTime)}",
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         color = TextSecondary
                     )
                     Spacer(Modifier.width(6.dp))
-                    ElapsedBadge(startTime = event.startTime, nowState = nowState)
+                    val elapsed = formatDurationShort(event.startTime, now)
+                    Box(
+                        modifier = Modifier
+                            .background(Primary, RoundedCornerShape(0.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = elapsed,
+                            fontSize = 10.sp,
+                            color = TextOnPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
                 2 -> {
                     // 已完成：原时间范围 + 耗时 badge（保持不变）
                     Text(
                         text = "${formatTime(event.startTime)}-${formatTime(event.endTime!!)}",
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         color = Secondary
                     )
                     Spacer(Modifier.width(6.dp))
@@ -627,7 +542,7 @@ fun EventCard(
                     ) {
                         Text(
                             text = formatDurationShort(event.startTime, event.endTime!!),
-                            fontSize = 12.sp,
+                            fontSize = 10.sp,
                             color = TextOnPrimary,
                             fontWeight = FontWeight.Bold
                         )
@@ -675,13 +590,13 @@ fun NoteRow(
             Spacer(Modifier.width(8.dp))
             Text(
                 text = formatTime(note.timestamp),
-                fontSize = 16.sp,
+                fontSize = 12.sp,
                 color = TextSecondary
             )
             Spacer(Modifier.width(6.dp))
             Text(
                 text = note.content,
-                fontSize = 16.sp,
+                fontSize = 13.sp,
                 color = TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -696,10 +611,9 @@ private fun formatTime(ts: Long): String = SimpleDateFormat("HH:mm", Locale.getD
 private fun formatDurationShort(start: Long, end: Long): String {
     val minutes = (end - start) / 1000 / 60
     return if (minutes < 60) {
-        "${minutes}分钟"
+        "${minutes}min"
     } else {
-        val hours = minutes / 60.0
-        if (hours % 1.0 == 0.0) "${hours.toInt()}小时" else "%.1f小时".format(hours)
+        "%.1fhours".format(minutes / 60.0)
     }
 }
 
@@ -710,14 +624,9 @@ private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
     val weekday = weekdayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
     return "${date.second}/${date.third}/$weekday"
 }
-
-/** 顶栏进度条比例：今天按当前时刻、过去日期=1f（整条填色）、未来日期=0f（全白）。 */
-private fun todayProgressFraction(date: Triple<Int, Int, Int>, now: Long): Float {
-    return when {
-        isToday(date) -> TimeVizCalculator.todayProgress(now)
-        LocalDate.of(date.first, date.second, date.third).isBefore(LocalDate.now()) -> 1f
-        else -> 0f
-    }
+private fun isToday(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -781,7 +690,7 @@ private fun BottomEntryBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(34.dp)
                 .padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -794,7 +703,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(26.dp)
                         .border(2.dp, Color.Black)
                         .background(Primary)
                         .clickable(onClick = onCalendarClick),
@@ -804,12 +713,12 @@ private fun BottomEntryBar(
                         Icons.Default.DateRange,
                         contentDescription = "选择日期",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .height(32.dp)
+                        .height(26.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -820,7 +729,7 @@ private fun BottomEntryBar(
                         text = "在做什么？",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
@@ -840,7 +749,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .height(32.dp)
+                        .height(26.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -851,13 +760,13 @@ private fun BottomEntryBar(
                         text = "写点什么...",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(26.dp)
                         .border(2.dp, Color.Black)
                         .background(Accent)
                         .clickable(onClick = onNotesClick),
@@ -867,7 +776,7 @@ private fun BottomEntryBar(
                         Icons.Default.Edit,
                         contentDescription = "随笔列表",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -875,10 +784,7 @@ private fun BottomEntryBar(
     }
 }
 
-/** B2：抽屉 overlay（遮罩 + 底部抽屉本体）。点遮罩关闭。
- * 记事：单行输入，IME Done 提交；
- * 随笔：多行输入，回车换行，底部"保存"按钮提交。
- * 抽屉本体应用 imePadding 避免被输入法遮挡。 */
+/** B2：抽屉 overlay（遮罩 + 底部抽屉本体）。无提交按钮、无 ✕，靠 IME Done 提交、点遮罩关闭。 */
 @Composable
 private fun EntryDrawer(
     drawerType: DrawerType,
@@ -906,8 +812,7 @@ private fun EntryDrawer(
                 .background(Color.Black.copy(alpha = 0.4f))
                 .clickable(onClick = onDismiss)
         )
-        // 抽屉本体：根 Surface 的 safeDrawingPadding 已统一消费 IME inset，
-        // 此处 align(BottomCenter) 自动贴在 IME 上方，无需再加 imePadding
+        // 抽屉本体
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -927,16 +832,16 @@ private fun EntryDrawer(
                     Text(
                         text = if (isEvent) "记事" else "随笔",
                         color = Color.White,
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                // 输入框：记事单行，随笔多行（min-height 放大1.2倍）
+                // 多行输入框：2dp 黑边、白底、min-height 96dp、IME Done 提交
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = if (isEvent) 48.dp else 120.dp)
+                        .heightIn(min = 96.dp)
                         .border(2.dp, Color.Black)
                         .background(Surface)
                         .padding(8.dp)
@@ -948,15 +853,13 @@ private fun EntryDrawer(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         textStyle = TextStyle(
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         ),
                         cursorBrush = SolidColor(Color.Black),
-                        singleLine = isEvent,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = if (isEvent) ImeAction.Done else ImeAction.Default
-                        ),
+                        singleLine = false,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(
                             onDone = { onSubmit(currentDraft) }
                         ),
@@ -966,7 +869,7 @@ private fun EntryDrawer(
                                     Text(
                                         text = placeholder,
                                         color = TextTertiary,
-                                        fontSize = 16.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -974,26 +877,6 @@ private fun EntryDrawer(
                             }
                         }
                     )
-                }
-                // 随笔：底部"保存"按钮（回车键已用于换行，需要独立提交入口）
-                if (!isEvent) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Box(
-                            modifier = Modifier
-                                .border(2.dp, Color.Black)
-                                .background(Accent)
-                                .clickable { onSubmit(currentDraft) }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = "保存",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
                 }
             }
         }

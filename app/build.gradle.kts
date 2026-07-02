@@ -1,11 +1,11 @@
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -84,38 +84,39 @@ ksp {
 }
 
 dependencies {
-    implementation(platform(libs.compose.bom))
+    val composeBom = platform("androidx.compose:compose-bom:${rootProject.extra["composeBom"]}")
+    implementation(composeBom)
 
-    implementation(libs.core.ktx)
-    implementation(libs.lifecycle.runtime.ktx)
-    implementation(libs.lifecycle.runtime.compose)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.activity.compose)
-    implementation(libs.core.splashscreen)
+    implementation("androidx.core:core-ktx:${rootProject.extra["coreKtx"]}")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:${rootProject.extra["lifecycle"]}")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:${rootProject.extra["lifecycle"]}")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:${rootProject.extra["lifecycle"]}")
+    implementation("androidx.activity:activity-compose:${rootProject.extra["activityCompose"]}")
+    implementation("androidx.core:core-splashscreen:${rootProject.extra["splashscreen"]}")
 
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.graphics)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.material3)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
 
-    implementation(libs.navigation.compose)
+    implementation("androidx.navigation:navigation-compose:${rootProject.extra["navigationCompose"]}")
 
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.navigation.compose)
+    implementation("com.google.dagger:hilt-android:${rootProject.extra["hilt"]}")
+    ksp("com.google.dagger:hilt-compiler:${rootProject.extra["hilt"]}")
+    implementation("androidx.hilt:hilt-navigation-compose:${rootProject.extra["hiltNavigationCompose"]}")
 
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    implementation("androidx.room:room-runtime:${rootProject.extra["room"]}")
+    implementation("androidx.room:room-ktx:${rootProject.extra["room"]}")
+    ksp("androidx.room:room-compiler:${rootProject.extra["room"]}")
 
-    implementation(libs.kotlinx.coroutines.android)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.extra["coroutines"]}")
 
-    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation("androidx.compose.ui:ui-tooling")
 
-    testImplementation(libs.junit)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.room.testing)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.truth)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.room:room-testing:${rootProject.extra["room"]}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("com.google.truth:truth:1.4.4")
 }

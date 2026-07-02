@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -18,8 +15,6 @@ import com.shijiben.data.local.EventEntity
 import com.shijiben.ui.theme.BorderLight
 import com.shijiben.ui.theme.RainbowHourColors
 import com.shijiben.ui.theme.TimeBlockNowBorder
-import com.shijiben.util.isPastDay
-import com.shijiben.util.isToday
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -27,25 +22,20 @@ import java.util.TimeZone
 fun DayProgressBar(
     events: List<EventEntity>,
     viewingDate: Triple<Int, Int, Int>,
-    nowState: State<Long>,
+    nowHour: Int,
     modifier: Modifier = Modifier
 ) {
     val today = isToday(viewingDate)
     val past = isPastDay(viewingDate)
-    val nowCal = remember(nowState.value) { Calendar.getInstance(TimeZone.getDefault()).apply { timeInMillis = nowState.value } }
-    val nowHour = nowCal.get(Calendar.HOUR_OF_DAY)
-    val coveredHours = remember(events) {
-        events.flatMap { e ->
-            val startHour = hourOfDay(e.startTime)
-            val endHour = e.endTime?.let { hourOfDay(it) } ?: startHour
-            (startHour..endHour).toList()
-        }.toSet()
-    }
+    val coveredHours = events.flatMap { e ->
+        val startHour = hourOfDay(e.startTime)
+        val endHour = e.endTime?.let { hourOfDay(it) } ?: startHour
+        (startHour..endHour).toList()
+    }.toSet()
 
     Column(
         modifier = modifier.fillMaxHeight(),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         for (hour in 0..23) {
             val hasRecord = hour in coveredHours
@@ -57,10 +47,9 @@ fun DayProgressBar(
                 isPast -> baseColor.copy(alpha = 0.3f)
                 else -> BorderLight
             }
-            // 纯色方块（8dp）：三态 + 当前小时黑边高亮。去掉数字标签，精确时刻交给事件卡片。
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(16.dp)
                     .background(bgColor)
                     .then(if (isNow) Modifier.border(2.dp, TimeBlockNowBorder) else Modifier)
             )
@@ -72,4 +61,25 @@ private fun hourOfDay(timestamp: Long): Int {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     cal.timeInMillis = timestamp
     return cal.get(Calendar.HOUR_OF_DAY)
+}
+
+private fun isToday(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    return date == Triple(
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH) + 1,
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
+}
+
+private fun isPastDay(date: Triple<Int, Int, Int>): Boolean {
+    val cal = Calendar.getInstance(TimeZone.getDefault())
+    val today = Triple(
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH) + 1,
+        cal.get(Calendar.DAY_OF_MONTH)
+    )
+    val (ty, tm, td) = today
+    val (y, m, d) = date
+    return y < ty || (y == ty && (m < tm || (m == tm && d < td)))
 }
