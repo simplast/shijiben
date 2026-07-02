@@ -269,3 +269,68 @@ class EventRepositoryHeatmapTest {
         assertThat(result[0].durationMs).isEqualTo(1 * h)
     }
 }
+
+/**
+ * dayRangeMs DST 回归测试：验证 Calendar.add 而非 +24h。
+ * - 春进日（23h）：America/New_York 2026-03-08，2:00→3:00，当天 23h。
+ * - 秋退日（25h）：America/New_York 2026-11-01，2:00→1:00，当天 25h。
+ * - 非 DST 时区（Asia/Shanghai）：恒 24h。
+ * 旧实现 end=start+24h 在春进日偏到次日 01:00、秋退日偏到当日 23:00。
+ */
+class DayRangeMsDstTest {
+
+    private val ny = java.util.TimeZone.getTimeZone("America/New_York")
+    private val sh = java.util.TimeZone.getTimeZone("Asia/Shanghai")
+    private val dayMs = 24L * 3600 * 1000
+
+    @Test
+    fun normalDay_is24Hours() {
+        val (s, e) = dayRangeMs(2026, 6, 15, sh)
+        assertThat(e - s).isEqualTo(dayMs)
+    }
+
+    @Test
+    fun normalDay_ny_is24Hours() {
+        val (s, e) = dayRangeMs(2026, 6, 15, ny)
+        assertThat(e - s).isEqualTo(dayMs)
+    }
+
+    @Test
+    fun springForward_ny_is23Hours() {
+        // 2026-03-08 America/New_York: 春进，2:00→3:00，当天 23h
+        val (s, e) = dayRangeMs(2026, 3, 8, ny)
+        assertThat(e - s).isEqualTo(23L * 3600 * 1000)
+        // 旧 +24h 实现会得到 24h（end 落到次日 01:00 EDT），此处断言 23h 即可区分
+    }
+
+    @Test
+    fun fallBack_ny_is25Hours() {
+        // 2026-11-01 America/New_York: 秋退，2:00→1:00，当天 25h
+        val (s, e) = dayRangeMs(2026, 11, 1, ny)
+        assertThat(e - s).isEqualTo(25L * 3600 * 1000)
+    }
+
+    @Test
+    fun springForward_ny_endIsNextDayMidnight() {
+        // 春进日 end 必须是次日 00:00 EDT（UTC-4），不是次日 01:00
+        val (s, e) = dayRangeMs(2026, 3, 8, ny)
+        val startCal = java.util.Calendar.getInstance(ny)
+        startCal.timeInMillis = s
+        assertThat(startCal.get(java.util.Calendar.DAY_OF_MONTH)).isEqualTo(8)
+        assertThat(startCal.get(java.util.Calendar.HOUR_OF_DAY)).isEqualTo(0)
+        val endCal = java.util.Calendar.getInstance(ny)
+        endCal.timeInMillis = e
+        assertThat(endCal.get(java.util.Calendar.DAY_OF_MONTH)).isEqualTo(9)
+        assertThat(endCal.get(java.util.Calendar.HOUR_OF_DAY)).isEqualTo(0)
+    }
+
+    @Test
+    fun fallBack_ny_endIsNextDayMidnight() {
+        // 秋退日 end 必须是次日 00:00 EST（UTC-5），不是当日 23:00
+        val (s, e) = dayRangeMs(2026, 11, 1, ny)
+        val endCal = java.util.Calendar.getInstance(ny)
+        endCal.timeInMillis = e
+        assertThat(endCal.get(java.util.Calendar.DAY_OF_MONTH)).isEqualTo(2)
+        assertThat(endCal.get(java.util.Calendar.HOUR_OF_DAY)).isEqualTo(0)
+    }
+}

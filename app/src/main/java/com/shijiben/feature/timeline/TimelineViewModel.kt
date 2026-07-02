@@ -147,11 +147,6 @@ class TimelineViewModel @Inject constructor(
         )
     }
 
-    private fun dayRange(y: Int, m: Int, d: Int): Pair<Long, Long> {
-        val cal = Calendar.getInstance(TimeZone.getDefault())
-        cal.set(y, m - 1, d, 0, 0, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        val s = cal.timeInMillis
-        return Pair(s, s + 24L * 3600 * 1000)
-    }
+    private fun dayRange(y: Int, m: Int, d: Int): Pair<Long, Long> =
+        com.shijiben.data.repository.dayRangeMs(y, m, d)
 }

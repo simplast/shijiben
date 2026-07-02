@@ -146,14 +146,8 @@ class EventRepository @Inject constructor(
         return EventStatus.Completed
     }
 
-    private fun dayRange(year: Int, month: Int, day: Int): Pair<Long, Long> {
-        val cal = Calendar.getInstance(TimeZone.getDefault())
-        cal.set(year, month - 1, day, 0, 0, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        val start = cal.timeInMillis
-        val end = start + 24L * 60 * 60 * 1000
-        return Pair(start, end)
-    }
+    internal fun dayRange(year: Int, month: Int, day: Int): Pair<Long, Long> =
+        dayRangeMs(year, month, day, TimeZone.getDefault())
 
     /** 工具：返回当天 0 点与次日 0 点的时间戳 */
     fun todayRange(): Pair<Long, Long> {
@@ -198,6 +192,28 @@ class EventRepository @Inject constructor(
 
     private fun yearEndEpoch(year: Year): Long =
         year.plusYears(1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+}
+
+/**
+ * 指定日期 0 点与次日 0 点的时间戳（[start, end)）。
+ * 用 Calendar.add 推进 1 天而非 +24h：DST 切换日当天时长为 23h（春进）或 25h（秋退），
+ * +24h 会偏移到次日 01:00 或当日 23:00，导致 getEventsByDate/getNotesByDateRange
+ * 在 DST 日漏查或多查 1 小时数据。Calendar.add 按日历日推进，DST-aware。
+ * internal 供单测访问；zone 提供测试注入点。
+ */
+internal fun dayRangeMs(
+    year: Int,
+    month: Int,
+    day: Int,
+    zone: TimeZone = TimeZone.getDefault()
+): Pair<Long, Long> {
+    val cal = Calendar.getInstance(zone)
+    cal.set(year, month - 1, day, 0, 0, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    val start = cal.timeInMillis
+    cal.add(Calendar.DAY_OF_MONTH, 1)
+    val end = cal.timeInMillis
+    return Pair(start, end)
 }
 
 /**
