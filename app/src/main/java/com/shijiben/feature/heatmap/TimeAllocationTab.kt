@@ -143,13 +143,23 @@ private fun AllocationList(items: List<TimeAllocationCalculator.TitleDuration>) 
  * - 3=Secondary 绿
  * - 4+=冷色循环（青/紫/粉/柠檬绿），与"前 4 名暖色"形成视觉分层
  * 与 8-bit 像素风一致：高饱和、强对比、有"游戏排行榜"感。
+ *
+ * internal 供单测直接调（与 filterAndMerge 同模式）。
  */
-private fun rankColor(rank: Int): Color = when (rank) {
+internal fun rankColor(rank: Int): Color = when (rank) {
     0 -> Primary
     1 -> Accent
     2 -> Warning
     3 -> Secondary
     else -> listOf(RainbowCyan, RainbowPurple, RainbowPink, RainbowLime)[(rank - 4) % 4]
+}
+
+/** 格式化时长为 "Xh Ym"，hours=0 时只显示分。internal 供单测直接调。 */
+internal fun formatAllocationDuration(totalMs: Long): String {
+    val totalMin = totalMs / 60_000
+    val hours = totalMin / 60
+    val mins = totalMin % 60
+    return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
 }
 
 @Composable
@@ -215,7 +225,7 @@ private fun AllocationRow(
         Spacer(Modifier.width(8.dp))
         // 时长：固定宽度右对齐，避免长度不一挤压柱状图
         Text(
-            text = formatDuration(item.totalMs),
+            text = formatAllocationDuration(item.totalMs),
             color = TextSecondary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -223,12 +233,4 @@ private fun AllocationRow(
             textAlign = TextAlign.End
         )
     }
-}
-
-/** 格式化时长为 "Xh Ym"，hours=0 时只显示分。 */
-private fun formatDuration(totalMs: Long): String {
-    val totalMin = totalMs / 60_000
-    val hours = totalMin / 60
-    val mins = totalMin % 60
-    return if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
 }
