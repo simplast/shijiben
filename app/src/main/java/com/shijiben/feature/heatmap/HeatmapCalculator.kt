@@ -87,15 +87,20 @@ object HeatmapCalculator {
      * 在单月视图中有意义（"今天在下个月"），但在年视图中，今天的日期会在
      * 相邻月 padding + 当前月实体各出现一次，导致重复标记。
      * 年视图语义：今天只在当前所在月的实体格标记，padding 格不标 isToday。
+     *
+     * **性能**：单次 `groupBy` 按 YearMonth 分桶（O(N)），再逐月查表取当月活动，
+     * 避免 12 次全量 `filter`（O(12N)）。对全年 365 天活动：4380 次迭代 → 365 次。
      */
     fun buildYearGrid(
         year: Year,
         activities: List<DailyActivity>,
         today: LocalDate
     ): YearGrid {
+        // 单次分桶：YearMonth → 当月活动列表。避免 12 次 filter 各扫全量。
+        val byMonth: Map<YearMonth, List<DailyActivity>> = activities.groupBy { YearMonth.from(it.date) }
         val months = (1..12).map { m ->
             val yearMonth = YearMonth.of(year.value, m)
-            val monthActivities = activities.filter { YearMonth.from(it.date) == yearMonth }
+            val monthActivities = byMonth[yearMonth].orEmpty()
             val rawCells = buildGrid(yearMonth, monthActivities, today)  // 复用既有 buildGrid
             // 年视图去重：padding 格（isInMonth=false）不标 isToday
             val cells = rawCells.map { row ->

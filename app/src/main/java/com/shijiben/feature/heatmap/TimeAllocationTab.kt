@@ -129,7 +129,10 @@ private fun AllocationList(items: List<TimeAllocationCalculator.TitleDuration>) 
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        itemsIndexed(items) { index, item ->
+        // key=title：列表内容变化（如切换范围）时，按 title 稳定身份复用 row 组合，
+        // 避免整列重建。注意 title 可能重复（同标题多事件聚合后理论上唯一，但保守起见
+        // 用 index+title 复合 key 防碰撞）。
+        itemsIndexed(items, key = { i, item -> "$i:${item.title}" }) { index, item ->
             AllocationRow(rank = index, item = item, maxMs = maxMs)
         }
     }

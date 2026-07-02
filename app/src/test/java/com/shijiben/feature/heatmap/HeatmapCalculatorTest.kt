@@ -282,4 +282,81 @@ class HeatmapCalculatorTest {
         // 确认 gridStart = 2026-06-29，6-28 不在网格内
         assertThat(grid[0][0].date).isEqualTo(LocalDate.of(2026, 6, 29))
     }
+
+    // ==================== buildYearGrid groupBy 回归 ====================
+
+    /**
+     * groupBy 重构回归：12 个月各投一条活动，验证每月正确接收当月活动、
+     * 不串月、无丢失。覆盖 groupBy 分桶与逐月查表路径。
+     */
+    @Test
+    fun buildYearGrid_groupBy_allMonthsReceiveActivity() {
+        val year = Year.of(2026)
+        val today = LocalDate.of(2026, 6, 15)
+        // 12 个月每月 15 日各 1 条 3h 活动（ratio=3/16<0.25 → level 1）
+        val activities = (1..12).map { m ->
+            DailyActivity(date = LocalDate.of(2026, m, 15), eventCount = 1, durationMs = 3 * h)
+        }
+        val grid = HeatmapCalculator.buildYearGrid(year, activities, today)
+        assertThat(grid.months).hasSize(12)
+        for (m in 1..12) {
+            val cell = grid.months[m - 1].cells.flatten()
+                .first { it.date == LocalDate.of(2026, m, 15) }
+            assertThat(cell.eventCount).isEqualTo(1)
+            assertThat(cell.durationMs).isEqualTo(3 * h)
+            assertThat(cell.level).isEqualTo(1)
+            assertThat(cell.isInMonth).isTrue()
+        }
+    }
+
+    /**
+     * groupBy 重构回归：同一月多条活动应全部进入该月，验证分桶列表完整保留。
+     */
+    @Test
+    fun buildYearGrid_groupBy_multipleActivitiesSameMonth() {
+        val year = Year.of(2026)
+        val today = LocalDate.of(2026, 7, 1)
+        // 6 月投 3 条不同日 + 1 月投 1 条，验证 6 月分桶保留全部 3 条
+        val activities = listOf(
+            DailyActivity(LocalDate.of(2026, 6, 1), 1, h),
+            DailyActivity(LocalDate.of(2026, 6, 10), 1, h),
+            DailyActivity(LocalDate.of(2026, 6, 28), 1, h),
+            DailyActivity(LocalDate.of(2026, 1, 5), 1, h)
+        )
+        val grid = HeatmapCalculator.buildYearGrid(year, activities, today)
+        val jun = grid.months[5].cells.flatten()
+        val junActivityDates = jun.filter { it.durationMs > 0 }.map { it.date }
+        assertThat(junActivityDates).containsExactly(
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 10),
+            LocalDate.of(2026, 6, 28)
+        )
+        val jan = grid.months[0].cells.flatten()
+        val janActivityDates = jan.filter { it.durationMs > 0 }.map { it.date }
+        assertThat(janActivityDates).containsExactly(LocalDate.of(2026, 1, 5))
+    }
+
+    /**
+     * groupBy 重构回归：activities 跨年（含非目标年日期），group 后非目标月查表得空，
+     * 不应污染目标年网格。验证 byMonth[yearMonth].orEmpty() 路径。
+     */
+    @Test
+    fun buildYearGrid_groupBy_activitiesFromOtherYearIgnored() {
+        val year = Year.of(2026)
+        val today = LocalDate.of(2026, 6, 15)
+        // 含 2025-06-15 与 2027-06-15，2026 年 6 月网格不应被命中
+        val activities = listOf(
+            DailyActivity(LocalDate.of(2025, 6, 15), 1, h),
+            DailyActivity(LocalDate.of(2027, 6, 15), 1, h),
+            DailyActivity(LocalDate.of(2026, 6, 15), 1, h)  // 仅这条属 2026
+        )
+        val grid = HeatmapCalculator.buildYearGrid(year, activities, today)
+        val jun2026Cell = grid.months[5].cells.flatten()
+            .first { it.date == LocalDate.of(2026, 6, 15) }
+        assertThat(jun2026Cell.durationMs).isEqualTo(h)
+        // 2026 全年仅有 1 天活动
+        val totalActive = grid.months.flatMap { it.cells.flatten() }
+            .count { it.durationMs > 0 && it.isInMonth }
+        assertThat(totalActive).isEqualTo(1)
+    }
 }
