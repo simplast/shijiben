@@ -30,9 +30,9 @@ import com.shijiben.data.local.NoteEntity
 import com.shijiben.ui.theme.Error
 import com.shijiben.ui.theme.PixelButton
 import com.shijiben.ui.theme.PixelOutlinedButton
-import com.shijiben.ui.theme.PixelSurface
-import com.shijiben.ui.theme.PixelTextSecondary
+import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
+import com.shijiben.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,7 +52,7 @@ fun NoteEditorSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = PixelSurface,
+        containerColor = SurfaceColor,
         shape = RoundedCornerShape(0.dp)
     ) {
         Column(
@@ -69,7 +69,7 @@ fun NoteEditorSheet(
                 Text(
                     text = "时间: ${formatTimestamp(editing.timestamp)}",
                     fontSize = 12.sp,
-                    color = PixelTextSecondary,
+                    color = TextSecondary,
                     fontFamily = FontFamily.Monospace
                 )
             }

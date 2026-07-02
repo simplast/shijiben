@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,10 +34,9 @@ import com.shijiben.data.local.NoteEntity
 import com.shijiben.ui.theme.Background
 import com.shijiben.ui.theme.PixelCard
 import com.shijiben.ui.theme.RainbowTrim
-import com.shijiben.ui.theme.PixelText
-import com.shijiben.ui.theme.PixelTextSecondary
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
+import com.shijiben.ui.theme.TextSecondary
 
 @Composable
 fun NotesScreen(
@@ -79,8 +77,7 @@ fun NotesScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = "还没有随笔，点右上角 + 记下此刻的想法",
-                            color = PixelTextSecondary,
-
+                            color = TextSecondary,
                             fontSize = 16.sp
                         )
                     }
@@ -115,8 +112,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
         ) {
             Text(
                 note.content,
-                color = PixelText,
-
+                color = TextPrimary,
                 fontSize = 16.sp,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
@@ -124,8 +120,7 @@ private fun NoteRow(note: NoteEntity, onClick: () -> Unit) {
             Spacer(Modifier.height(4.dp))
             Text(
                 formatTimestamp(note.timestamp),
-                color = PixelTextSecondary,
-
+                color = TextSecondary,
                 fontSize = 12.sp
             )
         }
