@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,7 +71,7 @@ fun HeatmapMonthTab(
             Spacer(Modifier.height(4.dp))
             HeatmapGrid(cells = state.cells, onDateClick = onDateClick)
             Spacer(Modifier.height(12.dp))
-            Legend()
+            HeatmapLegend()
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -131,30 +129,6 @@ private fun MonthSwitcher(
                 fontWeight = FontWeight.Bold
             )
         }
-    }
-}
-
-@Composable
-private fun PixelArrowBox(
-    onClick: () -> Unit,
-    enabled: Boolean,
-    arrow: ImageVector,
-    contentDescription: String
-) {
-    Box(
-        modifier = Modifier
-            .size(26.dp)
-            .border(2.dp, Color.Black)
-            .background(if (enabled) SurfaceColor else Disabled)
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            arrow,
-            contentDescription = contentDescription,
-            tint = if (enabled) Color.Black else DisabledText,
-            modifier = Modifier.size(14.dp)
-        )
     }
 }
 
@@ -239,29 +213,5 @@ private fun DayCell(
                 else -> Color.White
             }
         )
-    }
-}
-
-@Composable
-private fun Legend() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = "少", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.width(6.dp))
-        val colors = listOf(HeatmapLevel0, HeatmapLevel1, HeatmapLevel2, HeatmapLevel3, HeatmapLevel4)
-        for (c in colors) {
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .border(2.dp, Color.Black)
-                    .background(c)
-            )
-            Spacer(Modifier.width(4.dp))
-        }
-        Spacer(Modifier.width(2.dp))
-        Text(text = "多", fontSize = 12.sp, color = TextTertiary, fontWeight = FontWeight.Bold)
     }
 }

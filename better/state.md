@@ -1,15 +1,15 @@
 # Better state
-current_category: architecture
-cycle_count: 28
+current_category: tests
+cycle_count: 29
 last_run: 2026-07-02
 
 ## Category status
 | Category | Status | Cycles | Last finding |
 |----------|--------|--------|-------------|
 | correctness | DONE | 3 | F024 |
-| tests | DONE | 2 | F020 |
+| tests | RUNNING | 2 | F020 |
 | security | DONE | 3 | F025 |
-| architecture | DONE | 2 | F019 |
+| architecture | DONE | 3 | F029 |
 | ux | DONE | 3 | F027 |
 | performance | DONE | 2 | F026 |
 | ui | DONE | 7 | F028 |
@@ -21,4 +21,4 @@ last_run: 2026-07-02
 Order: correctness → security → performance → ux → ui → architecture → tests → dx → docs → direction
 Target: 30 cycles total (cycle 14 through 43) — Rotation 2 in progress (24-33)
 User directive: be creative, bold, no homogenization concerns, no questions
-Next: cycle 29 (architecture R3)
+Next: cycle 30 (tests R3)

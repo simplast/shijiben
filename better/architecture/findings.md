@@ -12,3 +12,11 @@
 - status: DONE (cycle 19)
 - evidence: app/src/main/java/com/shijiben/data/export/DataImportManager.kt:8
 - impact: M
+
+## F029 — HeatmapMonthTab 与 HeatmapYearTab 各有一份逐字相同的 Legend() + PixelArrowBox() 副本（DRY 漂移风险）
+- status: DONE (cycle 29)
+- evidence: app/src/main/java/com/shijiben/feature/heatmap/HeatmapMonthTab.kt:138,246 + HeatmapYearTab.kt:153,232
+- impact: M
+- cycle: 29
+- 问题：两份完全相同的私有函数副本，调整色阶/箭头尺寸/边框色需同步改两处，易漂移。
+- 修复：新增 `HeatmapCommon.kt` 集中 `HeatmapLegend()` + `PixelArrowBox()` 为 internal 共享函数；两 Tab 删除本地副本，调用点改用共享版本；清理两 Tab 因删除副本而失效的 imports（Icon/ImageVector 等）。
