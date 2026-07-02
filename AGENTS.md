@@ -209,28 +209,4 @@ A：`./gradlew --stop` 停 daemon 后重试，或本次构建加 `--no-daemon` �
 - [2026-06-29-time-allocation-design.md](docs/superpowers/specs/2026-06-29-time-allocation-design.md) — 时间去向聚合（HeatmapScreen 3 tab 容器 + TimeAllocationCalculator/ViewModel/Tab）
 - [2026-06-29-debug-console-overlay-design.md](docs/superpowers/specs/2026-06-29-debug-console-overlay-design.md) — 调试控制台悬浮 overlay（DebugOverlay + DebugLog ring buffer）
 
-## Recent changes (better cycles)
-- security: DataImportManager 导入 DoS 防护——readFromStream 改 8KB 分块读取并加 50MB 字节上限 + parseEvents/parseNotes 加 10 万条数组长度上限，超限抛 IllegalArgumentException（被 ImportViewModel catch 走 Error 提示）+ 新增 3 个回归测试
-- tests: 为 TimeVizCalculator.todayProgress/yearProgress 新增 7 个零覆盖纯函数单测（00:00/12:00/23:59:59 三点 + 年初/年中/年末三点 + 闰年 vs 非闰年分母比值=365/366），UTC 时区固定，全区间断言防浮点抖动
-- feat: 时间去向聚合——HeatmapScreen 重构为 3 tab 容器（月/年/去向），新增 TimeAllocationCalculator（纯函数按标题聚合 completed 事件时长）+ TimeAllocationViewModel + TimeAllocationTab（范围选择器+水平条形图列表），废弃 HeatmapYearScreen 独立路由
-- docs: AGENT.md 项目结构树 + ARCHITECTURE.md §2 包路径列表补充 `ui/debug/` 模块（DebugOverlay + DebugLog）——此前 MainActivity/Application 实际使用但文档未记录，AI agent/开发者不知道有 app 内调试控制台
-- dx: 测试依赖版本管理统一——5 处 testImplementation 硬编码版本（junit/robolectric/androidx.test:core/coroutines-test/truth）改用 rootProject.extra 引用，新增 4 个 extra key，coroutines-test 复用既有 coroutines key——零行为变化，消除主/测试版本不同步风险
-- ux: RecordingSheet 保存按钮加 enabled=title.isNotBlank()——title 为空时按钮禁用并显示 Disabled 灰色，提供即时视觉反馈（此前按钮始终可点但 save() 静默失败无反馈）
-- architecture: 移除 EventRepository.shiftToTargetDay 的死代码 cal2（创建并赋值 e.endTime 但从未读取，推测为「保留钟点」改「保留时长」后的残留）——零行为变化
-- security: DataImportManager.parseEvents 新增 status 信任边界校验——非法值（非 0/1/2）抛 IllegalArgumentException 拒绝导入，防止恶意文件污染事件状态机 + 新增回归测试
-- tests: 为 EventRepository.shiftToTargetDay 新增 5 个直接单测（hour:minute 保留 / 跨月边界 / null endTime / 已到目标日 / 时长保留），此前仅通过慢速 DB 集成测试间接覆盖
-- correctness: RecordingViewModel.save() 修复非法状态——编辑 Completed 事件并把 duration 调到 0 时，降级为 InProgress（避免保存 Completed+endTime=null，违反 EventRepository 不变式）+ 新增回归测试
-- correctness: RecordingViewModel.save() 新增 `start > now → NotStarted` 分支——未来开始时间的事件（duration>0）此前误标 InProgress，破坏状态机不变式并虚增热力图时长，现与 determineStatus 不变式对齐 + 新增回归测试
-- ui: NotesScreen 标题栏重构为 Row + SurfaceColor + 2dp 黑色分隔线，与其他 5 屏标准结构一致（移除 PixelCard 包裹 + 加 tint=TextPrimary + 加 Color/Surface/TextPrimary imports）
-- ui: NotesScreen 标题字号统一为 16sp Bold，与其他 5 屏一致（移除 titleLarge 22sp + MaterialTheme import）
-- ui: NotesScreen 补齐 RainbowTrim 品牌条 + Background，与其他 7 屏一致
-- ui: disabled 颜色硬编码改用 Disabled/DisabledText 令牌，统一 4 文件 11 处
-- ui: 移除 TimeVizScreen 的 PixelOutlinedButtonLocal 本地副本，改用共享 PixelOutlinedButton 统一按钮风格
-- ux: TimelineScreen 点击随笔改为内联打开 NoteEditorSheet（对齐 SearchScreen 模式）——EventList.onNoteClick 改 (NoteEntity)->Unit 转发具体随笔，新增 showNoteSheet/editingNote 状态 + NoteEditorSheet 渲染块，save/delete 后调 viewModel.refresh() 同步；底部 ✎ 图标仍跳转随笔列表（view-all 意图）
-- security: AndroidManifest allowBackup 改 false + fullBackupContent=false + dataExtractionRules=null——关闭 Auto Backup（Google Drive 上传）与 adb backup 提取，对齐隐私政策「数据不离开本设备、无备份」承诺
-- ui: NoteEditorSheet 标题移除最后一个 MaterialTheme.typography.titleLarge 残留——改用显式 20sp Bold + TextPrimary，与 6 屏标准一致（PixelText 旧别名→TextPrimary 令牌）
-- docs: AGENT.md 结构树 heatmap 行同步 cycle 13 重构（HeatmapYearScreen→HeatmapYearTab + 补 5 个 TimeAllocation/MonthTab 文件 + 标注 3 tab 容器）+ Spec 索引补 2 条 2026-06-29 spec（time-allocation + debug-console-overlay）
-- correctness: initEdit Completed 分支 coerceIn(300,1440)→(0,1440) + TimeRangeSlider ABS_MIN 300→0——修复编辑凌晨 5 点前已完成事件时 startTime 被静默钳制到 5:00 的数据损坏 + 新增回归测试
-- performance: TimelineScreen 60s `now` tick 改为 `State<Long>` 透传——drawBehind 读 nowState（顶栏进度条 draw-phase 重绘不重组）、新增 RowScope.StatsText + ElapsedBadge 叶子组合件独读 nowState.value、EventCard/EventList/DayProgressBar 参数改 nowState，整树 20 卡片/分钟重组降至 1（仅 in-progress）
-- architecture: DataImportManager 去除对 feature 层 TimeVizPrefs 的依赖——applyImport 签名移除 timeVizPrefs 参数 + ImportCounts 去 prefsUpdated 字段，prefs 写回职责上移到 ImportViewModel（data 层零向上引用，仿 DataExportManager 接原语范式）
-- dx: 依赖版本管理迁移到 Gradle version catalog（libs.versions.toml）——root/app build 脚本删除 14 处 extra 定义 + 21 处 rootProject.extra 引用，改用类型安全 libs.xxx 访问器，IDE 自动补全 + 编译期拼写检查，零行为变化
+> 变更历史见 `git log`，不在本文件维护。
