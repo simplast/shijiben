@@ -276,6 +276,7 @@ fun TimelineScreen(
                     EventList(
                         events = events,
                         notes = notes,
+                        viewingDate = date,
                         onEventClick = { event ->
                             editingEvent = event
                             showSheet = true
@@ -452,6 +453,7 @@ private fun ElapsedBadge(startTime: Long, nowState: State<Long>) {
 fun EventList(
     events: List<EventEntity>,
     notes: List<NoteEntity>,
+    viewingDate: Triple<Int, Int, Int>,
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
@@ -465,14 +467,7 @@ fun EventList(
                 .sortedBy { it.sortKey }
         }
         if (items.isEmpty()) {
-            Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "今天还是空白",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    color = TextSecondary
-                )
-            }
+            EmptyDayState(viewingDate = viewingDate)
         } else {
             items.forEach { item ->
                 when (item) {
@@ -489,6 +484,43 @@ fun EventList(
                         onClick = { onNoteClick(item.note) }
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 空日状态：按"今天/过去/未来"区分文案，避免过去空日误显"今天还是空白"。
+ * - 今天：主文案 + 引导提示（指向底部输入入口），轻量不催促
+ * - 过去：事实陈述"这天没有记录"，不评判（对齐"记录即审视，不制造焦虑"）
+ * - 未来：友好提示"这天还没到来"，不预设计划焦虑
+ */
+@Composable
+private fun EmptyDayState(viewingDate: Triple<Int, Int, Int>) {
+    val today = isToday(viewingDate)
+    val isFuture = LocalDate.of(viewingDate.first, viewingDate.second, viewingDate.third)
+        .isAfter(LocalDate.now())
+    Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val main = when {
+                today -> "今天还是空白"
+                isFuture -> "这天还没到来"
+                else -> "这天没有记录"
+            }
+            Text(
+                text = main,
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                color = TextSecondary
+            )
+            // 今天空态：加一行小字引导，指向底部输入入口（不催促，仅提示）
+            if (today) {
+                Text(
+                    text = "在下方记一笔",
+                    fontSize = 12.sp,
+                    color = TextTertiary,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
             }
         }
     }
