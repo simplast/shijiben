@@ -70,6 +70,8 @@ shijiben/
 - 停止 = completed
 - 当天结束仍 not_started → App 打开时自动顺延到次日
 
+> 状态不变式 + guard + save() 降级规则详见 [ARCHITECTURE.md §8 事件状态机](docs/ARCHITECTURE.md#8-事件状态机)。改 status 推算逻辑前务必读该节。
+
 ## 开发约定
 
 - **开发预览**：日常在 Android Studio 模拟器或真机上运行

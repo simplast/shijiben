@@ -181,3 +181,60 @@ Room schema：`AppDatabase` 标 `@Database(entities=[EventEntity, NoteEntity], v
 4. **8-bit 美学集中**：所有视觉元素集中在 `ui/theme`——`AppColors`（高饱和彩虹色板 + `HeatmapLevel0..4` 绿色色阶 + `RainbowHourColors` 8 色循环）、`AppTheme`（强制浅色 + Fusion Pixel 字体 + 全 0.dp 直角 `PixelShapes`）、`PixelComponents`（`PixelCard` 等复用组件）。feature 层只消费色板/组件，不自定义视觉常量。
 5. **flaky test 根治方案 A**（迭代 9 落地，仅测试侧改动，生产代码零改动）：根因 `WhileSubscribed(5000)` grace period 内 Room invalidation tracker 跑在真实 executor 线程 + `Dispatchers.resetMain()` 后命中 `NoopDispatcher`。方案 A 在 `HeatmapViewModelTest.setup()` 用 `setQueryExecutor` / `setTransactionExecutor` 把 Room executor 桥接到 `StandardTestDispatcher`，teardown 后队列静止不再 emit，竞态从根上消除。详见 `docs/superpowers/specs/2026-06-28-flaky-rootfix-and-docs-design.md`，5 次独立验证全绿。
 6. **DB 迁移历史**：`AppDatabase` version=2，v1→v2 迁移是标签移除（建新表-拷数据-删旧-改名重建索引，删 `tags` 表），详见 spec `2026-06-27-top-bottom-redesign-design.md` Part C。
+
+## 8. 事件状态机
+
+事件（Event）有 3 个状态（`EventStatus` enum，`status` 列存 Int）：
+
+```
+                      carryOverNotStarted
+       ┌──────────────────────────────────────┐
+       ▼                                       │
+┌──────────────┐  markInProgress   ┌──────────────────┐  markCompleted  ┌──────────────┐
+│  NotStarted  │ ────────────────► │    InProgress    │ ──────────────► │   Completed  │
+│   (0) 预写   │                   │ (1) endTime=null │                 │ (2) 有 endTime│
+└──────────────┘ ◄──────────────── └──────────────────┘ ◄────────────── └──────────────┘
+       ▲                markNotStarted         │  ▲                    markNotStarted/
+       │                                       │  │                    save()降级
+       │                                       │  │
+       └────────── save() duration>0+start>now ┘  └── save() duration=0+原Completed ──┘
+```
+
+### 状态不变式（必须始终成立）
+
+| 状态 | startTime vs now | endTime | 语义 |
+|------|------------------|---------|------|
+| `NotStarted(0)` | `startTime > now`（未来） | 可有可无 | 预写计划，未开始计时 |
+| `InProgress(1)` | `startTime <= now` | **必须 null** | 进行中，未结束 |
+| `Completed(2)` | `startTime <= now` | **必须非 null** | 已结束 |
+
+**关键不变式**：`Completed` 必须有 `endTime`；`endTime == null` 时只能是 `InProgress` 或 `NotStarted`。`EventRepository.determineStatus` 与 `RecordingViewModel.save` 共同保证此不变式。
+
+### 状态推算（determineStatus，纯函数）
+
+`EventRepository.determineStatus(startTime, endTime, now): EventStatus`（internal，可单测）：
+
+```
+endTime == null && startTime <= now  →  InProgress
+startTime > now                      →  NotStarted
+else（endTime != null && now > endTime）→  Completed
+```
+
+`createEvent` 未显式传 status 时调此函数推算；`RecordingViewModel.save` 用等价但更细的 guard（见下）。
+
+### 手动转移（Repository suspend 方法）
+
+- `markInProgress(id)`：→ InProgress，强制 `endTime = null`。
+- `markCompleted(id)`：→ Completed，`endTime = now`（若原为 null）或保留已有 endTime。
+- `markNotStarted(id)`：→ NotStarted，不动时间戳（仅改 status）。
+- `carryOverNotStarted(y,m,d)`：**仅** NotStarted 事件自动顺延到目标日的相同时刻（保留 hour:minute 与 duration），completed/inProgress 不动。App 打开时调，把"昨天及以前没做的预写"顺延到今天。
+
+### save() 的 guard（RecordingViewModel.save）
+
+编辑保存时，状态按 duration 与时间推算，有两条防非法状态降级规则：
+
+1. **`duration == 0`（无 endTime）+ 原 Completed → InProgress**：避免保存 `Completed + endTime=null`（违反不变式）。此分支优先于 `start > now` 检查，保证 initEdit 的 startTime 钳制不会破坏降级。
+2. **`duration > 0` + `start > now` → NotStarted**：未来开始时间的事件标 NotStarted（与 determineStatus 对齐），防止未来计划事件被误标 InProgress 而在热力图虚增时长。
+3. 否则：`now > actualEnd` → Completed；else → InProgress。
+
+> 这两条 guard 来自 bug 修复（cycle 25/26），此前误标导致状态机不变式破裂 + 热力图时长虚增。改 status 推算逻辑时务必保持不变式。
