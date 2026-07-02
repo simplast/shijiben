@@ -7,7 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.repository.EventRepository
 import com.shijiben.data.repository.NoteRepository
-import com.shijiben.feature.recording.MainCoroutineRule
+import com.shijiben.test.MainCoroutineRule
 import com.shijiben.feature.timeviz.TimeVizPrefs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first

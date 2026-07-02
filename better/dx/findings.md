@@ -21,3 +21,11 @@
 - 修复：在 `buildYearGrid` 内对每月 `buildGrid` 返回的 raw cells 做后处理——padding 格（`isInMonth=false`）一律 `copy(isToday = false)`，仅当前月实体格保留 isToday 标记。月视图语义不变（`buildGrid` 本身未改）。
 - evidence：`HeatmapCalculator.kt` buildYearGrid 函数；测试报告 `HeatmapYearViewModelTest.html` 8 tests / 0 failures / 100%
 - impact：M（修复真实 bug + 消除 2 个长期 baseline 失败，gate 从此更干净）
+
+## F041 — MainCoroutineRule 共享测试规则错放在 feature.recording 包，8 处跨包 import
+- status: DONE (cycle 41)
+- evidence: app/src/test/java/com/shijiben/feature/recording/MainCoroutineRule.kt（已删除）
+- impact: S
+- cycle: 41
+- 问题：`MainCoroutineRule` 是 8 个 ViewModel 测试共用的 JUnit TestRule（heatmap×3 / timeline / search / notes / recording / settings×2 / timeviz），但文件放在 `feature.recording` 包下。导致 8 个测试文件需 `import com.shijiben.feature.recording.MainCoroutineRule`——从 sibling feature 包导入测试 util 是典型 code smell，新人易误以为该规则与 recording 功能耦合。RecordingViewModelTest 本身靠同包解析无 import，迁移时易漏。
+- 修复：新建 `app/src/test/java/com/shijiben/test/MainCoroutineRule.kt`（package `com.shijiben.test`），删除旧文件，更新 9 个测试文件（8 个改 import + 1 个 RecordingViewModelTest 加显式 import）。零行为变化，纯包重构。

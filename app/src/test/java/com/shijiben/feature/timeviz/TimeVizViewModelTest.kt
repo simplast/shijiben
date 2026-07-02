@@ -1,7 +1,7 @@
 package com.shijiben.feature.timeviz
 
 import com.google.common.truth.Truth.assertThat
-import com.shijiben.feature.recording.MainCoroutineRule
+import com.shijiben.test.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
 import org.junit.Before

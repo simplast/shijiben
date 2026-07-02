@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.model.EventStatus
 import com.shijiben.data.repository.EventRepository
+import com.shijiben.test.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

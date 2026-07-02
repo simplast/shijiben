@@ -6,7 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.shijiben.data.local.AppDatabase
 import com.shijiben.data.repository.EventRepository
-import com.shijiben.feature.recording.MainCoroutineRule
+import com.shijiben.test.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
