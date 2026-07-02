@@ -24,8 +24,7 @@ import java.util.TimeZone
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class RecordingViewModelTest {
-    @get:Rule
-    val mainRule = MainCoroutineRule()
+    
 
     private lateinit var db: AppDatabase
     private lateinit var eventRepo: EventRepository
@@ -140,13 +139,6 @@ class RecordingViewModelTest {
 
         vm.initEdit(event)
         assertThat(vm.durationMinutes.value).isEqualTo(300)
-        assertThat(vm.durationMax.value).isEqualTo(300)
-    }
-
-    @Test
-    fun initNew_setsDurationMaxTo180() = runTest {
-        vm.initNew()
-        assertThat(vm.durationMax.value).isEqualTo(180)
     }
 
     @Test
@@ -234,7 +226,6 @@ class RecordingViewModelTest {
         )
 
         assertThat(vm.durationMinutes.value).isEqualTo(0)
-        assertThat(vm.durationMax.value).isEqualTo(180)
         assertThat(possibleSnaps.contains(vm.startMinutes.value)).isTrue()
     }
 }

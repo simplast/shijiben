@@ -157,6 +157,8 @@ class EventRepository @Inject constructor(
         return Pair(start, end)
     }
 
+    
+
     /** 工具：返回当天 0 点与次日 0 点的时间戳 */
     fun todayRange(): Pair<Long, Long> {
         val cal = Calendar.getInstance(TimeZone.getDefault())
@@ -283,4 +285,14 @@ internal fun effectiveDurationMs(
     val effectiveEnd = if (eventEnd.isBefore(dayEnd)) eventEnd else dayEnd
     val ms = Duration.between(eventStart, effectiveEnd).toMillis()
     return ms.coerceAtLeast(0L)
+}
+
+fun dayRangeMs(year: Int, month: Int, day: Int, tz: java.util.TimeZone): Pair<Long, Long> {
+    val cal = java.util.Calendar.getInstance(tz)
+    cal.set(year, month - 1, day, 0, 0, 0)
+    cal.set(java.util.Calendar.MILLISECOND, 0)
+    val start = cal.timeInMillis
+    cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+    val end = cal.timeInMillis
+    return Pair(start, end)
 }

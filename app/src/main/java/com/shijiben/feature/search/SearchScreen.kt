@@ -210,7 +210,7 @@ fun SearchScreen(
                                 onStart = {},
                                 onStop = {},
                                 onLongClick = {},
-                                nowState = nowState
+                                now = System.currentTimeMillis()
                             )
                             is SearchViewModel.SearchItem.NoteItem -> NoteRow(
                                 note = item.note,
