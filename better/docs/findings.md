@@ -21,3 +21,11 @@
 - 修复：ARCHITECTURE.md 新增 §8「事件状态机」——含 ASCII 状态图、状态不变式表、determineStatus 纯函数伪码、4 个手动转移方法、save() 的 3 条 guard 规则，并标注 guard 来源（cycle 25/26 bug 修复）。AGENTS.md 事件状态流转节加 blockquote 交叉引用指向 §8。
 - evidence：docs/ARCHITECTURE.md §8（L185-240）；AGENTS.md L73 交叉引用
 - impact：M（文档化关键不变式，防止未来改动破坏状态机）
+
+## F042 — util/ 包（cycle 39 新建 DateUtils）未在 AGENTS.md 结构树 + ARCHITECTURE.md §2 记录
+- status: DONE (cycle 42)
+- evidence: AGENTS.md 结构树（L45-49）+ docs/ARCHITECTURE.md §2 包路径列表（L71-72）
+- impact: S
+- cycle: 42
+- 问题：cycle 39（F039）把 3 个 feature 文件重复的 `isToday`/`todayTriple`/`isPastDay` 提取到新建 `util/DateUtils.kt`，但 AGENTS.md 项目结构树和 ARCHITECTURE.md §2 包路径列表均未补充 `util/` 节点。AI agent/开发者读文档不知道有此共享模块，可能再次复制粘贴日期逻辑造成 DRY 回退。
+- 修复：AGENTS.md 结构树补 `util/` 节点（标注 DateUtils 三函数 + 3 feature 共用）；ARCHITECTURE.md §2 包路径列表补 `util/` 条目（含 cycle 39 DRY 收敛点说明）+ 模块图横切说明补 `util/ (DateUtils)` 一行。

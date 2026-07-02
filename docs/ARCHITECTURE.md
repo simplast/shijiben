@@ -45,6 +45,7 @@
                   └─────────────────────────┘
 
 横切：di/ (DispatchersModule) — 提供 @IoDispatcher
+横切：util/ (DateUtils) — 顶层日期函数，被 feature 层共用
 横切：feature/timeviz/TimeVizModule.kt — 提供 SharedPreferences / TimeVizPrefs / Clock
 横切：ShiJiBenApplication — @HiltAndroidApp 入口
 ```
@@ -69,6 +70,7 @@
 - `navigation/AppNavHost.kt`：`Routes` object + `AppNavHost` composable。
 - `ui/theme/`：`AppColors` / `AppTheme` / `PixelComponents`。
 - `ui/debug/`：`DebugOverlay`（`@Composable`，仅 `BuildConfig.DEBUG` 包裹 app 内容叠加悬浮按钮）+ `DebugLog`（`object`，内存 ring buffer 200 条 + 未捕获异常持久化到 `debug-last-crash.txt`，release 空操作）。
+- `util/`：`DateUtils.kt`（顶层函数 `todayTriple` / `isToday` / `isPastDay`，被 `timeline/TimelineScreen` + `timeline/DayProgressBar` + `search/SearchScreen` 共用，cycle 39 提取的 DRY 收敛点）。
 - `MainActivity.kt`（`@AndroidEntryPoint`）/ `ShiJiBenApplication.kt`（`@HiltAndroidApp`）。
 
 ## 3. 数据流

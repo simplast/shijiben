@@ -45,6 +45,7 @@ shijiben/
       navigation/  # AppNavHost
       ui/theme/    # 8-bit 色板、字体、像素组件（AppColors, AppTheme, PixelComponents）
       ui/debug/    # 调试 overlay（仅 debug 构建）：DebugOverlay（悬浮调试按钮）+ DebugLog（异常 ring buffer + 崩溃持久化）
+      util/        # 共享工具函数（DateUtils：todayTriple/isToday/isPastDay，3 feature 文件共用）
       MainActivity.kt
       ShiJiBenApplication.kt
     src/main/res/
