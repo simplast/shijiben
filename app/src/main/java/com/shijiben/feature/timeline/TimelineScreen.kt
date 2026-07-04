@@ -584,46 +584,31 @@ fun NoteRow(
     onClick: () -> Unit
 ) {
     Surface(
-        color = AccentLight.copy(alpha = 0.35f),
+        color = AccentLight.copy(alpha = 0.12f),
         shape = RoundedCornerShape(0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(bottom = 8.dp),
-        shadowElevation = 2.dp
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // 橙色 ✎ 图标盒，与 BottomEntryBar 的随笔色身份一致
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .background(Accent),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "随笔",
-                    tint = Color.White,
-                    modifier = Modifier.size(12.dp)
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = formatTime(note.timestamp),
-                fontSize = 16.sp,
-                color = TextSecondary
-            )
-            Spacer(Modifier.width(6.dp))
             Text(
                 text = note.content,
                 fontSize = 16.sp,
-                color = TextPrimary,
+                color = TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            )
+            Text(
+                text = formatTime(note.timestamp),
+                fontSize = 14.sp,
+                color = TextTertiary
             )
         }
     }
