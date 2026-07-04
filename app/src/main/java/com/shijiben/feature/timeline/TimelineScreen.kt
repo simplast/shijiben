@@ -172,7 +172,7 @@ fun TimelineScreen(
                             // 徽章本体：2dp 黑边白底（去硬阴影，避免顶栏过重）
                             Box(
                                 modifier = Modifier
-                                    .border(2.dp, Color.Black)
+                                    .border(2.dp, Border)
                                     .background(Surface)
                                     .padding(horizontal = 12.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.Center
@@ -190,7 +190,7 @@ fun TimelineScreen(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .border(2.dp, Color.Black)
+                            .border(2.dp, Border)
                             .background(Surface)
                             .clickable { onHeatmapClick() },
                         contentAlignment = Alignment.Center
@@ -211,7 +211,7 @@ fun TimelineScreen(
                         modifier = Modifier
                             .padding(start = 6.dp)
                             .size(32.dp)
-                            .border(2.dp, Color.Black)
+                            .border(2.dp, Border)
                             .background(Surface)
                             .clickable { onSearchClick() },
                         contentAlignment = Alignment.Center
@@ -228,7 +228,7 @@ fun TimelineScreen(
                         modifier = Modifier
                             .padding(start = 6.dp)
                             .size(32.dp)
-                            .border(2.dp, Color.Black)
+                            .border(2.dp, Border)
                             .background(Surface)
                             .clickable { onSettingsClick() },
                         contentAlignment = Alignment.Center
@@ -594,11 +594,10 @@ fun NoteRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 橙色 ✎ 图标盒（2dp 黑边，8-bit 风），与 BottomEntryBar 的随笔色身份一致
+            // 橙色 ✎ 图标盒，与 BottomEntryBar 的随笔色身份一致
             Box(
                 modifier = Modifier
                     .size(20.dp)
-                    .border(2.dp, Color.Black)
                     .background(Accent),
                 contentAlignment = Alignment.Center
             ) {
@@ -726,7 +725,7 @@ private fun BottomEntryBar(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(Primary)
                         .clickable(onClick = onCalendarClick),
                     contentAlignment = Alignment.Center
@@ -742,7 +741,7 @@ private fun BottomEntryBar(
                     modifier = Modifier
                         .height(32.dp)
                         .weight(1f)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(Surface)
                         .clickable(onClick = onEventTriggerClick),
                     contentAlignment = Alignment.CenterStart
@@ -773,7 +772,7 @@ private fun BottomEntryBar(
                     modifier = Modifier
                         .height(32.dp)
                         .weight(1f)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(Surface)
                         .clickable(onClick = onNoteTriggerClick),
                     contentAlignment = Alignment.CenterStart
@@ -789,7 +788,7 @@ private fun BottomEntryBar(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(Accent)
                         .clickable(onClick = onNotesClick),
                     contentAlignment = Alignment.Center
@@ -847,7 +846,7 @@ private fun EntryDrawer(
                 // 标签徽章
                 Box(
                     modifier = Modifier
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(if (isEvent) Primary else Accent)
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
@@ -864,7 +863,7 @@ private fun EntryDrawer(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = if (isEvent) 48.dp else 120.dp)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(Surface)
                         .padding(8.dp)
                 ) {

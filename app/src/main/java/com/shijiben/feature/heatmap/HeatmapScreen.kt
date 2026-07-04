@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.ui.theme.Background
+import com.shijiben.ui.theme.Border
 import com.shijiben.ui.theme.Primary
 import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.Surface as SurfaceColor
@@ -96,7 +97,7 @@ private fun TabBar(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .border(2.dp, if (isSelected) Primary else Color.Black)
+                    .border(2.dp, if (isSelected) Primary else Border)
                     .background(if (isSelected) Primary else SurfaceColor)
                     .clickable { onTabSelected(i) }
                     .padding(vertical = 8.dp),

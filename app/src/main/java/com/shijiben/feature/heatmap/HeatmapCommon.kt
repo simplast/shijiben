@@ -52,7 +52,6 @@ internal fun HeatmapLegend() {
             Box(
                 modifier = Modifier
                     .size(16.dp)
-                    .border(2.dp, Color.Black)
                     .background(c)
             )
             Spacer(Modifier.width(4.dp))
@@ -76,7 +75,6 @@ internal fun PixelArrowBox(
     Box(
         modifier = Modifier
             .size(26.dp)
-            .border(2.dp, Color.Black)
             .background(if (enabled) SurfaceColor else Disabled)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center

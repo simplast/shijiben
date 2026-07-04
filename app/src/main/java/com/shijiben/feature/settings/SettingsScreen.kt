@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shijiben.ui.theme.Background
+import com.shijiben.ui.theme.Border
 import com.shijiben.ui.theme.Error
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
@@ -240,7 +241,7 @@ private fun SettingsRow(
     Surface(
         color = if (enabled) SurfaceColor else Disabled,   // 导出中置灰
         shape = RoundedCornerShape(0.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, Color.Black),
+        border = androidx.compose.foundation.BorderStroke(2.dp, Border),
         shadowElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()

@@ -294,7 +294,6 @@ private fun StepperBox(
     Box(
         modifier = Modifier
             .size(26.dp)
-            .border(2.dp, Color.Black)
             .background(bg)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center

@@ -48,6 +48,7 @@ import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeline.EventCard
 import com.shijiben.feature.timeline.NoteRow
 import com.shijiben.ui.theme.Background
+import com.shijiben.ui.theme.Border
 import com.shijiben.ui.theme.RainbowTrim
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
@@ -110,7 +111,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .weight(1f)
                         .height(36.dp)
-                        .border(2.dp, Color.Black)
+                        .border(2.dp, Border)
                         .background(SurfaceColor)
                         .padding(horizontal = 8.dp),
                     contentAlignment = Alignment.CenterStart

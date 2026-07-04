@@ -182,7 +182,6 @@ private fun AllocationRow(
             Box(
                 modifier = Modifier
                     .size(20.dp)
-                    .border(2.dp, Color.Black)
                     .background(barColor),
                 contentAlignment = Alignment.Center
             ) {
@@ -215,7 +214,6 @@ private fun AllocationRow(
             modifier = Modifier
                 .weight(1f)
                 .height(16.dp)
-                .border(2.dp, Color.Black)
                 .background(SurfaceColor)
         ) {
             Box(

@@ -149,7 +149,6 @@ private fun CircadianBarRow(
             modifier = Modifier
                 .weight(1f)
                 .height(14.dp)
-                .border(2.dp, Color.Black)
                 .background(SurfaceColor)
         ) {
             Box(

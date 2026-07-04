@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 fun PixelCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Surface,
-    borderColor: Color = Color.Black,
+    borderColor: Color = Border,
     borderWidth: Dp = 2.dp,
     shadow: Boolean = true,
     content: @Composable () -> Unit

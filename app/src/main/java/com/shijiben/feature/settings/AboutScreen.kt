@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shijiben.BuildConfig
 import com.shijiben.ui.theme.Background
+import com.shijiben.ui.theme.Border
 import com.shijiben.ui.theme.Surface as SurfaceColor
 import com.shijiben.ui.theme.TextPrimary
 import com.shijiben.ui.theme.TextSecondary
@@ -142,7 +143,7 @@ private fun Section(
     Surface(
         color = SurfaceColor,
         shape = RoundedCornerShape(0.dp),
-        border = androidx.compose.foundation.BorderStroke(2.dp, Color.Black),
+        border = androidx.compose.foundation.BorderStroke(2.dp, Border),
         shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {

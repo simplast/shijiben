@@ -83,7 +83,7 @@ private fun DebugFloatingButton() {
                 .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
                 .size(24.dp)
                 .background(Color(0xCCFF4444), CircleShape)
-                .border(1.dp, Color.Black, CircleShape)
+                .border(1.dp, Color.White, CircleShape)
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
