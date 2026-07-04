@@ -179,16 +179,16 @@ fun TimelineScreen(
                                 Text(
                                     text = formatDateCompact(date),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
+                                    fontSize = 16.sp,
                                     color = if (isToday(date)) TextPrimary else Accent
                                 )
                             }
                         }
                     }
-                    // 热力图回看入口：26dp 像素方块，2×2 小绿块矩阵
+                    // 热力图回看入口：32dp 像素方块，2×2 小绿块矩阵
                     Box(
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(32.dp)
                             .border(2.dp, Color.Black)
                             .background(Surface)
                             .clickable { onHeatmapClick() },
@@ -205,11 +205,11 @@ fun TimelineScreen(
                             }
                         }
                     }
-                    // 搜索入口：26dp 放大镜像素方块，2dp 黑边白底，与热力图/设置方块同风格
+                    // 搜索入口：32dp 放大镜像素方块，2dp 黑边白底，与热力图/设置方块同风格
                     Box(
                         modifier = Modifier
                             .padding(start = 6.dp)
-                            .size(26.dp)
+                            .size(32.dp)
                             .border(2.dp, Color.Black)
                             .background(Surface)
                             .clickable { onSearchClick() },
@@ -219,14 +219,14 @@ fun TimelineScreen(
                             Icons.Default.Search,
                             contentDescription = "搜索",
                             tint = Color.Black,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
-                    // 设置入口：26dp 像素方块齿轮，2dp 黑边白底，与热力图方块同风格
+                    // 设置入口：32dp 像素方块齿轮，2dp 黑边白底，与热力图方块同风格
                     Box(
                         modifier = Modifier
                             .padding(start = 6.dp)
-                            .size(26.dp)
+                            .size(32.dp)
                             .border(2.dp, Color.Black)
                             .background(Surface)
                             .clickable { onSettingsClick() },
@@ -236,7 +236,7 @@ fun TimelineScreen(
                             Icons.Default.Settings,
                             contentDescription = "设置",
                             tint = Color.Black,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -253,7 +253,7 @@ fun TimelineScreen(
                 } else baseStats
                 Text(
                     text = statsText,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = TextTertiary,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -405,7 +405,7 @@ fun EventList(
                 Text(
                     text = "今天还是空白",
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     color = TextSecondary
                 )
             }
@@ -491,7 +491,7 @@ fun EventCard(
             Text(
                 text = event.title,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 color = when (event.status) {
                     2 -> Success
                     0 -> TextTertiary
@@ -509,7 +509,7 @@ fun EventCard(
                     // 进行中：显示开始时间 + 运行中时长 badge
                     Text(
                         text = "自 ${formatTime(event.startTime)}",
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                         color = TextSecondary
                     )
                     Spacer(Modifier.width(6.dp))
@@ -521,7 +521,7 @@ fun EventCard(
                     ) {
                         Text(
                             text = elapsed,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = TextOnPrimary,
                             fontWeight = FontWeight.Bold
                         )
@@ -531,7 +531,7 @@ fun EventCard(
                     // 已完成：原时间范围 + 耗时 badge（保持不变）
                     Text(
                         text = "${formatTime(event.startTime)}-${formatTime(event.endTime!!)}",
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                         color = Secondary
                     )
                     Spacer(Modifier.width(6.dp))
@@ -542,7 +542,7 @@ fun EventCard(
                     ) {
                         Text(
                             text = formatDurationShort(event.startTime, event.endTime!!),
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = TextOnPrimary,
                             fontWeight = FontWeight.Bold
                         )
@@ -590,13 +590,13 @@ fun NoteRow(
             Spacer(Modifier.width(8.dp))
             Text(
                 text = formatTime(note.timestamp),
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 color = TextSecondary
             )
             Spacer(Modifier.width(6.dp))
             Text(
                 text = note.content,
-                fontSize = 13.sp,
+                fontSize = 16.sp,
                 color = TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -690,7 +690,7 @@ private fun BottomEntryBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(34.dp)
+                .height(40.dp)
                 .padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -703,7 +703,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(26.dp)
+                        .size(32.dp)
                         .border(2.dp, Color.Black)
                         .background(Primary)
                         .clickable(onClick = onCalendarClick),
@@ -713,12 +713,12 @@ private fun BottomEntryBar(
                         Icons.Default.DateRange,
                         contentDescription = "选择日期",
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .height(26.dp)
+                        .height(32.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -729,7 +729,7 @@ private fun BottomEntryBar(
                         text = "在做什么？",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
@@ -749,7 +749,7 @@ private fun BottomEntryBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .height(26.dp)
+                        .height(32.dp)
                         .weight(1f)
                         .border(2.dp, Color.Black)
                         .background(Surface)
@@ -760,13 +760,13 @@ private fun BottomEntryBar(
                         text = "写点什么...",
                         color = TextTertiary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
-                        .size(26.dp)
+                        .size(32.dp)
                         .border(2.dp, Color.Black)
                         .background(Accent)
                         .clickable(onClick = onNotesClick),
@@ -776,7 +776,7 @@ private fun BottomEntryBar(
                         Icons.Default.Edit,
                         contentDescription = "随笔列表",
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -832,16 +832,16 @@ private fun EntryDrawer(
                     Text(
                         text = if (isEvent) "记事" else "随笔",
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                // 多行输入框：2dp 黑边、白底、min-height 96dp、IME Done 提交
+                // 输入框：记事单行，随笔多行（min-height 放大1.2倍）
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 96.dp)
+                        .heightIn(min = if (isEvent) 48.dp else 120.dp)
                         .border(2.dp, Color.Black)
                         .background(Surface)
                         .padding(8.dp)
@@ -853,7 +853,7 @@ private fun EntryDrawer(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         textStyle = TextStyle(
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         ),
@@ -869,7 +869,7 @@ private fun EntryDrawer(
                                     Text(
                                         text = placeholder,
                                         color = TextTertiary,
-                                        fontSize = 14.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
