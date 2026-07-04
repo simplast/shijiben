@@ -71,3 +71,15 @@
 ./gradlew assembleDebug
 ./gradlew :app:assembleRelease
 ```
+
+## 真机交付
+
+新需求通过验证门后，若用户设备已连接 ADB，直接推送安装到真机验证：
+
+```bash
+adb devices
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+未连接设备时只完成构建；安装成功后交由用户在真机上确认，才算需求完成。
