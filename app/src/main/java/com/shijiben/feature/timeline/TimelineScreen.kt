@@ -400,8 +400,10 @@ fun EventList(
 ) {
     Column(modifier = Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
         val items = remember(events, notes) {
-            (events.map { TimelineItem.EventItem(it) } + notes.map { TimelineItem.NoteItem(it) })
-                .sortedBy { it.sortKey }
+            // 随笔置顶（unshift：新的在上），事项在下方按时间正序排列（push：新的在下）
+            val noteItems = notes.map { TimelineItem.NoteItem(it) }.sortedByDescending { it.sortKey }
+            val eventItems = events.map { TimelineItem.EventItem(it) }.sortedBy { it.sortKey }
+            noteItems + eventItems
         }
         if (items.isEmpty()) {
             Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
@@ -582,7 +584,7 @@ fun NoteRow(
     onClick: () -> Unit
 ) {
     Surface(
-        color = Surface,
+        color = AccentLight.copy(alpha = 0.35f),
         shape = RoundedCornerShape(0.dp),
         modifier = Modifier
             .fillMaxWidth()
