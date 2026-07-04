@@ -65,12 +65,12 @@ fun HeatmapScreen(
                     color = TextPrimary
                 )
             }
-            // 2dp 黑色分隔线
-            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+            // 2dp 浅灰分隔线
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Border))
 
             // tab 切换栏：月 / 年 / 去向
             TabBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
-            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Border))
 
             // tab 内容
             when (selectedTab) {

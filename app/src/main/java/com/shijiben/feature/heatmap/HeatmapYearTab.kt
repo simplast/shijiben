@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.shijiben.ui.theme.Border
 import com.shijiben.ui.theme.Disabled
 import com.shijiben.ui.theme.DisabledText
 import com.shijiben.ui.theme.HeatmapLevel0
@@ -62,7 +63,7 @@ fun HeatmapYearTab(
             onNext = viewModel::nextYear,
             onGoCurrent = viewModel::goToCurrentYear
         )
-        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Border))
 
         Column(
             modifier = Modifier

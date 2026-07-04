@@ -59,7 +59,7 @@ fun HeatmapMonthTab(
             onNext = viewModel::nextMonth,
             onGoCurrent = viewModel::goToCurrentMonth
         )
-        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Color.Black))
+        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(Border))
 
         Column(
             modifier = Modifier
