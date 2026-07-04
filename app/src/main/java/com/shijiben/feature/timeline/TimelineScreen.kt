@@ -54,8 +54,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -77,6 +79,7 @@ import com.shijiben.feature.recording.RecordingSheet
 import com.shijiben.feature.timeviz.TimeVizCalculator
 import com.shijiben.ui.theme.*
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
@@ -145,24 +148,21 @@ fun TimelineScreen(
             alignment = Alignment.TopCenter
         )
         Column(modifier = Modifier.fillMaxSize().padding(bottom = 6.dp)) {
-            // 顶部 8dp 彩虹条（品牌标识，全 app 唯一保留处）
-            Row(modifier = Modifier.fillMaxWidth().height(8.dp)) {
-                val trimColors = listOf(
-                    Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFF59E0B),
-                    Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFF06B6D4),
-                    Color(0xFF6366F1), Color(0xFFA855F7)
-                )
-                for (i in 0 until 80) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f).fillMaxHeight()
-                            .background(trimColors[i % 8])
-                    )
-                }
-            }
             // 顶栏一条带：左日期徽章 + 右概览统计
+            // 背景即今天进度条：已过去时间填 PrimaryLight 浅红，剩余保持 Surface
+            val todayFraction = todayProgressFraction(date, now)
             Row(
-                modifier = Modifier.fillMaxWidth().background(Surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Surface)
+                    .drawBehind {
+                        if (todayFraction > 0f) {
+                            drawRect(
+                                color = PrimaryLight,
+                                size = Size(size.width * todayFraction, size.height)
+                            )
+                        }
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -635,6 +635,14 @@ private fun formatDateCompact(date: Triple<Int, Int, Int>): String {
 private fun isToday(date: Triple<Int, Int, Int>): Boolean {
     val cal = Calendar.getInstance(TimeZone.getDefault())
     return date == Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+}
+
+private fun todayProgressFraction(date: Triple<Int, Int, Int>, now: Long): Float {
+    return when {
+        isToday(date) -> TimeVizCalculator.todayProgress(now)
+        LocalDate.of(date.first, date.second, date.third).isBefore(LocalDate.now()) -> 1f
+        else -> 0f
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
