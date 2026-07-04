@@ -178,6 +178,49 @@ class TimelineViewModelTest {
     }
 
     @Test
+    fun repeatEvent_nonExistentEventId_leavesDbUnchanged() = runTest {
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "已完成",
+            startTime = now - 120_000,
+            endTime = now - 60_000,
+            note = "原备注",
+            status = EventStatus.Completed.value
+        )
+        val before = eventRepo.getEventById(id)!!
+        vm.repeatEvent(999_999L)
+        assertThat(eventRepo.getEventById(999_999L)).isNull()
+        val after = eventRepo.getEventById(id)!!
+        assertThat(after.status).isEqualTo(before.status)
+        assertThat(after.startTime).isEqualTo(before.startTime)
+        assertThat(eventRepo.getAllEvents().first()).hasSize(1)
+    }
+
+    @Test
+    fun repeatEvent_completedEvent_createsInProgressCopy() = runTest {
+        val now = System.currentTimeMillis()
+        val id = eventRepo.createEvent(
+            title = "已完成",
+            startTime = now - 120_000,
+            endTime = now - 60_000,
+            note = "原备注",
+            status = EventStatus.Completed.value
+        )
+        vm.repeatEvent(id)
+        val list = vm.events.first { it.size == 2 }
+        val original = list.first { it.id == id }
+        val copy = list.first { it.id != id }
+        assertThat(original.status).isEqualTo(EventStatus.Completed.value)
+        assertThat(original.title).isEqualTo("已完成")
+        assertThat(original.note).isEqualTo("原备注")
+        assertThat(copy.status).isEqualTo(EventStatus.InProgress.value)
+        assertThat(copy.title).isEqualTo("已完成")
+        assertThat(copy.note).isEqualTo("原备注")
+        assertThat(copy.endTime).isNull()
+        assertThat(Math.abs(copy.startTime - now)).isLessThan(5_000L)
+    }
+
+    @Test
     fun deleteEvent_validEventId_removesEvent() = runTest {
         val now = System.currentTimeMillis()
         val id = eventRepo.createEvent(title = "待删", startTime = now, endTime = null, note = null)

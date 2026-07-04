@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -285,6 +286,7 @@ fun TimelineScreen(
                         },
                         onStartEvent = { event -> viewModel.markInProgress(event.id) },
                         onStopEvent = { event -> viewModel.markCompleted(event.id) },
+                        onRepeatEvent = { event -> viewModel.repeatEvent(event.id) },
                         onEventLongClick = { event -> pendingDelete = event },
                         onNoteClick = onNotesClick,
                         now = now
@@ -391,6 +393,7 @@ fun EventList(
     onEventClick: (EventEntity) -> Unit,
     onStartEvent: (EventEntity) -> Unit,
     onStopEvent: (EventEntity) -> Unit,
+    onRepeatEvent: (EventEntity) -> Unit,
     onEventLongClick: (EventEntity) -> Unit,
     onNoteClick: () -> Unit,
     now: Long
@@ -417,6 +420,7 @@ fun EventList(
                         onClick = { onEventClick(item.event) },
                         onStart = { onStartEvent(item.event) },
                         onStop = { onStopEvent(item.event) },
+                        onRepeatEvent = { onRepeatEvent(item.event) },
                         onLongClick = { onEventLongClick(item.event) },
                         now = now
                     )
@@ -437,6 +441,7 @@ fun EventCard(
     onClick: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
+    onRepeatEvent: (() -> Unit)? = null,
     onLongClick: () -> Unit,
     now: Long
 ) {
@@ -456,30 +461,47 @@ fun EventCard(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 未完成事项的开始/停止按钮
-            if (event.status != 2) {
+            // 左侧操作按钮：未开始→开始，进行中→停止，已完成→再来一次（如提供回调）
+            val showRepeat = event.status == 2 && onRepeatEvent != null
+            if (event.status != 2 || showRepeat) {
                 IconButton(
                     onClick = {
-                        if (event.status == 0) onStart() else onStop()
+                        when (event.status) {
+                            0 -> onStart()
+                            1 -> onStop()
+                            else -> onRepeatEvent?.invoke()
+                        }
                     },
                     modifier = Modifier.size(32.dp)
                 ) {
-                    if (event.status == 0) {
-                        // 未开始 → 三角形播放按钮
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            contentDescription = "开始",
-                            tint = Primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        // 进行中 → 方形停止按钮
-                        Canvas(
-                            modifier = Modifier.size(16.dp)
-                        ) {
-                            drawRect(
-                                color = Primary,
-                                size = size
+                    when (event.status) {
+                        0 -> {
+                            // 未开始 → 三角形播放按钮
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = "开始",
+                                tint = Primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        1 -> {
+                            // 进行中 → 方形停止按钮
+                            Canvas(
+                                modifier = Modifier.size(16.dp)
+                            ) {
+                                drawRect(
+                                    color = Primary,
+                                    size = size
+                                )
+                            }
+                        }
+                        else -> {
+                            // 已完成 → 循环箭头（再来一次）
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "再来一次",
+                                tint = Primary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }

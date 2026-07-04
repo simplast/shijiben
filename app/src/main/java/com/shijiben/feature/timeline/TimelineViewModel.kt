@@ -118,6 +118,22 @@ class TimelineViewModel @Inject constructor(
         }
     }
 
+    /** 再来一次：复制已完成事件并立即开始计时 */
+    fun repeatEvent(eventId: Long) {
+        viewModelScope.launch {
+            val event = eventRepository.getEventById(eventId) ?: return@launch
+            val now = System.currentTimeMillis()
+            eventRepository.createEvent(
+                title = event.title,
+                startTime = now,
+                endTime = null,
+                note = event.note,
+                status = com.shijiben.data.model.EventStatus.InProgress.value
+            )
+            refresh()
+        }
+    }
+
     /** 删除事件（列表长按触发） */
     fun deleteEvent(eventId: Long) {
         viewModelScope.launch {
